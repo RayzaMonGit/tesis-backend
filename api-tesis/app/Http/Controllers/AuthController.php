@@ -19,7 +19,7 @@ class AuthController extends Controller
         $validator = Validator::make(request()->all(), [
             'name' => 'required',
             'email' => 'required|email|unique:users',
-            'password' => 'required|confirmed|min:8',
+            'password' => 'required|min:6',
         ]);
   
         if($validator->fails()){
@@ -96,7 +96,11 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60
+            'expires_in' => auth()->factory()->getTTL() * 60,
+            "user" => [
+                "name"=> auth('api')->user()->name,
+                "email"=>auth('api')->user()->email
+            ]
         ]);
     }
 }
