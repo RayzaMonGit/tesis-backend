@@ -1,5 +1,10 @@
 import { setupLayouts } from 'virtual:generated-layouts'
+import Component from 'vue-flatpickr-component'
 import { createRouter, createWebHistory } from 'vue-router/auto'
+//import{redirects, routes} from './additional-routes'
+import { setupGuards } from './guards'
+//import { redirects, routes } from './additional-routes'
+
 
 function recursiveLayouts(route) {
   if (route.children) {
@@ -21,10 +26,27 @@ const router = createRouter({
     return { top: 0 }
   },
   extendRoutes: pages => [
-    ...[...pages].map(route => recursiveLayouts(route)),
+    ...[
+      {
+        path:'/',
+        name:'index',
+        redirect:to=>{
+          return{name:'login',query:to.query}
+        },
+
+      }
+    ],
+    ...[...pages,...[
+      {
+        path:'/documentos-lista',
+        name:'documentos',
+        component:()=>import('@/pages/tercera-page.vue')
+      }
+    ]].map(route => recursiveLayouts(route)),
   ],
 })
 
+setupGuards(router)
 export { router }
 export default function (app) {
   app.use(router)

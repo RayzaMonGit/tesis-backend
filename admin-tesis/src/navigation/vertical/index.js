@@ -9,4 +9,9 @@ export default [
     to: { name: 'second-page' },
     icon: { icon: 'ri-file-text-line' },
   },
+  {
+    title: 'Tercera pagina',
+    to: { name: 'documentos' },
+    icon: { icon: 'ri-hand' },
+  },
 ]
