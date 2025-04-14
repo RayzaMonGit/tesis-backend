@@ -15,8 +15,12 @@ const form = ref({
   password: '',
   remember: false,
 })
-
-definePage({ meta: { layout: 'blank' } })
+definePage({
+  meta: {
+    layout: 'blank',
+    unauthenticatedOnly: true,
+  },
+})
 
 const isPasswordVisible = ref(false)
 const authV2LoginMask = useGenerateImageVariant(authV2LoginMaskLight, authV2LoginMaskDark)

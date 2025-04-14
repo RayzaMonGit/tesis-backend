@@ -28,25 +28,36 @@ const router = createRouter({
   extendRoutes: pages => [
     ...[
       {
-        path:'/',
-        name:'index',
-        redirect:to=>{
-          return{name:'login',query:to.query}
+        path: '/',
+        name: 'index',
+        redirect: to => {
+          // TODO: Get type from backend
+          const userData = useCookie('userData')
+          const userRole = userData.value?.role
+          if (userRole === 'admin')
+            return { name: 'dashboards-crm' }
+          if (userRole === 'client')
+            return { name: 'access-control' }
+          
+          return { name: 'login', query: to.query }
         },
-
-      }
+      },
     ],
     ...[...pages,...[
       {
         path:'/documentos-lista',
         name:'documentos',
-        component:()=>import('@/pages/tercera-page.vue')
+        component:()=>import('@/pages/tercera-page.vue'),
+        meta:{
+          not_authenticated:false,
+        }
       }
     ]].map(route => recursiveLayouts(route)),
   ],
 })
 
 setupGuards(router)
+//setupGuards(router)
 export { router }
 export default function (app) {
   app.use(router)

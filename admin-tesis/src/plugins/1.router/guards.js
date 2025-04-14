@@ -4,7 +4,13 @@ export const setupGuards = router => {
   // 👉 router.beforeEach
   // Docs: https://router.vuejs.org/guide/advanced/navigation-guards.html#global-before-guards
   router.beforeEach(to => {
-  
+    /*
+         * If it's a public route, continue navigation. This kind of pages are allowed to visited by login & non-login users. Basically, without any restrictions.
+         * Examples of public routes are, 404, under maintenance, etc.
+         */
+    if (to.meta.public)
+      return undefined
+
     /**
          * Check if user is logged in by checking if token & user data exists in local storage
          * Feel free to update this logic to suit your needs
@@ -22,7 +28,10 @@ export const setupGuards = router => {
       else
         return undefined
     }
-    if (to.matched.length) {
+    if(to.meta.not_authenticated==false){
+      return true;
+    }
+    if (!isLoggedIn && to.matched.length) {
       /* eslint-disable indent */
             return isLoggedIn
                 ? { name: 'not-authorized' }
