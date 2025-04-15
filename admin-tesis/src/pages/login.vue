@@ -1,5 +1,6 @@
 <script setup>
 import { useGenerateImageVariant } from '@/@core/composable/useGenerateImageVariant'
+import { $api } from '@/utils/api'
 import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
 import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'
@@ -15,12 +16,45 @@ const form = ref({
   password: '',
   remember: false,
 })
+
+const error_exsist = ref(null);
+const succes_exsist=ref(null);
+
+
 definePage({
   meta: {
     layout: 'blank',
     unauthenticatedOnly: true,
   },
 })
+
+const login = async () => {
+  try {
+    error_exsist.value = null;
+    succes_exsist.value=null;
+    const resp = await $api('/auth/login', {
+      method: 'POST',
+      body: {
+        email: form.value.email,
+        password: form.value.password,
+      },
+      onResponseError({ response }) {
+        console.log(response._data.error);
+        error_exsist.value = response._data.error;
+      }
+    })
+
+    console.log(resp);
+
+    localStorage.setItem('token', resp.access_token);
+    localStorage.setItem('user', JSON.stringify(resp.user));
+
+    succes_exsist.value=true
+
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 const isPasswordVisible = ref(false)
 const authV2LoginMask = useGenerateImageVariant(authV2LoginMaskLight, authV2LoginMaskDark)
@@ -37,38 +71,16 @@ const authV2LoginIllustration = useGenerateImageVariant(authV2LoginIllustrationL
     </div>
   </RouterLink>
 
-  <VRow
-    no-gutters
-    class="auth-wrapper"
-  >
-    <VCol
-      md="8"
-      class="d-none d-md-flex align-center justify-center position-relative"
-    >
+  <VRow no-gutters class="auth-wrapper">
+    <VCol md="8" class="d-none d-md-flex align-center justify-center position-relative">
       <div class="d-flex align-center justify-center pa-10">
-        <img
-          :src="authV2LoginIllustration"
-          class="auth-illustration w-100"
-          alt="auth-illustration"
-        >
+        <img :src="authV2LoginIllustration" class="auth-illustration w-100" alt="auth-illustration">
       </div>
-      <VImg
-        :src="authV2LoginMask"
-        class="d-none d-md-flex auth-footer-mask"
-        alt="auth-mask"
-      />
+      <VImg :src="authV2LoginMask" class="d-none d-md-flex auth-footer-mask" alt="auth-mask" />
     </VCol>
-    <VCol
-      cols="12"
-      md="4"
-      class="auth-card-v2 d-flex align-center justify-center"
-      style="background-color: rgb(var(--v-theme-surface));"
-    >
-      <VCard
-        flat
-        :max-width="500"
-        class="mt-12 mt-sm-0 pa-5 pa-lg-7"
-      >
+    <VCol cols="12" md="4" class="auth-card-v2 d-flex align-center justify-center"
+      style="background-color: rgb(var(--v-theme-surface));">
+      <VCard flat :max-width="500" class="mt-12 mt-sm-0 pa-5 pa-lg-7">
         <VCardText>
           <h4 class="text-h4 mb-1">
             Welcome to <span class="text-capitalize">{{ themeConfig.app.title }}! 👋🏻</span>
@@ -80,84 +92,54 @@ const authV2LoginIllustration = useGenerateImageVariant(authV2LoginIllustrationL
         </VCardText>
 
         <VCardText>
-          <VForm @submit.prevent="() => {}">
+          <VForm @submit.prevent="login()">
             <VRow>
               <!-- email -->
               <VCol cols="12">
-                <VTextField
-                  v-model="form.email"
-                  autofocus
-                  label="Email"
-                  type="email"
-                  placeholder="johndoe@email.com"
-                />
+                <VTextField v-model="form.email" autofocus label="Email" type="email" placeholder="johndoe@email.com" />
               </VCol>
 
               <!-- password -->
               <VCol cols="12">
-                <VTextField
-                  v-model="form.password"
-                  label="Password"
-                  placeholder="············"
+                <VTextField v-model="form.password" label="Password" placeholder="············"
                   :type="isPasswordVisible ? 'text' : 'password'"
                   :append-inner-icon="isPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
-                  @click:append-inner="isPasswordVisible = !isPasswordVisible"
-                />
+                  @click:append-inner="isPasswordVisible = !isPasswordVisible" />
 
-                <!-- remember me checkbox -->
-                <div class="d-flex align-center justify-space-between flex-wrap my-6 gap-x-2">
-                  <VCheckbox
-                    v-model="form.remember"
-                    label="Remember me"
-                  />
+                  <!-- alerta -->
+                <VAlert type="success" class="my-2" v-if="succes_exsist">
+                  felicidades credenciales <strong>correctas</strong>
+                </VAlert>
 
-                  <a
-                    class="text-primary"
-                    href="#"
-                  >
-                    Forgot Password?
-                  </a>
-                </div>
+                <!-- alerta error -->
+                <VAlert type="error" class="my-2" v-if="error_exsist">
+                  Error: <strong>{{ error_exsist }}</strong>
+                </VAlert>
 
                 <!-- login button -->
-                <VBtn
-                  block
-                  type="submit"
-                >
+                <VBtn block type="submit" class="my-2">
                   Login
                 </VBtn>
               </VCol>
 
               <!-- create account -->
-              <VCol
-                cols="12"
-                class="text-body-1 text-center"
-              >
+              <VCol cols="12" class="text-body-1 text-center">
                 <span class="d-inline-block">
                   New on our platform?
                 </span>
-                <a
-                  class="text-primary ms-1 d-inline-block text-body-1"
-                  href="#"
-                >
+                <a class="text-primary ms-1 d-inline-block text-body-1" href="#">
                   Create an account
                 </a>
               </VCol>
 
-              <VCol
-                cols="12"
-                class="d-flex align-center"
-              >
+              <VCol cols="12" class="d-flex align-center">
                 <VDivider />
                 <span class="mx-4 text-high-emphasis">or</span>
                 <VDivider />
               </VCol>
 
               <!-- auth providers -->
-              <VCol
-                cols="12"
-                class="text-center"
-              >
+              <VCol cols="12" class="text-center">
                 <AuthProvider />
               </VCol>
             </VRow>
