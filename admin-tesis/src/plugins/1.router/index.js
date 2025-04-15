@@ -32,14 +32,12 @@ const router = createRouter({
         name: 'index',
         redirect: to => {
           // TODO: Get type from backend
-          const userData = useCookie('userData')
-          const userRole = userData.value?.role
-          if (userRole === 'admin')
-            return { name: 'dashboards-crm' }
-          if (userRole === 'client')
-            return { name: 'access-control' }
+          const userData = localStorage.getItem('user')
           
+          if (userData)
+            return { name: 'dashboard'};
           return { name: 'login', query: to.query }
+
         },
       },
     ],

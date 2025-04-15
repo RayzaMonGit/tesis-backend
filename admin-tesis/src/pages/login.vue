@@ -20,6 +20,9 @@ const form = ref({
 const error_exsist = ref(null);
 const succes_exsist=ref(null);
 
+const route = useRoute()
+const router = useRouter()
+
 
 definePage({
   meta: {
@@ -50,6 +53,13 @@ const login = async () => {
     localStorage.setItem('user', JSON.stringify(resp.user));
 
     succes_exsist.value=true
+
+    setTimeout(async()=>{
+
+      await nextTick(() => {
+        router.replace(route.query.to ? String(route.query.to) : '/')
+      })
+    },1500);
 
   } catch (error) {
     console.log(error);
