@@ -1,4 +1,36 @@
 //import { canNavigate } from '@layouts/plugins/casl'
+function parseJwt(token) {
+  try {
+    // Aquí separamos la segunda parte (el payload) que contiene los datos como la fecha de expiración
+    const base64Url = token.split('.')[1]; // Obtenemos el payload que está en formato base64Url
+
+    // El formato base64Url usa '-' y '_' en lugar de '+' y '/' respectivamente
+    // Necesitamos reemplazarlos para que sea decodificable en base64
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+
+    // Decodificamos la cadena base64
+    // atob() convierte la cadena base64 a texto legible
+    // Luego usamos decodeURIComponent para manejar correctamente los caracteres especiales
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); // Convertimos a formato URI
+    }).join(''));
+
+    // Finalmente convertimos el payload decodificado a un objeto JSON y lo retornamos
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
+function isTokenExpired(token) {
+  const decodedToken = parseJwt(token);
+  if (!decodedToken || !decodedToken.exp) {
+    return true; // Token inválido o sin fecha de expiración
+  }
+  const currentTime = Math.floor(Date.now() / 1000); // Tiempo actual en segundos
+  return decodedToken.exp < currentTime; // Retorna true si el token ha expirado
+}
+
 
 export const setupGuards = router => {
   // 👉 router.beforeEach
@@ -16,6 +48,19 @@ export const setupGuards = router => {
          * Feel free to update this logic to suit your needs
          */
     const isLoggedIn = !!(localStorage.getItem('user') && localStorage.getItem('token'))
+    console.log(isLoggedIn);
+    if (isLoggedIn && isTokenExpired(localStorage.getItem('token'))) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      return {
+        name: 'login',
+        query: {
+          ...to.query,
+          to: to.fullPath !== '/' ? to.path : undefined,
+        },
+      };
+
+    }
 
     /*
           If user is logged in and is trying to access login like page, redirect to home
@@ -28,21 +73,21 @@ export const setupGuards = router => {
       else
         return undefined
     }
-    if(to.meta.not_authenticated==false){
+    if (to.meta.not_authenticated == false) {
       return true;
     }
     if (!isLoggedIn && to.matched.length) {
       /* eslint-disable indent */
-            return isLoggedIn
-                ? { name: 'not-authorized' }
-                : {
-                    name: 'login',
-                    query: {
-                        ...to.query,
-                        to: to.fullPath !== '/' ? to.path : undefined,
-                    },
-                }
-            /* eslint-enable indent */
+      return isLoggedIn
+        ? { name: 'not-authorized' }
+        : {
+          name: 'login',
+          query: {
+            ...to.query,
+            to: to.fullPath !== '/' ? to.path : undefined,
+          },
+        }
+      /* eslint-enable indent */
     }
   })
 }

@@ -12,7 +12,7 @@ import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 
 const form = ref({
-  email: '',
+  email: 'raypy@gmail.com',
   password: '',
   remember: false,
 })

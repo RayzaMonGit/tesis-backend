@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -24,6 +25,9 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
+        'surename',
+        'role_id',
+        'avatar',        
     ];
 
     /**
@@ -67,5 +71,9 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+
+    public function role(){
+        return $this->belongsTo(Role::class,"role_id");
     }
 }
