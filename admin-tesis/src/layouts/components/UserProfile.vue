@@ -88,6 +88,7 @@ const logout = async () =>{
               <div>
                 <div class="text-body-2 font-weight-medium text-high-emphasis">
                   {{ user.name+' '+user.surname }}
+                
                 </div>
                 <div class="text-capitalize text-caption text-disabled">
                   {{user.role.name}}

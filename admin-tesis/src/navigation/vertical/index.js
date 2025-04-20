@@ -12,7 +12,7 @@ export default [
   },
   {
     title: 'Roles y Permisos',
-    to: { name: 'tercera-page' },
+    to: { name: 'roles-permisos' },
     icon: { icon: 'ri-lock-password-line' },
   },
 
