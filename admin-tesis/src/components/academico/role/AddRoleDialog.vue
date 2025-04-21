@@ -13,8 +13,66 @@ const dialogVisibleUpdate = val => {
     emit('update:isDialogVisible', val)
 }
 
+const error_exsist=ref(null);
 
 const LIST_PERMISSIONS = PERMISOS;
+const role= ref(null);
+const permissions=ref([]);
+const AddPermission=(permiso)=>{
+    let INDEX=permissions.value.findIndex((perm)=>perm==permiso);
+    if(INDEX!=-1){
+        permissions.value.splice(INDEX,1);
+    }else{
+        permissions.value.push(permiso);
+    }
+    console.log(permissions.value);
+}
+const warning=ref(null);
+const success=ref(null);
+const store = async () => {
+    warning.value = null;
+    if (!role.value) {
+        warning.value = "Se debe llenar el nombre del rol";
+        return;
+    } if(permissions.value.length==0) {
+        warning.value = "Seleccione al menos un permiso para el rol";
+        return;
+    }
+    let data={
+        name:role.value,
+        permissions:permissions.value,
+    }
+    
+    try {
+        const resp = await $api('/role', {
+          method: 'POST',
+          body:data,
+          onResponseError({ response }) {
+            console.log(response);
+            error_exsist.value = response._data.error;
+          }
+        })
+        console.log(resp)
+        if(resp.message==403){
+            warning.value=resp.message_text;
+        }else{
+            success.value="El rol se ha creado correctamente";
+            setTimeout(() => {
+                success.value=null;
+                warning.value=null;
+                role.value=null;
+                permissions.value=[];
+                emit('update:isDialogVisible',false);
+            }, 1500);
+        }
+
+    } catch (error) {
+        console.log(error);
+        error_exsist.value =error;
+    }
+
+
+}
 </script>
 
 <template> <!-- añadir roles-->
@@ -29,10 +87,28 @@ const LIST_PERMISSIONS = PERMISOS;
                         Agregar un nuevo rol
                     </h4>
                 </div>
-                <VTextField label="Rol:" placeholder="Ejemplo: Administrador" />
+                <VTextField label="Rol:" v-model="role" placeholder="Ejemplo: Administrador" />
+                
+                <VAlert type="warning" v-if="warning" class="mt-3">
+                 <strong>{{warning}}</strong> 
+                </VAlert>
+
+                <VAlert type="error" v-if="error_exsist" class="mt-3">
+                 <strong>hubo un error al guardar en el servidor</strong> 
+                </VAlert>
+
+                <VAlert type="success" v-if="success" class="mt-3">
+                 <strong>{{success}}</strong> 
+                </VAlert>
+
 
             </VCardText>
             <VCardText class="pa-5">
+                <!-- boton crear rol-->
+                <VBtn @click="store()">
+                    Crear rol
+                    <VIcon end icon="ri-checkbox-circle-line" />
+                </VBtn>
                 <!-- tabla de roles-->
                 <VTable>
                     <thead>
@@ -53,8 +129,10 @@ const LIST_PERMISSIONS = PERMISOS;
                             </td>
                             <td>
                                 <ul>
-                                    <li v-for="(permiso, index2) in item.permisos" :key="index2" style="list-style: none;">
-                                        <VCheckbox :label="permiso.name" :value="permiso.permiso" />
+                                    <li v-for="(permiso, index2) in item.permisos" :key="index2"
+                                        style="list-style: none;">
+                                        <VCheckbox :label="permiso.name" :value="permiso.permiso"
+                                            @click="AddPermission(permiso.permiso)" />
                                     </li>
                                 </ul>
                             </td>
@@ -62,11 +140,6 @@ const LIST_PERMISSIONS = PERMISOS;
                         </tr>
                     </tbody>
                 </VTable>
-                <!-- boton crear rol-->
-                <VBtn>
-                    Crear rol
-                    <VIcon end icon="ri-checkbox-circle-line" />
-                </VBtn>
 
             </VCardText>
         </VCard>

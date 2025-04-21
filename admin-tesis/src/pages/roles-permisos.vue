@@ -1,17 +1,30 @@
 <script setup>
-import data from '@/views/js/datatable'
-import { VCard } from 'vuetify/components';
-
+//import data from '@/views/js/datatable'
+const data=[];
 const headers = [
   { title: 'ID', key: 'id' },
-  { title: 'NAME', key: 'fullName' },
-  { title: 'EMAIL', key: 'email' },
-  { title: 'DATE', key: 'startDate' },
-  { title: 'EXPERIENCE', key: 'experience' },
-  { title: 'AGE', key: 'age' },
+  { title: 'Role', key: 'name' },
+  { title: 'Permisos', key: 'permissions_pluck' },
+  { title: 'Fecha', key: 'created_at' },
+  { title: 'Op', key: 'action' },
 ]
 const searchQuery = ref(null);
 const isAddRoleDialogVisible = ref(false);
+
+const list = async () => {
+        const resp =  await $api('/role',{
+            method: 'GET',
+            onResponseError({response}){
+              console.log(response);
+            }
+        })
+        console.log(resp);
+
+        //data.value = resp.roles;
+    }
+onMounted(() => {
+        list();
+    })
 </script>
 
 <template>
