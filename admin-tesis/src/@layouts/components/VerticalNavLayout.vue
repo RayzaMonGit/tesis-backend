@@ -64,9 +64,9 @@ export default defineComponent({
 
 
       // 👉 Footer
-      const footer = h('footer', { class: 'layout-footer' }, [
-        h('div', { class: 'footer-content-container' }, slots.footer?.()),
-      ])
+      //const footer = h('footer', { class: 'layout-footer' }, [
+      //  h('div', { class: 'footer-content-container' }, slots.footer?.()),
+      //])
 
 
       // 👉 Overlay
@@ -80,7 +80,7 @@ export default defineComponent({
         h('div', { class: 'layout-content-wrapper' }, [
           navbar,
           main,
-          footer,
+          //footer,
         ]),
         layoutOverlay,
       ])
