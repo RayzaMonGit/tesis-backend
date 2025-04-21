@@ -16,7 +16,7 @@ Route::group([
     Route::post('/me', [AuthController::class, 'me'])->name('me');//->middleware('auth:api')
 });
 Route::group([
-    'middleware'=>['auth:api']
-],function($router){
+    'middleware' => ['auth:api']
+],function($router) {
     Route::resource("role",RoleController::class);
 });

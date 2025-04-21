@@ -1,10 +1,9 @@
 <?php
-
 namespace App\Http\Controllers\Rol;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
+use App\Http\Controllers\Controller;
 
 class RoleController extends Controller
 {
@@ -13,14 +12,20 @@ class RoleController extends Controller
      */
     public function index(Request $request)
     {
-        $search=$request->get("search");
-        $roles=Role::where("name","like","%".search."%")->orderBy("id","desc")->get();
+        $search = $request->get("search");
+        
+        $roles = Role::where("name","ilike","%".$search."%")->orderBy("id","desc")->get();
+
         return response()->json([
-            "id"=>$rol->id,
-            "name"=>$rol->name,
-            "created_at"=> $rol->created_at->format("Y-m-d h:i:s"),
-            "permissions"=>$rol->permissions,
-            "permissions_pluck"=>$role->permissions->pluck('name'),
+            "roles" => $roles->map(function($rol) {
+                return [
+                    "id" => $rol->id,
+                    "name" => $rol->name,
+                    "created_at" => $rol->created_at->format("Y-m-d h:i:s"),
+                    "permissions" => $rol->permissions,
+                    "permissions_pluck" => $rol->permissions->pluck('name'),
+                ];
+            })
         ]);
     }
 
