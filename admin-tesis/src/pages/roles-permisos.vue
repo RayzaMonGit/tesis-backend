@@ -1,4 +1,8 @@
 <script setup>
+import DeleteRoleDialog from '@/components/academico/role/DeleteRoleDialog.vue';
+import EditRoleDialog from '@/components/academico/role/EditRoleDialog.vue';
+import { watch } from 'vue';
+
 //import data from '@/views/js/datatable'
 const data = ref([]);
 const headers = [
@@ -10,7 +14,10 @@ const headers = [
 ]
 const searchQuery = ref(null);
 const isAddRoleDialogVisible = ref(false);
-
+const isEditRoleDialogVisible=ref(false);
+const isDeleteRoleDialogVisible=ref(false);
+const role_Selected=ref(null);
+const role_Selected_deleted=ref(null);
 const list = async () => {
   const resp = await $api('/role?search='+(searchQuery.value?searchQuery.value:''), {
     method: 'GET',
@@ -18,19 +25,33 @@ const list = async () => {
       console.log(response);
     }
   })
-  console.log(resp);
+  //console.log(resp);
 
   data.value = resp.roles;
 }
 const editItem = (item) => {
-
+  isEditRoleDialogVisible.value=true;
+  role_Selected.value=item;
 }
 const deleteItem = (item) => {
-
+isDeleteRoleDialogVisible.value=true;
+role_Selected_deleted.value=item;
 }
 onMounted(() => {
   list();
 })
+watch(isEditRoleDialogVisible,(event)=>{
+  console.log(event);
+  if (event==false) {
+    role_Selected.value=null;
+  }
+  })
+  watch(isDeleteRoleDialogVisible,(event)=>{
+  console.log(event);
+  if (event==false) {
+    role_Selected_deleted.value=null;
+  }
+  })
 </script>
 
 <template>
@@ -72,17 +93,21 @@ onMounted(() => {
 
         <template #item.action="{ item }">
           <div class="d-flex gap-1">
+            <!--boton editar-->
             <IconBtn size="small" @click="editItem(item)">
               <VIcon icon="ri-pencil-line" />
             </IconBtn>
+            <!--boton borrar-->
             <IconBtn size="small" @click="deleteItem(item)">
               <VIcon icon="ri-delete-bin-line" />
             </IconBtn>
           </div>
         </template>
       </VDataTable>
-      <AddRoleDialog v-model:is-dialog-visible="isAddRoleDialogVisible" />
-
+      <AddRoleDialog v-model:is-dialog-visible="isAddRoleDialogVisible" @addRole="list()" />
+      <EditRoleDialog v-if="role_Selected" :rolSelected="role_Selected"  v-model:is-dialog-visible="isEditRoleDialogVisible" @editRole="list()" />
+      <DeleteRoleDialog v-if="role_Selected_deleted" :rolSelected="role_Selected_deleted"  v-model:is-dialog-visible="isDeleteRoleDialogVisible" @deleteRole="list()" />
+      
     </VCard>
 
 

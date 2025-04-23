@@ -4,76 +4,78 @@ const props = defineProps({
         type: Boolean,
         required: true,
     },
+    rolSelected: {
+        type: Object,
+        required: true,
+
+    },
 })
-
-const emit = defineEmits(['update:isDialogVisible','addRole'])
-
-
+const emit = defineEmits(['update:isDialogVisible','editRole'])
 const dialogVisibleUpdate = val => {
     emit('update:isDialogVisible', val)
 }
-
-const error_exsist=ref(null);
+const error_exsist = ref(null);
 
 const LIST_PERMISSIONS = PERMISOS;
-const role= ref(null);
-const permissions=ref([]);
-const AddPermission=(permiso)=>{
-    let INDEX=permissions.value.findIndex((perm)=>perm==permiso);
-    if(INDEX!=-1){
-        permissions.value.splice(INDEX,1);
-    }else{
+const role = ref(null);
+const permissions = ref([]);
+const AddPermission = (permiso) => {
+    let INDEX = permissions.value.findIndex((perm) => perm == permiso);
+    if (INDEX != -1) {
+        permissions.value.splice(INDEX, 1);
+    } else {
         permissions.value.push(permiso);
     }
     console.log(permissions.value);
 }
-const warning=ref(null);
-const success=ref(null);
+const warning = ref(null);
+const success = ref(null);
 const store = async () => {
     warning.value = null;
     if (!role.value) {
         warning.value = "Se debe llenar el nombre del rol";
         return;
-    } if(permissions.value.length==0) {
+    } if (permissions.value.length == 0) {
         warning.value = "Seleccione al menos un permiso para el rol";
         return;
     }
-    let data={
-        name:role.value,
-        permissions:permissions.value,
+    let data = {
+        name: role.value,
+        permissions: permissions.value,
     }
-    
+
     try {
-        const resp = await $api('/role', {
-          method: 'POST',
-          body:data,
-          onResponseError({ response }) {
-            console.log(response);
-            error_exsist.value = response._data.error;
-          }
+        const resp = await $api('/role/'+role_selected.value.id, {
+            method: 'PATCH',
+            body: data,
+            onResponseError({ response }) {
+                console.log(response);
+                error_exsist.value = response._data.error;
+            }
         })
         console.log(resp)
-        if(resp.message==403){
-            warning.value=resp.message_text;
-        }else{
-            success.value="El rol se ha creado correctamente";
-            setTimeout(() => {
-                success.value=null;
-                warning.value=null;
-                role.value=null;
-                permissions.value=[];
-                emit('update:isDialogVisible',false);
-                emit('addRole',true);
-            }, 1500);
+        if (resp.message == 403) {
+            warning.value = resp.message_text;
+        } else {
+            success.value = "El rol se ha editado correctamente";
+            emit('editRole',true);
+            emit('update:isDialogVisible', false)
         }
 
     } catch (error) {
         console.log(error);
-        error_exsist.value =error;
+        error_exsist.value = error;
     }
 
 
 }
+const role_selected = ref(null);
+onMounted(() => {
+    role_selected.value = props.rolSelected;
+    console.log(role_selected.value);
+    role.value = role_selected.value.name;
+    permissions.value = role_selected.value.permissions_pluck;
+})
 </script>
 
 <template> <!-- añadir roles-->
@@ -84,30 +86,30 @@ const store = async () => {
 
             <VCardText class="pa-5">
                 <div class="mb-6">
-                    <h4 class="text-h4 text-center mb-2">
-                        Agregar un nuevo rol
+                    <h4 class="text-h4 text-center mb-2" v-if="role_selected">
+                        Editar rol:{{ role_selected.id }}
                     </h4>
                 </div>
                 <VTextField label="Rol:" v-model="role" placeholder="Ejemplo: Administrador" />
-                
+
                 <VAlert type="warning" v-if="warning" class="mt-3">
-                 <strong>{{warning}}</strong> 
+                    <strong>{{ warning }}</strong>
                 </VAlert>
 
                 <VAlert type="error" v-if="error_exsist" class="mt-3">
-                 <strong>hubo un error al guardar en el servidor</strong> 
+                    <strong>hubo un error al guardar en el servidor</strong>
                 </VAlert>
 
                 <VAlert type="success" v-if="success" class="mt-3">
-                 <strong>{{success}}</strong> 
+                    <strong>{{ success }}</strong>
                 </VAlert>
 
 
             </VCardText>
             <VCardText class="pa-5">
-                <!-- boton crear rol-->
+                <!-- boton modificar rol-->
                 <VBtn @click="store()">
-                    Crear rol
+                    Modificar rol
                     <VIcon end icon="ri-checkbox-circle-line" />
                 </VBtn>
                 <!-- tabla de roles-->
@@ -132,8 +134,11 @@ const store = async () => {
                                 <ul>
                                     <li v-for="(permiso, index2) in item.permisos" :key="index2"
                                         style="list-style: none;">
-                                        <VCheckbox :label="permiso.name" :value="permiso.permiso"
-                                            @click="AddPermission(permiso.permiso)" />
+                                        <VCheckbox 
+                                        v-model="permissions"
+                                        :label="permiso.name" 
+                                        :value="permiso.permiso"
+                                        @click="AddPermission(permiso.permiso)" />
                                     </li>
                                 </ul>
                             </td>
