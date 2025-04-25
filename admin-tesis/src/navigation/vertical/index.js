@@ -7,7 +7,7 @@ export default [
   { heading: 'Accesos' },
   {
     title: 'Usuarios',
-    to: { name: 'second-page' },
+    to: { name: 'staffs' },
     icon: { icon: 'ri-user-3-line' },
   },
   {

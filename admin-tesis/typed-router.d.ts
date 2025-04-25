@@ -37,7 +37,7 @@ declare module 'vue-router/auto-routes' {
     'postulantes-listado': RouteRecordInfo<'postulantes-listado', '/postulantes-listado', Record<never, never>, Record<never, never>>,
     'postulantes-registrar': RouteRecordInfo<'postulantes-registrar', '/postulantes-registrar', Record<never, never>, Record<never, never>>,
     'roles-permisos': RouteRecordInfo<'roles-permisos', '/roles-permisos', Record<never, never>, Record<never, never>>,
-    'second-page': RouteRecordInfo<'second-page', '/second-page', Record<never, never>, Record<never, never>>,
+    'staffs': RouteRecordInfo<'staffs', '/staffs', Record<never, never>, Record<never, never>>,
     'tercera-page': RouteRecordInfo<'tercera-page', '/tercera-page', Record<never, never>, Record<never, never>>,
   }
 }
