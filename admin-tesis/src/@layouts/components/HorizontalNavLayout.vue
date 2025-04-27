@@ -43,12 +43,12 @@ const configStore = useLayoutConfigStore()
       <slot />
     </main>
 
-    <!-- 👉 Footer -->
+    <!-- 👉 Footer 
     <footer class="layout-footer">
       <div class="footer-content-container">
         <slot name="footer" />
       </div>
-    </footer>
+    </footer>-->
   </div>
 </template>
 
@@ -108,11 +108,11 @@ const configStore = useLayoutConfigStore()
 
     // 👉 Footer
     // Boxed content
-    .layout-footer {
-      .footer-content-container {
-        @include mixins.boxed-content;
-      }
-    }
+    //.layout-footer {
+    //  .footer-content-container {
+    //    @include mixins.boxed-content;
+    //  }
+    //}
   }
 
   // If both navbar & horizontal nav sticky

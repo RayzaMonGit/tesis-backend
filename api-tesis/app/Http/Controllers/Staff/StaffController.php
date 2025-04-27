@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Staff;
 
+//use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,12 @@ class StaffController extends Controller
         return response()->json([
             //"users"=>$users,//con este yate devuelve, pero solo en array
             "users"=>UserCollection::make($users),
+            "roles"=>Role::where("name","not ilike","%academico%")->get()->map(function($role){
+                return [
+                    "id"=>$role->id,
+                    "name"=>$role->name,
+                ];
+            }),
         ]);
     }
 

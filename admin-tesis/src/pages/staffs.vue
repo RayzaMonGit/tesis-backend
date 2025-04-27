@@ -9,11 +9,22 @@ const headers = [
   { title: 'ID', key: 'id' },
   { title: 'Avatar', key: 'imagen' },
   { title: 'Nombre y Apellido', key: 'full_name' },
+  { title: 'Rol', key: 'role_name' },
   { title: 'Telefono', key: 'telefono' },
   { title: 'Email', key: 'email' },
+  {title: 'Documento',  key: 'document_full', },
   { title: 'Op', key: 'action' },
 ]
-
+const roles = ref([]);
+/*
+const avatarText = value => {
+        if (!value)
+            return ''
+        const nameArray = value.split(' ')
+        
+        return nameArray.map(word => word.charAt(0).toUpperCase()).join('')
+    }
+ */
 const searchQuery = ref(null);
 const isAddStaffDialogVisible = ref(false);
 const isEditstaffDialogVisible = ref(false);
@@ -30,9 +41,24 @@ const list = async () => {
         console.log(resp);
 
         data.value = resp.users.data;
-        console.log(resp.users.data);
-       // roles.value = resp.roles;
+        //console.log(resp.users.data);
+       roles.value = resp.roles;
     }
+const addStaff=(newUser)=>{
+  data.value.unshift(newUser);
+}
+const editStaff=(editUser)=>{
+  let INDEX=data.value.findIndex((user)=>user.id==editUser.id);
+  if(INDEX!=-1){
+    data.value[INDEX]=editUser;
+  }
+}
+const deleteStaff=(User)=>{
+  let INDEX=data.value.findIndex((user)=>user.id==User.id);
+  if(INDEX!=-1){
+    data.value.splice(INDEX,1);
+  }
+}
 const editItem = (item) => {
   isEditstaffDialogVisible.value = true;
   staff_Selected.value = item;
@@ -66,7 +92,7 @@ watch(isDeletestaffDialogVisible, (event) => {
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="d-flex align-center">
           <!--  lupa  -->
-          <VTextField v-model="searchQuery" placeholder="Search Staff" style="inline-size: 300px;" density="compact"
+          <VTextField v-model="searchQuery" placeholder="Buscar Staff" style="inline-size: 300px;" density="compact"
             class="me-3" @keyup.enter="list" />
         </div>
 
@@ -110,7 +136,14 @@ watch(isDeletestaffDialogVisible, (event) => {
                         </div> -->
                     </div>
                 </template>
-
+                <template #item.document_full="{ item }">
+                    <div class="d-flex align-center">
+                        <div class="d-flex flex-column ms-3">
+                            <span class="d-block font-weight-medium text-high-emphasis text-truncate">{{ item.n_doc }}</span>
+                            <small>{{ item.tipo_doc }}</small>
+                        </div>
+                    </div>
+                </template>
           <template #item.action="{ item }">
             <div class="d-flex gap-1">
               <!--boton editar-->
@@ -124,12 +157,12 @@ watch(isDeletestaffDialogVisible, (event) => {
             </div>
           </template>
         </VDataTable>
-        <!-- <AddStaffDialog v-model:is-dialog-visible="isAddStaffDialogVisible" @addStaff="list()" />
-      <EditStaffDialog v-if="staff_Selected" :rolSelected="staff_Selected"
-        v-model:is-dialog-visible="isEditstaffDialogVisible" @editStaff="list()" />
-      <DeleteStaffDialog v-if="staff_Selected_deleted" :rolSelected="staff_Selected_deleted"
-        v-model:is-dialog-visible="isDeletestaffDialogVisible" @deleteStaff="list()" />
--->
+         <AddStaffDialog v-if="roles.length>0" v-model:is-dialog-visible="isAddStaffDialogVisible" :roles="roles" @addStaff="addStaff" />
+      <!--el nombre q se pone en el vif es el mismo que 
+      esta en EditStaff Dialog.vue en la parte de props-->
+          <EditStaffDialog v-if="staff_Selected" :userSelected="staff_Selected" :roles="roles" v-model:is-dialog-visible="isEditstaffDialogVisible" @editStaff="editStaff" />
+      <DeleteStaffDialog v-if="staff_Selected_deleted" :userSelected="staff_Selected_deleted" @deleteStaff="deleteStaff" v-model:is-dialog-visible="isDeletestaffDialogVisible" />
+
     </VCard>
 
 

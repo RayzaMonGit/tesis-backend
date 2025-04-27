@@ -28,7 +28,10 @@ class UserResource extends JsonResource
                 //http://127.0.0.1:8000/storage/calamardo.png
             'avatar' => $this->resource->avatar ? env("APP_URL")."storage/".$this->resource->avatar : NULL,
             'telefono'=>$this->resource->telefono,
-            'designacion'=>$this->resource->designacion  
+            'designacion'=>$this->resource->designacion,
+            'gender'=>$this->resource->gender,
+            'tipo_doc'=>$this->resource->tipo_doc,
+            'n_doc'=>$this->resource->n_doc,
             ];
     }
 }

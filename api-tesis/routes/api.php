@@ -20,5 +20,7 @@ Route::group([
     'middleware' => ['auth:api']
 ],function($router) {
     Route::resource("role",RoleController::class);
+    //ruta post para actualizar los datos del usuario
+    Route::post("staffs/{id}",[StaffController::class,"update"]);
     Route::resource("staffs",StaffController::class);
 });
