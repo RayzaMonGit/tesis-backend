@@ -19,17 +19,19 @@ class StaffController extends Controller
      */
     public function index(Request $request)
     {
-        $search=$request->get("search");
-        $users=User::where("name","like","%".$search."%")->orderBy("id","desc")->get();
+        $search = $request->get("search");
+
+        //users viene de la tabla users en la base de datos
+        $users = User::where(DB::raw("users.name || ' ' || COALESCE(users.surname,'') || ' ' || users.email"),"ilike","%".$search."%")->orderBy("id","desc")->get();
+
         return response()->json([
-            //"users"=>$users,//con este yate devuelve, pero solo en array
-            "users"=>UserCollection::make($users),
-            "roles"=>Role::where("name","not ilike","%academico%")->get()->map(function($role){
+            "users" => UserCollection::make($users),
+            "roles" => Role::where("name","not ilike","%academico%")->get()->map(function($role) {
                 return [
-                    "id"=>$role->id,
-                    "name"=>$role->name,
+                    "id" => $role->id,
+                    "name" => $role->name
                 ];
-            }),
+            })
         ]);
     }
 

@@ -10,7 +10,7 @@ const props = defineProps({
 
     },
 })
-const emit = defineEmits(['update:isDialogVisible', 'deleteUser'])
+const emit = defineEmits(['update:isDialogVisible', 'deleteStaff'])
 const dialogVisibleUpdate = val => {
     emit('update:isDialogVisible', val)
 }
@@ -30,7 +30,7 @@ const deleted = async () => {
         console.log(resp)
 
         success.value = "El usuario se ha eliminado correctamente";
-        emit('deleteUser',user_selected.value)
+        emit('deleteStaff',user_selected.value)
         emit('update:isDialogVisible', false)
 
     } catch (error) {
