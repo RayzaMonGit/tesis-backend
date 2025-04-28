@@ -93,6 +93,12 @@ class AuthController extends Controller
      */
     protected function respondWithToken($token)
     {
+    /*El getallpermissions devuelve todos lo permisos que tiene asignado
+    un usuario a partir de su rol */
+    $permissions= auth('api')->user()->getAllPermissions()->map(function($permission){
+        return $permission->name;
+
+    });
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
@@ -103,6 +109,7 @@ class AuthController extends Controller
                 "email"=>auth('api')->user()->email,
                 "avatar"=>auth('api')->user()->avatar ? env("APP_URL")."storage/".auth('api')->user()->avatar : null,
                 "role"=> auth('api')->user()->role,
+                "permissions"=> $permissions,
             ]
         ]);
     }

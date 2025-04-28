@@ -3,20 +3,37 @@ export default [
     title: 'Dashboard',
     to: { name: 'dashboard' },
     icon: { icon: 'ri-bar-chart-2-line' },
+    permission: 'all',
   },
-  { heading: 'Accesos' },
+  { heading: 'Accesos', permissions: ['list_rol', "register_rol"
+,"list_rol",
+"edit_rol",
+"delete_rol"] },
   {
     title: 'Usuarios',
     to: { name: 'staffs' },
+    permission: 'list_rol',
     icon: { icon: 'ri-user-3-line' },
+    // Aquí no especificaste permiso, podrías agregarlo si lo deseas (ej: 'list_staff')
   },
   {
     title: 'Roles y Permisos',
     to: { name: 'roles-permisos' },
     icon: { icon: 'ri-lock-password-line' },
+    permission: 'list_rol',
   },
 
-  { heading: 'Gestión Académica' },
+  { heading: 'Gestión', permissions: ["register_postulant",
+    "list_postulant"
+,"edit_postulant"
+,"delete_postulant"
+,"profile_postulant"
+,"register_comission"
+,"list_comission"
+,"edit_comission"
+,"delete_comission"
+  ] },
+  
   {
     title: 'Postulantes',
     icon: { icon: 'ri-file-user-line' },
@@ -25,59 +42,13 @@ export default [
         title: 'Registrar',
         to: { name: 'postulantes-registrar' },
         icon: { icon: 'ri-user-add-line' },
+        permission: 'register_postulant',
       },
       {
         title: 'Listado',
         to: { name: 'postulantes-listado' },
         icon: { icon: 'ri-list-unordered' },
-      },
-    ],
-  },
-  {
-    title: 'Documentos',
-    icon: { icon: 'ri-file-upload-line' },
-    children: [
-      {
-        title: 'Subir Documento',
-        to: { name: 'documentos-subir' },
-        icon: { icon: 'ri-upload-cloud-line' },
-      },
-      {
-        title: 'Ver Documentos',
-        to: { name: 'documentos-listado' },
-        icon: { icon: 'ri-folder-line' },
-      },
-    ],
-  },
-  {
-    title: 'Convocatorias',
-    icon: { icon: 'ri-megaphone-line' },
-    children: [
-      {
-        title: 'Crear Convocatoria',
-        to: { name: 'convocatorias-crear' },
-        icon: { icon: 'ri-add-circle-line' },
-      },
-      {
-        title: 'Ver Convocatorias',
-        to: { name: 'convocatorias-listado' },
-        icon: { icon: 'ri-calendar-event-line' },
-      },
-    ],
-  },
-  {
-    title: 'Evaluaciones',
-    icon: { icon: 'ri-clipboard-line' },
-    children: [
-      {
-        title: 'Registrar Evaluación',
-        to: { name: 'evaluaciones-registrar' },
-        icon: { icon: 'ri-clipboard-fill' },
-      },
-      {
-        title: 'Listado',
-        to: { name: 'evaluaciones-listado' },
-        icon: { icon: 'ri-list-check' },
+        permission: 'list_postulant',
       },
     ],
   },
@@ -89,15 +60,90 @@ export default [
         title: 'Crear Comisión',
         to: { name: 'comisiones-crear' },
         icon: { icon: 'ri-user-add-line' },
+        permission: 'register_comission',
       },
       {
         title: 'Ver Comisiones',
         to: { name: 'comisiones-listado' },
         icon: { icon: 'ri-group-line' },
+        permission: 'list_comission',
+      },
+    ],
+  },
+ 
+  { heading: 'Documentacion', permissions: [
+"register_documents"
+,"list_documents"
+,"edit_documents"
+,"delete_documents"
+,"register_convocatories"
+,"list_convocatories"
+,"edit_convocatories"
+,"delete_convocatories"
+  ] },
+  {
+    title: 'Documentos',
+    icon: { icon: 'ri-file-upload-line' },
+    children: [
+      {
+        title: 'Subir Documento',
+        to: { name: 'documentos-subir' },
+        icon: { icon: 'ri-upload-cloud-line' },
+        permission: 'register_documents',
+      },
+      {
+        title: 'Ver Documentos',
+        to: { name: 'documentos-listado' },
+        icon: { icon: 'ri-folder-line' },
+        permission: 'list_documents',
       },
     ],
   },
   {
+    title: 'Convocatorias',
+    icon: { icon: 'ri-megaphone-line' },
+    children: [
+      {
+        title: 'Crear Convocatoria',
+        to: { name: 'convocatorias-crear' },
+        icon: { icon: 'ri-add-circle-line' },
+        permission: 'register_convocatories',
+      },
+      {
+        title: 'Ver Convocatorias',
+        to: { name: 'convocatorias-listado' },
+        icon: { icon: 'ri-calendar-event-line' },
+        permission: 'list_convocatories',
+      },
+    ],
+  },
+  { heading: 'Evaluaciones', permissions: [
+    "register_evaluation"
+,"list_evaluation"
+,"edit_evaluation"
+,"delete_evaluation"
+,"assign_evaluation_to_postulant"
+  ] },
+  {
+    title: 'Evaluaciones',
+    icon: { icon: 'ri-clipboard-line' },
+    children: [
+      {
+        title: 'Registrar Evaluación',
+        to: { name: 'evaluaciones-registrar' },
+        icon: { icon: 'ri-clipboard-fill' },
+        permission: 'register_evaluation',
+      },
+      {
+        title: 'Listado',
+        to: { name: 'evaluaciones-listado' },
+        icon: { icon: 'ri-list-check' },
+        permission: 'list_evaluation',
+      },
+    ],
+  },
+  
+ /* {
     title: 'Instituciones',
     icon: { icon: 'ri-building-line' },
     children: [
@@ -105,51 +151,34 @@ export default [
         title: 'Registrar',
         to: { name: 'instituciones-registrar' },
         icon: { icon: 'ri-add-line' },
+        permission: 'register_institution',
       },
       {
         title: 'Listado',
         to: { name: 'instituciones-listado' },
         icon: { icon: 'ri-bank-line' },
+        permission: 'list_institution',
       },
     ],
   },
 
-  { heading: 'Configuración' },
+  { heading: 'Calendario y Configuración', permissions: ['calendar'] },
+  {
+    title: 'Calendario',
+    to: { name: 'calendario' },
+    icon: { icon: 'ri-calendar-line' },
+    permission: 'calendar',
+  },*/
+  { heading: 'Configuración', permissions: [
+    "register_rol"
+,"list_rol"
+,"edit_rol"
+,"delete_rol"
+  ] },
   {
     title: 'Módulos y Operaciones',
     to: { name: 'modulos-operaciones' },
     icon: { icon: 'ri-settings-3-line' },
+    permission: 'register_rol',
   },
-
-  // {
-  //   title: 'second-page',
-  //   icon: { icon: 'ri-home-smile-line' },
-  //   children: [
-  //     {
-  //       title: 'CRM',
-  //       to: 'second-page',
-  //       icon: { icon: 'ri-computer-line' },
-  //     },
-  //     {
-  //       title: 'Analytics',
-  //       to: 'second-page',
-  //       icon: { icon: 'ri-bar-chart-line' },
-  //     },
-  //     {
-  //       title: 'eCommerce',
-  //       to: 'second-page',
-  //       icon: { icon: 'ri-shopping-cart-2-line' },
-  //     },
-  //     {
-  //       title: 'Academy',
-  //       to: 'second-page',
-  //       icon: { icon: 'ri-book-open-line' },
-  //     },
-  //     {
-  //       title: 'Logistics',
-  //       to: 'second-page',
-  //       icon: { icon: 'ri-truck-line' },
-  //     },
-  //   ],
-  // },
-]
+];
