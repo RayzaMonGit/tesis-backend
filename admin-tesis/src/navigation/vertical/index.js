@@ -3,16 +3,17 @@ export default [
     title: 'Dashboard',
     to: { name: 'dashboard' },
     icon: { icon: 'ri-bar-chart-2-line' },
-    permission: 'all',
+    permission:'all',
   },
-  { heading: 'Accesos', permissions: ['list_rol', "register_rol"
-,"list_rol",
+  { heading: 'Accesos', permissions: ['list_rol', "register_rol",
 "edit_rol",
 "delete_rol"] },
   {
     title: 'Usuarios',
     to: { name: 'staffs' },
-    permission: 'list_rol',
+    permissions:['list_rol', "register_rol",
+"edit_rol",
+"delete_rol"],
     icon: { icon: 'ri-user-3-line' },
     // Aquí no especificaste permiso, podrías agregarlo si lo deseas (ej: 'list_staff')
   },
@@ -20,14 +21,16 @@ export default [
     title: 'Roles y Permisos',
     to: { name: 'roles-permisos' },
     icon: { icon: 'ri-lock-password-line' },
-    permission: 'list_rol',
+    permissions:['list_rol', "register_rol",
+"edit_rol",
+"delete_rol"] ,
   },
 
   { heading: 'Gestión', permissions: ["register_postulant",
     "list_postulant"
 ,"edit_postulant"
 ,"delete_postulant"
-,"profile_postulant"
+//,"profile_postulant"
 ,"register_comission"
 ,"list_comission"
 ,"edit_comission"
@@ -42,13 +45,15 @@ export default [
         title: 'Registrar',
         to: { name: 'postulantes-registrar' },
         icon: { icon: 'ri-user-add-line' },
-        permission: 'register_postulant',
+        permission:'register_postulant',
       },
       {
         title: 'Listado',
         to: { name: 'postulantes-listado' },
         icon: { icon: 'ri-list-unordered' },
-        permission: 'list_postulant',
+        permissions: ["list_postulant"
+,"edit_postulant"
+,"delete_postulant"],
       },
     ],
   },
@@ -60,13 +65,15 @@ export default [
         title: 'Crear Comisión',
         to: { name: 'comisiones-crear' },
         icon: { icon: 'ri-user-add-line' },
-        permission: 'register_comission',
+        permission:'register_comission',
       },
       {
         title: 'Ver Comisiones',
         to: { name: 'comisiones-listado' },
         icon: { icon: 'ri-group-line' },
-        permission: 'list_comission',
+        permissions:["list_comission"
+,"edit_comission"
+,"delete_comission"],
       },
     ],
   },
@@ -89,7 +96,9 @@ export default [
         title: 'Subir Documento',
         to: { name: 'documentos-subir' },
         icon: { icon: 'ri-upload-cloud-line' },
-        permission: 'register_documents',
+        permissions:["register_documents",
+,"edit_documents"
+,"delete_documents"] ,
       },
       {
         title: 'Ver Documentos',
@@ -107,13 +116,15 @@ export default [
         title: 'Crear Convocatoria',
         to: { name: 'convocatorias-crear' },
         icon: { icon: 'ri-add-circle-line' },
-        permission: 'register_convocatories',
+        permissions:["register_convocatories"
+,"edit_convocatories"
+,"delete_convocatories"],
       },
       {
         title: 'Ver Convocatorias',
         to: { name: 'convocatorias-listado' },
         icon: { icon: 'ri-calendar-event-line' },
-        permission: 'list_convocatories',
+        permission:'list_convocatories',
       },
     ],
   },
@@ -132,7 +143,10 @@ export default [
         title: 'Registrar Evaluación',
         to: { name: 'evaluaciones-registrar' },
         icon: { icon: 'ri-clipboard-fill' },
-        permission: 'register_evaluation',
+        permissions:["register_evaluation"
+,"edit_evaluation"
+,"delete_evaluation"
+,"assign_evaluation_to_postulant"],
       },
       {
         title: 'Listado',
@@ -151,13 +165,13 @@ export default [
         title: 'Registrar',
         to: { name: 'instituciones-registrar' },
         icon: { icon: 'ri-add-line' },
-        permission: 'register_institution',
+        permissions:[] 'register_institution',
       },
       {
         title: 'Listado',
         to: { name: 'instituciones-listado' },
         icon: { icon: 'ri-bank-line' },
-        permission: 'list_institution',
+        permissions:[] 'list_institution',
       },
     ],
   },
@@ -167,7 +181,7 @@ export default [
     title: 'Calendario',
     to: { name: 'calendario' },
     icon: { icon: 'ri-calendar-line' },
-    permission: 'calendar',
+    permissions:[] 'calendar',
   },*/
   { heading: 'Configuración', permissions: [
     "register_rol"
@@ -179,6 +193,9 @@ export default [
     title: 'Módulos y Operaciones',
     to: { name: 'modulos-operaciones' },
     icon: { icon: 'ri-settings-3-line' },
-    permission: 'register_rol',
+    permissions:["register_rol"
+,"list_rol"
+,"edit_rol"
+,"delete_rol"],
   },
 ];

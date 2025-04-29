@@ -45,58 +45,69 @@ watch([
 
 const navItemsV = ref([]);
 onMounted(() => {
-  let USER = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
+  const USER = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
+  
   if (USER) {
     console.log(USER);
-    //lista e permisos del usuario autentificado
-    let permissions = USER.permissions;
-    navItems.forEach((nav) => {
-      //validamos si el usuario es superadmin
-      if (USER.role.name == 'Super-Admin') {
-        navItemsV.value.push(nav);
-      } else {
+    const permissions = USER.permissions;
+    console.log("Permisos del usuario:", permissions);
 
-        //los permisos que ienen all puede ser visto por cualquiiera
-        if(nav.permission == "all"){
-          navItemsV.value.push(nav);
+    navItemsV.value = []; // Limpiamos
+
+    navItems.forEach(nav => {
+      if (USER.role.name === 'Super-Admin') {
+        // Super Admin ve todo
+        navItemsV.value.push(nav);
+        return;
+      }
+
+      const navClone = { ...nav };
+
+      // -- HEADINGS
+      if (nav.heading && nav.permissions?.length) {
+        const hasPermission = nav.permissions.some(p => permissions.includes(p));
+        if (hasPermission) {
+          navItemsV.value.push(navClone);
         }
-        if(nav.heading){
-          //filtramos los permisos que se necesitan para ver el heading
-          let headingP = nav.permissions.filter((permission) => {
-            if(permissions.includes(permission)){
-              return true;
-            }
-            return false;
-          })
-          // SI TENEMOS ALMENOS UN PERMISO PUEDE VERSE EL HEADING
-          if(headingP.length > 0){
-            navItemsV.value.push(nav);
+      }
+
+      // -- ITEMS CON CHILDREN
+      else if (nav.children?.length) {
+        const filteredChildren = nav.children.filter(child => {
+          if (child.permission) {
+            return permissions.includes(child.permission);
+          } else if (child.permissions) {
+            return child.permissions.some(p => permissions.includes(p));
           }
+          return false;
+        });
+
+        if (filteredChildren.length > 0) {
+          navClone.children = filteredChildren;
+          navItemsV.value.push(navClone);
         }
-        //si el nav tiene submenus 
-        if(nav.children){
-          let navT = nav;
-          //filtramos si los submenus pueden ser vistos 
-          //con los permisos del usuario autentificado 
-          let newChildren = nav.children.filter((subnav) => {
-              if(permissions.includes(subnav.permission)){
-                return true;
-              }
-              return false;
-          });
-          //asignacion de los nuevos submenus
-          navT.children = newChildren;
-          navItemsV.value.push(navT);
-        }else{
-          //verificamos si los permisos de usuario pueden ver la opcion de navegacion
-          if(permissions.includes(nav.permission)){
-            navItemsV.value.push(nav);
+      }
+
+      // -- ITEMS NORMALES
+      else {
+        if (nav.permission) {
+          if (permissions.includes(nav.permission) || nav.permission === 'all') {
+            navItemsV.value.push(navClone);
+          }
+        } else if (nav.permissions) {
+          const hasPermission = nav.permissions.some(p => permissions.includes(p));
+          if (hasPermission) {
+            navItemsV.value.push(navClone);
           }
         }
       }
     });
+
+    console.log("Sidebar final:", navItemsV.value);
   }
-})
+});
+
+
 </script>
 
 <template>
