@@ -76,18 +76,41 @@ export const setupGuards = router => {
     if (to.meta.not_authenticated == false) {
       return true;
     }
+    
     if (!isLoggedIn && to.matched.length) {
       /* eslint-disable indent */
       return isLoggedIn
-        ? { name: 'not-authorized' }
-        : {
-          name: 'login',
-          query: {
-            ...to.query,
-            to: to.fullPath !== '/' ? to.path : undefined,
-          },
-        }
+      ? { name: 'not-authorized' }
+      : {
+        name: 'login',
+        query: {
+          ...to.query,
+          to: to.fullPath !== '/' ? to.path : undefined,
+        },
+      }
       /* eslint-enable indent */
     }
-  })
-}
+    
+    let USER=localStorage.getItem('user')?JSON.parse(localStorage.getItem('user')):null;
+    if (USER && USER.role.name !== 'Super-Admin') {
+      const userPermissions = USER.permissions || [];
+
+      const routePermission = to.meta.permission;
+      const routePermissions = to.meta.permissions;
+
+      if (routePermission && routePermission !== 'all' && !userPermissions.includes(routePermission)) {
+        return { name: 'not-authorized' };
+      }
+
+      if (Array.isArray(routePermissions)) {
+        const hasPermission = routePermissions.some(p => userPermissions.includes(p));
+        if (!hasPermission) {
+          return { name: 'not-authorized' };
+        }
+      }
+    }
+
+    // Si todo pasó, continuar navegación
+    return true;
+  });
+};

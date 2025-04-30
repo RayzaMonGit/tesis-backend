@@ -26,6 +26,60 @@ export default [
 "delete_rol"] ,
   },
 
+  
+  
+  { heading: 'Documentacion', permissions: [
+    "register_documents"
+    ,"list_documents"
+    ,"edit_documents"
+    ,"delete_documents"
+    ,"register_convocatories"
+    ,"list_convocatories"
+    ,"edit_convocatories"
+    ,"delete_convocatories"
+      ] },
+      {
+        title: 'Convocatorias',
+        icon: { icon: 'ri-megaphone-line' },
+        children: [
+          {
+            title: 'Crear Convocatoria',
+            to: { name: 'convocatorias-crear' },
+            icon: { icon: 'ri-add-circle-line' },
+            permissions:["register_convocatories"
+    ,"edit_convocatories"
+    ,"delete_convocatories"],
+          },
+          {
+            title: 'Ver Convocatorias',
+            to: { name: 'convocatorias-listado' },
+            icon: { icon: 'ri-calendar-event-line' },
+            permission:'list_convocatories',
+          },
+        ],
+      },
+      {
+        title: 'Documentos',
+        icon: { icon: 'ri-file-upload-line' },
+        children: [
+          {
+            title: 'Subir Documento',
+            to: { name: 'documentos-subir' },
+            icon: { icon: 'ri-upload-cloud-line' },
+            permissions:["register_documents",
+    ,"edit_documents"
+    ,"delete_documents"] ,
+          },
+          {
+            title: 'Ver Documentos',
+            to: { name: 'documentos-listado' },
+            icon: { icon: 'ri-folder-line' },
+            permission: 'list_documents',
+          },
+        ],
+      },
+      
+    
   { heading: 'Gestión', permissions: ["register_postulant",
     "list_postulant"
 ,"edit_postulant"
@@ -78,56 +132,6 @@ export default [
     ],
   },
  
-  { heading: 'Documentacion', permissions: [
-"register_documents"
-,"list_documents"
-,"edit_documents"
-,"delete_documents"
-,"register_convocatories"
-,"list_convocatories"
-,"edit_convocatories"
-,"delete_convocatories"
-  ] },
-  {
-    title: 'Documentos',
-    icon: { icon: 'ri-file-upload-line' },
-    children: [
-      {
-        title: 'Subir Documento',
-        to: { name: 'documentos-subir' },
-        icon: { icon: 'ri-upload-cloud-line' },
-        permissions:["register_documents",
-,"edit_documents"
-,"delete_documents"] ,
-      },
-      {
-        title: 'Ver Documentos',
-        to: { name: 'documentos-listado' },
-        icon: { icon: 'ri-folder-line' },
-        permission: 'list_documents',
-      },
-    ],
-  },
-  {
-    title: 'Convocatorias',
-    icon: { icon: 'ri-megaphone-line' },
-    children: [
-      {
-        title: 'Crear Convocatoria',
-        to: { name: 'convocatorias-crear' },
-        icon: { icon: 'ri-add-circle-line' },
-        permissions:["register_convocatories"
-,"edit_convocatories"
-,"delete_convocatories"],
-      },
-      {
-        title: 'Ver Convocatorias',
-        to: { name: 'convocatorias-listado' },
-        icon: { icon: 'ri-calendar-event-line' },
-        permission:'list_convocatories',
-      },
-    ],
-  },
   { heading: 'Evaluaciones', permissions: [
     "register_evaluation"
 ,"list_evaluation"

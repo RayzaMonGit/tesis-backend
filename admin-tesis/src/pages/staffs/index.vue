@@ -82,6 +82,15 @@ watch(isDeletestaffDialogVisible, (event) => {
     staff_Selected_deleted.value = null;
   }
 })
+
+definePage({
+  meta: {
+    permissions: ['list_rol', "register_rol",
+"edit_rol",
+"delete_rol"]
+  },
+})
+
 </script>
 
 <template>
