@@ -69,8 +69,7 @@ const logout = async () =>{
       class="cursor-pointer"
       size="38"
     >
-      <VImg :src="avatar1" />
-
+      <VImg :src="user.avatar ?user.avatar: avatar1" />
       <!-- SECTION Menu -->
       <VMenu
         activator="parent"

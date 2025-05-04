@@ -22,7 +22,7 @@ declare module 'vue-router/auto-routes' {
     '$error': RouteRecordInfo<'$error', '/:error(.*)', { error: ParamValue<true> }, { error: ParamValue<false> }>,
     'comisiones-crear': RouteRecordInfo<'comisiones-crear', '/comisiones-crear', Record<never, never>, Record<never, never>>,
     'comisiones-listado': RouteRecordInfo<'comisiones-listado', '/comisiones-listado', Record<never, never>, Record<never, never>>,
-    'convocatorias-crear': RouteRecordInfo<'convocatorias-crear', '/convocatorias-crear', Record<never, never>, Record<never, never>>,
+    'convocatorias-add': RouteRecordInfo<'convocatorias-add', '/convocatorias/add', Record<never, never>, Record<never, never>>,
     'convocatorias-listado': RouteRecordInfo<'convocatorias-listado', '/convocatorias-listado', Record<never, never>, Record<never, never>>,
     'dashboard': RouteRecordInfo<'dashboard', '/dashboard', Record<never, never>, Record<never, never>>,
     'documentos-listado': RouteRecordInfo<'documentos-listado', '/documentos-listado', Record<never, never>, Record<never, never>>,

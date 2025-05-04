@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Rol\RoleController;
 use App\Http\Controllers\Staff\StaffController;
+use App\Http\Controllers\Convocatorias\ConvocatoriaController;
  
 Route::group([
    // 'middleware' => 'api',
@@ -23,4 +24,7 @@ Route::group([
     //ruta post para actualizar los datos del usuario
     Route::post("staffs/{id}",[StaffController::class,"update"]);
     Route::resource("staffs",StaffController::class);
+
+    Route::post("convocatorias/{id}", [ConvocatoriaController::class, "update"]); // método POST para actualizar con archivos
+    Route::resource("convocatorias", ConvocatoriaController::class);
 });

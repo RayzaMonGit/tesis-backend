@@ -44,7 +44,7 @@ export default [
         children: [
           {
             title: 'Crear Convocatoria',
-            to: { name: 'convocatorias-crear' },
+            to: { name: 'convocatorias-add' },
             icon: { icon: 'ri-add-circle-line' },
             permissions:["register_convocatories"
     ,"edit_convocatories"
