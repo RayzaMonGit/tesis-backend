@@ -11,6 +11,7 @@ class convocatoria extends Model
 {
     use SoftDeletes;
     use HasFactory;
+    protected $table = 'convocatorias';
     protected $fillable = [
         'estado',
         'titulo',
@@ -21,11 +22,10 @@ class convocatoria extends Model
         'plazas_disponibles',
         'sueldo_referencial',
         'documento',
-        'requisitos_id',
     ];
 
     public function requisitos(){
-        return $this->hasMany(Requisitos::class,"requisitos_id");
+        return $this->hasMany(Requisitos::class,"id_convocatoria");
         
     }
     

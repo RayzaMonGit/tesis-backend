@@ -5,13 +5,15 @@ namespace App\Http\Controllers\Convocatorias;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Convocatorias\Convocatoria;
+use App\Models\Convocatorias\Requisitos;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Resources\Concvocatorias\ConvocatoriaCollection;
-
+use App\Http\Resources\Convocatorias\ConvocatoriaCollection;
+use App\Http\Resources\Convocatorias\ConvocatoriaResource;
 
 class ConvocatoriaController extends Controller
-{/**
+{
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
@@ -19,20 +21,17 @@ class ConvocatoriaController extends Controller
         $search = $request->get("search");
         $area = $request->get("area");
 
-        //users viene de la tabla users en la base de datos
-        $convocatorias = Convocatoria::where(function($q) use($search,$area){
+        $convocatorias = Convocatoria::where(function($q) use($search, $area){
             if($area){
-                $q->where("area",$area);
+                $q->where("area", $area);
             }
-           if($search){
-              $q->whereHas("requisitos",function($q) use($search){
-                $q->where(DB::raw("requisitos.descripcion"),"ilike","%".$search."%");
-             });
-
-           }
-
+            if($search){
+                $q->whereHas("requisitos", function($q) use($search){
+                    $q->where("descripcion", "ilike", "%".$search."%");
+                });
+            }
         })
-        ->orderBy("id","desc")->get();
+        ->orderBy("id", "desc")->get();
 
         return response()->json([
             "convocatorias" => ConvocatoriaCollection::make($convocatorias),
@@ -44,32 +43,80 @@ class ConvocatoriaController extends Controller
      */
     public function store(Request $request)
     {
+        // Iniciar transacción para garantizar que se guarden tanto la convocatoria como sus requisitos
+        DB::beginTransaction();
         
-        if($request->hasFile("documento")){
-            $path = Storage::putFile("convocatorias",$request->file("documento"));
-            $request->request->add(["documento" => $path]);
+        try {
+            // Procesar documento
+            if($request->hasFile("documento")){
+                $path = Storage::putFile("convocatorias", $request->file("documento"));
+                $request->request->add(["documento" => $path]);
+            }
+            
+            // Crear la convocatoria
+            $convocatoria = Convocatoria::create([
+                'titulo' => $request->titulo,
+                'descripcion' => $request->descripcion,
+                'area' => $request->area,
+                'fecha_inicio' => $request->fecha_inicio,
+                'fecha_fin' => $request->fecha_fin,
+                'estado' => $request->estado ?? 'Borrador',
+                'plazas_disponibles' => $request->plazas_disponibles,
+                'sueldo_referencial' => $request->sueldo_referencial,
+                'documento' => $request->documento,
+            ]);
+            
+            // Procesar requisitos obligatorios seleccionados
+            if ($request->has('requisitos_obligatorios')) {
+                $requisitosObligatorios = json_decode($request->requisitos_obligatorios, true);
+                
+                foreach ($requisitosObligatorios as $req) {
+                    if ($req['seleccionado']) {
+                        Requisitos::create([
+                            'id_convocatoria' => $convocatoria->id,
+                            'descripcion' => $req['texto'],
+                            'tipo' => 'Obligatorio'
+                        ]);
+                    }
+                }
+            }
+            
+            // Procesar requisitos personalizados
+            if ($request->has('requisitos_personalizados')) {
+                $requisitosPersonalizados = json_decode($request->requisitos_personalizados, true);
+                
+                foreach ($requisitosPersonalizados as $req) {
+                    Requisitos::create([
+                        'id_convocatoria' => $convocatoria->id,
+                        'descripcion' => $req['nombre'],
+                        'tipo' => $req['tipo']
+                    ]);
+                }
+            }
+            
+            DB::commit();
+            
+            return response()->json([
+                "message" => 200,
+                "convocatoria_id" => $convocatoria->id
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                "message" => 500,
+                "error" => $e->getMessage()
+            ], 500);
         }
-        
-        $convocatoria = Convocatoria::create($request->all());
-        $requisitos=Requisitos::create([
-            "descripcion"=>$request->descripcion,
-            "tipo"=>$request->tipo
-        ]);
-        $convocatoria->update([
-            "requisitos_id"=>$requisitos->id
-        ]);
-
-        return response()->json([
-            "message" => 200,
-        ]);
-   }
+    }
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        $convocatoria=Convocatoria::findOrFail($id);
+        $convocatoria = Convocatoria::with('requisitos')->findOrFail($id);
         return response()->json([
             "convocatoria" => ConvocatoriaResource::make($convocatoria),
         ]);
@@ -80,38 +127,117 @@ class ConvocatoriaController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $convocatoria=Convocatoria::findOrFail($id);
-        if($request->hasFile("documento")){
-            if($convocatoria->avatar){
-                Storage::delete($convocatoria->avatar);
-            }
-            $path=Storage::putFile("convocatorias",$request->file("documento"));
-            $request->request->add(["documento"=>$path]);
-        }
+        DB::beginTransaction();
         
-        $convocatoria->update($request->all());
-       $requisitos=$convocatoria->requisitos;
-        $requisitos->update([
-            "descripcion"=>$request->descripcion,
-            "tipo"=>$request->tipo
-        ]);
-        return response()->json([
-            "message"=>200,
-        ]);
+        try {
+            $convocatoria = Convocatoria::findOrFail($id);
+            
+            // Procesar documento
+            if($request->hasFile("documento")){
+                if($convocatoria->documento){
+                    Storage::delete($convocatoria->documento);
+                }
+                $path = Storage::putFile("convocatorias", $request->file("documento"));
+                $request->request->add(["documento" => $path]);
+            }
+            
+            // Actualizar convocatoria
+            $convocatoria->update([
+                'titulo' => $request->titulo ?? $convocatoria->titulo,
+                'descripcion' => $request->descripcion ?? $convocatoria->descripcion,
+                'area' => $request->area ?? $convocatoria->area,
+                'fecha_inicio' => $request->fecha_inicio ?? $convocatoria->fecha_inicio,
+                'fecha_fin' => $request->fecha_fin ?? $convocatoria->fecha_fin,
+                'estado' => $request->estado ?? $convocatoria->estado,
+                'plazas_disponibles' => $request->plazas_disponibles ?? $convocatoria->plazas_disponibles,
+                'sueldo_referencial' => $request->sueldo_referencial ?? $convocatoria->sueldo_referencial,
+                'documento' => $request->documento ?? $convocatoria->documento,
+            ]);
+            
+            // Si se están actualizando los requisitos, eliminar los anteriores
+            if ($request->has('requisitos_obligatorios') || $request->has('requisitos_personalizados')) {
+                // Eliminar requisitos existentes
+                Requisitos::where('id_convocatoria', $convocatoria->id)->delete();
+                
+                // Procesar requisitos obligatorios seleccionados
+                if ($request->has('requisitos_obligatorios')) {
+                    $requisitosObligatorios = json_decode($request->requisitos_obligatorios, true);
+                    
+                    foreach ($requisitosObligatorios as $req) {
+                        if ($req['seleccionado']) {
+                            Requisitos::create([
+                                'id_convocatoria' => $convocatoria->id,
+                                'descripcion' => $req['texto'],
+                                'tipo' => 'Obligatorio'
+                            ]);
+                        }
+                    }
+                }
+                
+                // Procesar requisitos personalizados
+                if ($request->has('requisitos_personalizados')) {
+                    $requisitosPersonalizados = json_decode($request->requisitos_personalizados, true);
+                    
+                    foreach ($requisitosPersonalizados as $req) {
+                        Requisitos::create([
+                            'id_convocatoria' => $convocatoria->id,
+                            'descripcion' => $req['nombre'],
+                            'tipo' => $req['tipo']
+                        ]);
+                    }
+                }
+            }
+            
+            DB::commit();
+            
+            return response()->json([
+                "message" => 200
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                "message" => 500,
+                "error" => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
-    {$convocatoria = Convocatoria::findOrFail($id);
-        if($convocatoria->avatar){
-            Storage::delete($convocatoria->avatar);
+    {
+        DB::beginTransaction();
+        
+        try {
+            $convocatoria = Convocatoria::findOrFail($id);
+            
+            // Eliminar documento asociado
+            if($convocatoria->documento){
+                Storage::delete($convocatoria->documento);
+            }
+            
+            // Eliminar requisitos asociados
+            Requisitos::where('id_convocatoria', $convocatoria->id)->delete();
+            
+            // Eliminar convocatoria
+            $convocatoria->delete();
+            
+            DB::commit();
+            
+            return response()->json([
+                "message" => 200
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                "message" => 500,
+                "error" => $e->getMessage()
+            ], 500);
         }
-        $convocatoria->delete();
-
-        return response()->json([
-            "message" => 200,
-        ]);
     }
 }

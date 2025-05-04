@@ -11,8 +11,8 @@ class requisitos extends Model
 {
     use SoftDeletes;
     use HasFactory;
+    protected $table = 'requisitos';
     protected $fillable = [
-        'requisitos_id',
         'id_convocatoria',
         'descripcion',
         'tipo',

@@ -1,5 +1,6 @@
 <script setup>
 import { VExpansionPanelTitle } from 'vuetify/components';
+import { load } from 'webfontloader';
 
 const activeTab = ref('info');
 const estados = [
@@ -12,7 +13,7 @@ const hoy = new Date().toISOString().split('T')[0]
 const formRef = ref(null)
 
 const from = ref({
-  id_convocatoria: null,
+  id: null,
   titulo: null,
   descripcion: null,
   area: null,
@@ -64,6 +65,7 @@ const store = async () => {
   console.log("Guardando...")
 
   warning.value = null;
+  // Validaciones existentes
   if (!from.value.titulo) {
     warning.value = "Se debe llenar el TÍTULO del cargo";
     return;
@@ -95,21 +97,19 @@ const store = async () => {
   formData.append('fecha_fin', from.value.fecha_fin);
   formData.append('estado', "Borrador");
   formData.append('plazas_disponibles', from.value.plazas_disponibles);
-  //formData.append('documento', from.value.documento);
+  
   if (from.value.sueldo_referencial) {
     formData.append('sueldo_referencial', from.value.sueldo_referencial);
-  } if (FILE_DOCUMENTO.value) {
-    formData.append('documento', FILE_DOCUMENTO.value)
+  } 
+  if (FILE_DOCUMENTO.value) {
+    formData.append('documento', FILE_DOCUMENTO.value);
   }
 
-
-  //si solo fuera texto utilizaria el let data={}
-  //pero como tiene un archivo como el de imagen utilizo el FormData()
-
-  //el nombre de "imagen" viene desde StaffController
-  //formData.append('imagen', FILE_AVATAR.value);
-
-
+  // Preparar y enviar los requisitos obligatorios
+  formData.append('requisitos_obligatorios', JSON.stringify(requisitosObligatorios.value));
+  
+  // Preparar y enviar los requisitos personalizados
+  formData.append('requisitos_personalizados', JSON.stringify(requisitosPersonalizados.value));
 
   try {
     const resp = await $api('/convocatorias', {
@@ -127,9 +127,8 @@ const store = async () => {
         success.value = null
         warning.value = null
         error_exsist.value = null
-        // emit('update:isDialogVisible', false)
-        // emit('addConvocatoria', resp.convocatoria)
-        // fieldsClean();
+        // Navegar a la lista de convocatorias o limpiar formulario
+        // router.push('/convocatorias');
       }, 1500)
     } else if (resp.message === 403) {
       warning.value = resp.message_text
