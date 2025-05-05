@@ -52,7 +52,7 @@ export default [
           },
           {
             title: 'Ver Convocatorias',
-            to: { name: 'convocatorias-listado' },
+            to: { name: 'convocatorias-list' },
             icon: { icon: 'ri-calendar-event-line' },
             permission:'list_convocatories',
           },
