@@ -144,6 +144,8 @@ const store = async () => {
     }
 }
 const loadFile= ($event)=>{
+    /*console.log(IMAGEN_PREVIZUALIZA.value);
+    console.log(FILE_AVATAR.value);*/
     if($event.target.files[0].type.indexOf("image") < 0){
         FILE_AVATAR.value = null;
         IMAGEN_PREVIZUALIZA.value = null;

@@ -124,12 +124,14 @@ const store = async () => {
     if (resp.message === 200) {
       success.value = "Convocatoria registrada correctamente"
       setTimeout(() => {
-        success.value = null
-        warning.value = null
-        error_exsist.value = null
+        success.value = null;
+        warning.value = null;
+        error_exsist.value = null;
+        // Limpiar formulario
+        fileClean();
         // Navegar a la lista de convocatorias o limpiar formulario
         // router.push('/convocatorias');
-      }, 1500)
+      }, 1000)
     } else if (resp.message === 403) {
       warning.value = resp.message_text
     }
@@ -183,6 +185,35 @@ const agregarRequisito = () => {
   nuevoRequisito.value.nombre = '';
   nuevoRequisito.value.tipo = 'Obligatorio';
 };
+const fileClean=()=>{
+  FILE_DOCUMENTO.value = null;
+  NOMBRE_ARCHIVO_PREVIZUALIZA.value = null;
+  from.value.id = null;
+  from.value.titulo = null;  
+  from.value.descripcion = null;
+  from.value.area = null;
+  from.value.fecha_inicio = null;
+  from.value.fecha_fin = null;
+  from.value.plazas_disponibles = null;
+  from.value.sueldo_referencial = null;
+  requisitosObligatorios.value = [
+    { texto: "1. Cédula de Identidad Vigente", seleccionado: false },
+    { texto: "2. Libreta de Servicio Militar (Para varones)", seleccionado: false },
+    { texto: "3. Título en Provisión Nacional o Título Profesional con grado académico de Técnico Superior o Licenciatura en el área establecido en el cuadro de cargos convocados.", seleccionado: false },
+    { texto: "4. Diploma de Posgrado en Educación Superior", seleccionado: false },
+    { texto: "5. Experiencia Profesional Específica de dos (2) años en el área de su formación,certificada por instituciones legalmente constituidas.", seleccionado: false },
+    { texto: "6. Certificado de Lengua Originaria, emitido por instituciones reconocidas por el Ministerio de Educación (EGPP, IPLC y UNEFCO) y Viceministerio de Descolonización (de cualquier idioma oficial del Estado Plurinacional de Bolivia).", seleccionado: false },
+    { texto: "7. Certificación REJAP, que acredite No contar con procesos y antecedentes penales.", seleccionado: false },
+    { texto: "8. Certificación CENVI (ex SIPASSE), que acredite No contar con procesos antecedentes de violencia ejercida contra la mujer o cualquier miembro de familia.", seleccionado: false },
+    { texto: "9. Certificación de No contar con procesos administrativos con Resolución Final Sancionatoria Ejecutoriada, certificado emitido por la Dirección Departamental de Educación.", seleccionado: false },
+    { texto: "10. Certificación de No contar con imputación formal en los casos de acoso y violencia sexual contra estudiantes en el marco del Decreto Supremo N° 1302 de 1 de agosto de 2012 modificado por Decreto Supremo N° 1320 de 8 de agosto de 2012, emitida por la Unidad de Asuntos Jurídicos de las Direcciones Departamentales de Educación o Dirección General de Asuntos Jurídicos del Ministerio de Educación.", seleccionado: false },
+    { texto: "11. Declaración jurada de incompatibilidad laboral y Salarial.", seleccionado: false },
+  ];
+  requisitosPersonalizados.value = [];
+todosSeleccionados.value = false;
+mostrarDocumento.value = false;
+
+}
 
 </script>
 <template>

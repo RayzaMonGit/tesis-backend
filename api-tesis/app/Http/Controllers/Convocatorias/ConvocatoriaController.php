@@ -48,9 +48,11 @@ class ConvocatoriaController extends Controller
         
         try {
             // Procesar documento
+            $documentoPath = null;
             if($request->hasFile("documento")){
-                $path = Storage::putFile("convocatorias", $request->file("documento"));
-                $request->request->add(["documento" => $path]);
+                /*$path = $request->file("documento")->store("convocatorias", "public");
+                $request->request->add(["documento" => $path]);*/
+                $documentoPath = $request->file("documento")->store("convocatorias", "public");
             }
             
             // Crear la convocatoria
@@ -63,7 +65,7 @@ class ConvocatoriaController extends Controller
                 'estado' => $request->estado ?? 'Borrador',
                 'plazas_disponibles' => $request->plazas_disponibles,
                 'sueldo_referencial' => $request->sueldo_referencial,
-                'documento' => $request->documento,
+                'documento' => $documentoPath,
             ]);
             
             // Procesar requisitos obligatorios seleccionados
@@ -98,7 +100,7 @@ class ConvocatoriaController extends Controller
             
             return response()->json([
                 "message" => 200,
-                "convocatoria_id" => $convocatoria->id
+                "convocatoria" => $convocatoria->id
             ]);
             
         } catch (\Exception $e) {
@@ -137,7 +139,8 @@ class ConvocatoriaController extends Controller
                 if($convocatoria->documento){
                     Storage::delete($convocatoria->documento);
                 }
-                $path = Storage::putFile("convocatorias", $request->file("documento"));
+                $path = $request->file("documento")->store("convocatorias", "public");
+
                 $request->request->add(["documento" => $path]);
             }
             

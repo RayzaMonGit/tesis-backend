@@ -24,7 +24,7 @@ class ConvocatoriaResource extends JsonResource
             "fecha_fin" => $this->resource->fecha_fin,
             "plazas_disponibles" => $this->resource->plazas_disponibles,
             "sueldo_referencial" => $this->resource->sueldo_referencial,
-            "documento" => env("APP_URL")."/storage/".$this->resource->documento,
+            'documento' => $this->resource->documento ? env("APP_URL")."storage/".$this->resource->documento : NULL,
             "requisitos" => $this->resource->requisitos->map(function($requisito) {
                 return [
                     "id" => $requisito->id,
