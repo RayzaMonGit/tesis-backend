@@ -11,10 +11,31 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\User\UserResource;
 use App\Http\Resources\User\UserCollection;
+use App\Http\Resources\Convocatorias\RequisitoResource;
+
+
 
 
 class ConvocatoriaController extends Controller
 {
+    public function requisitos($id)
+{
+    try {
+        $convocatoria = Convocatoria::with('requisitos')->findOrFail($id);
+
+        return response()->json([
+            'requisitos' => RequisitoResource::collection($convocatoria->requisitos),
+            'status' => 'success'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'requisitos' => [],
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
     public function index(Request $request)
     {
         // Solo las publicadas

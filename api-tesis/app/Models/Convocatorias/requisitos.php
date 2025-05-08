@@ -13,6 +13,7 @@ class requisitos extends Model
     use HasFactory;
     protected $table = 'requisitos';
     protected $fillable = [
+        'id',
         'id_convocatoria',
         'descripcion',
         'tipo',
@@ -20,6 +21,6 @@ class requisitos extends Model
 
     public function convocatoria()
 {
-    return $this->belongsTo(Convocatoria::class, 'id_convocatoria');
+    return $this->belongsTo(Convocatoria::class, 'id_convocatoria','id');
 }
 }

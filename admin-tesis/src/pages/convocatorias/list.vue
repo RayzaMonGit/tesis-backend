@@ -58,7 +58,7 @@ const deleteConvocatoria = (item) => {
     if (INDEX != -1) {
         convocatorias.value.splice(INDEX, 1);
     }
-}
+}*/
 
 const verRequisitos = async (item) => {
     convocatoriaSeleccionada.value = item;
@@ -95,8 +95,9 @@ const verRequisitos = async (item) => {
         console.error("Error al obtener requisitos:", error);
         requisitosConvocatoria.value = [];
     }
-}*/
+}
 // Esta función reemplazaría tu actual verRequisitos
+/*
 const verRequisitos = async (item) => {
     convocatoriaSeleccionada.value = item;
     console.log("Convocatoria seleccionada:", item);
@@ -118,7 +119,7 @@ const verRequisitos = async (item) => {
         console.error("Error al obtener requisitos:", error);
         requisitosConvocatoria.value = [];
     }
-}
+}*/
 
 const reset = () => {
     searchQuery.value = null;
@@ -275,7 +276,7 @@ definePage({
 
                                 <div class="d-flex gap-1">
                                     <!--para ver los requisitos individuales de cada convovatoria-->
-                                    <IconBtn size="small"  title="Ver requisitos" @click="verRequisitos(item)">
+                                    <IconBtn size="small"  title="Ver requisitos" @click="verRequisitos(item) ">
                                         <VIcon icon="ri-file-list-3-line" />
                                     </IconBtn>
                                 </div>

@@ -5,7 +5,8 @@ namespace App\Models\Convocatorias;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Convocatorias\requisitos;
+//use App\Models\Convocatorias\requisitos;
+use App\Models\Convocatorias\Requisitos;
 
 class convocatoria extends Model
 {
@@ -25,7 +26,10 @@ class convocatoria extends Model
     ];
 
     public function requisitos(){
-        return $this->hasMany(Requisitos::class,"id_convocatoria","id");
+        //return $this->hasMany(Requisitos::class,"id_convocatoria","id");
+        //return $this->hasMany(Requisitos::class);
+        return $this->hasMany(Requisitos::class, 'id_convocatoria', 'id');
+
         
     }
     
