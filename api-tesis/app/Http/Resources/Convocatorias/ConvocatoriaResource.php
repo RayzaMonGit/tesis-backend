@@ -25,13 +25,15 @@ class ConvocatoriaResource extends JsonResource
             "plazas_disponibles" => $this->resource->plazas_disponibles,
             "sueldo_referencial" => $this->resource->sueldo_referencial,
             'documento' => $this->resource->documento ? env("APP_URL")."storage/".$this->resource->documento : NULL,
-            "requisitos" => $this->resource->requisitos->map(function($requisito) {
-                return [
-                    "id" => $requisito->id,
-                    "descripcion" => $requisito->descripcion,
-                    "tipo" => $requisito->tipo,
-                ];
-            }),
+            "requisitos" => collect($this->resource->requisitos)->map(function($requisito) {
+    return [
+        "id" => $requisito->id,
+        "descripcion" => $requisito->descripcion,
+        "tipo" => $requisito->tipo,
+        "id_convocatoria" => $requisito->id_convocatoria,
+    ];
+}),
+
         ];
     }
 }

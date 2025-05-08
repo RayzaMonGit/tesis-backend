@@ -4,7 +4,7 @@ import { load } from 'webfontloader';
 
 const activeTab = ref('info');
 const estados = [
-  'Borrador', 'Publicado', 'Cerrado', 'Anulado'
+  'Borrador', 'Abierta', 'Cerrado', 'Anulado'
 ]
 // Fecha actual para validaciones
 const hoy = new Date().toISOString().split('T')[0]
@@ -21,6 +21,7 @@ const from = ref({
   fecha_fin: null,
   plazas_disponibles: null,
   sueldo_referencial: null,
+  estado: 'Borrador',
 
   //documento: null,
 });
@@ -95,7 +96,7 @@ const store = async () => {
   formData.append('area', from.value.area);
   formData.append('fecha_inicio', from.value.fecha_inicio);
   formData.append('fecha_fin', from.value.fecha_fin);
-  formData.append('estado', "Borrador");
+  formData.append('estado', from.value.estado);
   formData.append('plazas_disponibles', from.value.plazas_disponibles);
   
   if (from.value.sueldo_referencial) {
@@ -196,6 +197,7 @@ const fileClean=()=>{
   from.value.fecha_fin = null;
   from.value.plazas_disponibles = null;
   from.value.sueldo_referencial = null;
+  from.value.estado = 'Borrador';
   requisitosObligatorios.value = [
     { texto: "1. Cédula de Identidad Vigente", seleccionado: false },
     { texto: "2. Libreta de Servicio Militar (Para varones)", seleccionado: false },
@@ -212,6 +214,7 @@ const fileClean=()=>{
   requisitosPersonalizados.value = [];
 todosSeleccionados.value = false;
 mostrarDocumento.value = false;
+
 
 }
 
@@ -267,8 +270,19 @@ mostrarDocumento.value = false;
                 required />
             </VCol>
 
+            <!-- PLAZAS DISPONIBLES -->
+            <VCol cols="12" md="4">
+              <VTextField v-model="from.plazas_disponibles" label="Plazas disponibles" placeholder="Ej: 1" type="number"
+                :rules="[v => v > 0 || 'Debe ser un número mayor a 0']" required />
+            </VCol>
+
+            <!-- SUELDO REFERENCIAL -->
+            <VCol cols="12" md="4">
+              <VTextField v-model="from.sueldo_referencial" label="Sueldo referencial" placeholder="Ej: 3500 Bs."
+                type="number" :rules="[v => v >= 0 || 'Debe ser un número válido']"  />
+            </VCol>
             <!-- ESTADO -->
-            <!--<VCol cols="12" md="6">
+            <VCol cols="12" md="4">
           <VSelect
             v-model="from.estado"
             :items="estados"
@@ -277,19 +291,7 @@ mostrarDocumento.value = false;
             :rules="[v => !!v || 'Selecciona un estado']"
             required
           />
-        </VCol>-->
-
-            <!-- PLAZAS DISPONIBLES -->
-            <VCol cols="12" md="6">
-              <VTextField v-model="from.plazas_disponibles" label="Plazas disponibles" placeholder="Ej: 1" type="number"
-                :rules="[v => v > 0 || 'Debe ser un número mayor a 0']" required />
-            </VCol>
-
-            <!-- SUELDO REFERENCIAL -->
-            <VCol cols="12" md="6">
-              <VTextField v-model="from.sueldo_referencial" label="Sueldo referencial" placeholder="Ej: 3500 Bs."
-                type="number" :rules="[v => v >= 0 || 'Debe ser un número válido']" />
-            </VCol>
+        </VCol>
 
             <!-- DOCUMENTO -->
             <VCol cols="12" md="12">

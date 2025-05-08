@@ -2,125 +2,40 @@
 const router = useRouter()
 const searchQuery = ref(null);
 const estado = ref(null);
-const estados = ref(['Abierta', 'Cerrada', 'Borrador', 'Finalizada']);
+const estados = ref(['Abierta', 'Cerrado', 'Borrador', 'Anulado']);
 const convocatorias = ref([]);
 const currentPage = ref(1);
 const totalPage = ref(1);
 const convocatoria_selected_deleted = ref(null);
 const isDeleteConvocatoriaDialogVisible = ref(false);
+
+
 const showRequisitosDialog = ref(false);
 const requisitosConvocatoria = ref([]);
 const convocatoriaSeleccionada = ref(null);
 
-// Datos de ejemplo para desarrollo mientras la API esté en desarrollo
-const convocatoriasMock = [
-    {
-        id: 1,
-        titulo: 'Convocatoria para Becas Universitarias',
-        descripcion: 'Becas para estudiantes de pregrado con alto rendimiento académico',
-        fecha_inicio: '2025-05-01',
-        fecha_fin: '2025-06-15',
-        estado: 'Abierta',
-        imagen: null
-    },
-    {
-        id: 2,
-        titulo: 'Fondos para Investigación',
-        descripcion: 'Fondos destinados a proyectos de investigación científica',
-        fecha_inicio: '2025-04-15',
-        fecha_fin: '2025-05-30',
-        estado: 'Borrador',
-        imagen: null
-    },
-    {
-        id: 3,
-        titulo: 'Concurso de Innovación Tecnológica',
-        descripcion: 'Para startups y emprendedores con ideas innovadoras',
-        fecha_inicio: '2025-03-10',
-        fecha_fin: '2025-04-10',
-        estado: 'Cerrada',
-        imagen: null
-    },
-    {
-        id: 4,
-        titulo: 'Subsidio para Proyectos Comunitarios',
-        descripcion: 'Apoyo financiero para iniciativas que beneficien a comunidades locales',
-        fecha_inicio: '2025-06-01',
-        fecha_fin: '2025-07-15',
-        estado: 'Finalizada',
-        imagen: null
-    }
-];
 
-const requisitosMock = {
-    1: [
-        { id: 1, nombre: 'Certificado académico', descripcion: 'Promedio mínimo de 8.0', obligatorio: true },
-        { id: 2, nombre: 'Carta de motivación', descripcion: 'Explicar por qué merece la beca', obligatorio: true },
-        { id: 3, nombre: 'Situación socioeconómica', descripcion: 'Documentos que acrediten situación familiar', obligatorio: true },
-        { id: 4, nombre: 'Actividades extracurriculares', descripcion: 'Participación en eventos académicos', obligatorio: false }
-    ],
-    2: [
-        { id: 5, nombre: 'Propuesta de investigación', descripcion: 'Documento detallado con objetivos', obligatorio: true },
-        { id: 6, nombre: 'CV del investigador principal', descripcion: 'Experiencia y publicaciones previas', obligatorio: true },
-        { id: 7, nombre: 'Presupuesto detallado', descripcion: 'Desglose de gastos previstos', obligatorio: true },
-        { id: 8, nombre: 'Cartas de recomendación', descripcion: 'Al menos dos referencias académicas', obligatorio: false }
-    ],
-    3: [
-        { id: 9, nombre: 'Plan de negocio', descripcion: 'Modelo de negocio y proyecciones', obligatorio: true },
-        { id: 10, nombre: 'Prototipo o demo', descripcion: 'Versión funcional del producto', obligatorio: true },
-        { id: 11, nombre: 'Equipo de trabajo', descripcion: 'CV de los miembros del equipo', obligatorio: true },
-        { id: 12, nombre: 'Patentes relacionadas', descripcion: 'Si existen patentes previas', obligatorio: false }
-    ],
-    4: [
-        { id: 13, nombre: 'Descripción del proyecto', descripcion: 'Objetivos y beneficiarios', obligatorio: true },
-        { id: 14, nombre: 'Impacto comunitario', descripcion: 'Beneficios esperados para la comunidad', obligatorio: true },
-        { id: 15, nombre: 'Cronograma de actividades', descripcion: 'Planificación temporal del proyecto', obligatorio: true },
-        { id: 16, nombre: 'Sostenibilidad', descripcion: 'Plan para continuidad después del subsidio', obligatorio: true }
-    ]
-};
 
 const list = async () => {
     try {
-        // Intenta usar la API real primero
-        const resp = await $api('/convocatorias?page=' + currentPage.value +
-  '&search=' + (searchQuery.value ? searchQuery.value : '') +
-  '&estado=' + (estado.value ? estado.value : '')
-
-            , {
+            // Intenta usar la API real primero
+            const resp = await $api('/convocatorias?page=' + currentPage.value + 
+            '&search=' + (searchQuery.value ? searchQuery.value : '') +
+            '&estado=' + (estado.value ? estado.value : '')
+            ,{
                 method: 'GET',
-                onResponseError({ response }) {
-    console.error("Error API:", response);
-    throw new Error(response._data?.message || 'Error al obtener las convocatorias');
-}
-
+                onResponseError({response}){
+                  console.log("Error API:", response);
+                  throw new Error("API Error");
+                }
             });
             console.log("Respuesta API:", resp);
 
-        totalPage.value = resp.total_page;
-        convocatorias.value = resp.convocatorias.data;
+            convocatorias.value = resp.data;
+totalPage.value = resp.meta.last_page;
+
     } catch (error) {
-        console.log("Usando datos mock debido a error de API:", error);
-/*
-        // Filtrado local de datos mock
-        let filteredData = [...convocatoriasMock];
-
-        if (searchQuery.value) {
-            const query = searchQuery.value.toLowerCase();
-            filteredData = filteredData.filter(item =>
-                item.titulo.toLowerCase().includes(query) ||
-                item.descripcion.toLowerCase().includes(query)
-            );
-        }
-
-        if (estado.value) {
-            filteredData = filteredData.filter(item =>
-                item.estado === estado.value
-            );
-        }
-
-        // Simular paginación
-        totalPage.value = 1;  // Con pocos datos mock solo necesitamos 1 página
-        convocatorias.value = filteredData;*/
+        console.log("Error de API:", error);
     }
 }
 /*
@@ -144,28 +59,66 @@ const deleteConvocatoria = (item) => {
         convocatorias.value.splice(INDEX, 1);
     }
 }
-*/
-/*const verRequisitos = async (item) => {
+
+const verRequisitos = async (item) => {
     convocatoriaSeleccionada.value = item;
+    requisitosConvocatoria.value = []; // Reiniciar requisitos
+    showRequisitosDialog.value = true; // Mostrar el diálogo inmediatamente
 
     try {
-        // Intenta usar la API real primero
         const resp = await $api('/convocatorias/' + item.id + '/requisitos', {
             method: 'GET',
             onResponseError({ response }) {
-                console.log("Error API requisitos:", response);
+                console.error("Error API requisitos:", response);
                 throw new Error("API Error");
             }
         });
-        requisitosConvocatoria.value = resp.requisitos;
-    } catch (error) {
-        console.log("Usando datos mock de requisitos debido a error de API:", error);
-        // Usar datos mock para los requisitos
-        requisitosConvocatoria.value = requisitosMock[item.id] || [];
-    }
 
-    showRequisitosDialog.value = true;
+        console.log("Respuesta requisitos:", resp);
+
+        // Manejar diferentes formatos de respuesta
+        if (resp && resp.requisitos) {
+            if (Array.isArray(resp.requisitos) && resp.requisitos.length > 0) {
+                requisitosConvocatoria.value = resp.requisitos;
+            } else {
+                console.log("No se encontraron requisitos para esta convocatoria");
+                requisitosConvocatoria.value = [];
+            }
+        } else if (resp && Array.isArray(resp)) {
+            // Si la respuesta es directamente un array
+            requisitosConvocatoria.value = resp;
+        } else {
+            console.error("La estructura de respuesta no es la esperada:", resp);
+            requisitosConvocatoria.value = [];
+        }
+    } catch (error) {
+        console.error("Error al obtener requisitos:", error);
+        requisitosConvocatoria.value = [];
+    }
 }*/
+// Esta función reemplazaría tu actual verRequisitos
+const verRequisitos = async (item) => {
+    convocatoriaSeleccionada.value = item;
+    console.log("Convocatoria seleccionada:", item);
+    //mostrar requisitos
+    
+    //recuperar datos de requisitos
+    try {
+        const resp = await $api('/convocatorias/' + item.id + '/requisitos', {
+            method: 'GET',
+                    onResponseError({response}){
+                      console.log("Error API:", response);
+                      throw new Error("API Error");
+                    }
+                });
+        
+        console.log("Respuesta requisitos:", resp);
+       
+    } catch (error) {
+        console.error("Error al obtener requisitos:", error);
+        requisitosConvocatoria.value = [];
+    }
+}
 
 const reset = () => {
     searchQuery.value = null;
@@ -181,6 +134,7 @@ const avatarText = value => {
 
     return nameArray.map(word => word.charAt(0).toUpperCase()).join('')
 }
+*/
 
 watch(currentPage, (val) => {
     console.log(val);
@@ -199,7 +153,6 @@ watch(showRequisitosDialog, (val) => {
         convocatoriaSeleccionada.value = null;
     }
 })
-*/
 onMounted(() => {
     list()
 })
@@ -217,20 +170,39 @@ definePage({
             <VCardText class="d-flex flex-wrap gap-4">
                 <div class="d-flex align-center">
                     <!-- 👉 busqueda  -->
-                    <VTextField v-model="searchQuery" placeholder="Buscar convocatorias" style="inline-size: 300px;"
-                        density="compact" class="me-3" @keyup.enter="list" />
+                    <VTextField
+                        v-model="searchQuery"
+                        placeholder="Buscar convocatorias"
+                        style="inline-size: 300px;"
+                        density="compact"
+                        class="me-3"
+                        @keyup.enter="list"
+                    />
                 </div>
-                <!-- 👉 busqueda por requisitos  -->
                 <div>
-                    <VSelect :items="estados" v-model="estado" style="inline-size: 300px;" label="Estado"
-                        placeholder="Seleccionar estado" eager />
+                    <VSelect
+                        :items="estados"
+                        v-model="estado"
+                        style="inline-size: 300px;"
+                        label="Estado"
+                        placeholder="Seleccionar estado"
+                        eager
+                    />
                 </div>
                 <div>
-                    <!-- 👉 lupa  -->
-                    <VBtn color="info" class="mx-1" prepend-icon="ri-search-2-line" @click="list()">
+                    <VBtn
+                        color="info"
+                        class="mx-1"
+                        prepend-icon="ri-search-2-line"
+                        @click="list()"
+                    >
                     </VBtn>
-                    <!-- 👉 recargar  -->
-                    <VBtn color="secondary" class="mx-1" prepend-icon="ri-restart-line" @click="reset()">
+                    <VBtn
+                        color="secondary"
+                        class="mx-1"
+                        prepend-icon="ri-restart-line"
+                        @click="reset()"
+                    >
                     </VBtn>
                 </div>
                 <VSpacer />
@@ -271,6 +243,7 @@ definePage({
                     </thead>
 
                     <tbody>
+                        <!--para ver  cada convovatoria-->
                         <tr v-for="item in convocatorias" :key="item.id">
                             <td>
                                 <div class="d-flex align-center">
@@ -293,7 +266,7 @@ definePage({
                             </td>
                             <td>
                                 <VChip :color="item.estado === 'Abierta' ? 'success' :
-                                    item.estado === 'Cerrada' ? 'error' :
+                                    item.estado === 'Cerrado' ? 'error' :
                                         item.estado === 'Borrador' ? 'warning' : 'info'" size="small">
                                     {{ item.estado }}
                                 </VChip>
@@ -302,7 +275,7 @@ definePage({
 
                                 <div class="d-flex gap-1">
                                     <!--para ver los requisitos individuales de cada convovatoria-->
-                                    <IconBtn size="small"  title="Ver requisitos">
+                                    <IconBtn size="small"  title="Ver requisitos" @click="verRequisitos(item)">
                                         <VIcon icon="ri-file-list-3-line" />
                                     </IconBtn>
                                 </div>
@@ -312,10 +285,10 @@ definePage({
                             <td>
                                 <div class="d-flex gap-1">
 
-                                    <IconBtn size="small" @click="editItem(item)" title="Editar">
+                                    <IconBtn size="small" title="Editar">
                                         <VIcon icon="ri-pencil-line" />
                                     </IconBtn>
-                                    <IconBtn size="small" @click="deleteItem(item)" title="Eliminar">
+                                    <IconBtn size="small" title="Eliminar">
                                         <VIcon icon="ri-delete-bin-line" />
                                     </IconBtn>
                                 </div>
@@ -326,6 +299,60 @@ definePage({
 
                 <VPagination v-model="currentPage" :length="totalPage" />
             </VCardText>
+            
+            <VDialog v-model="showRequisitosDialog" max-width="600">
+  <VCard>
+    <VCardTitle>
+      <VIcon icon="ri-file-list-3-line" class="me-2" />
+      Requisitos de {{ convocatoriaSeleccionada?.titulo }}
+    </VCardTitle>
+    
+    <VDivider />
+    
+    <VCardText>
+      <VProgressCircular 
+        v-if="!requisitosConvocatoria" 
+        indeterminate 
+        class="ma-5 d-block mx-auto"
+      />
+      
+      <div v-else-if="requisitosConvocatoria.length === 0" class="d-flex flex-column align-center pa-5">
+        <VIcon icon="ri-information-line" size="x-large" color="info" class="mb-4" />
+        <p class="text-h6 text-center">No hay requisitos registrados para esta convocatoria.</p>
+      </div>
+      
+      <VList v-else density="compact">
+        <VListItem v-for="req in requisitosConvocatoria" :key="req.id">
+          <template #prepend>
+            <VIcon 
+              :icon="req.tipo && req.tipo.toLowerCase() === 'obligatorio' ? 'ri-checkbox-circle-fill' : 'ri-checkbox-blank-circle-line'" 
+              :color="req.tipo && req.tipo.toLowerCase() === 'obligatorio' ? 'error' : 'info'"
+              class="me-2"
+            />
+          </template>
+          <VListItemTitle class="mb-1">{{ req.descripcion }}</VListItemTitle>
+          <template #append>
+            <VChip
+              size="small" 
+              :color="req.tipo && req.tipo.toLowerCase() === 'obligatorio' ? 'error' : 'info'" 
+              variant="outlined"
+              class="ms-2"
+            >
+              {{ req.tipo || 'No especificado' }}
+            </VChip>
+          </template>
+        </VListItem>
+      </VList>
+    </VCardText>
+    
+    <VCardActions>
+      <VSpacer />
+      <VBtn color="primary" @click="showRequisitosDialog = false">
+        Cerrar
+      </VBtn>
+    </VCardActions>
+  </VCard>
+</VDialog>
 
            
         </VCard>

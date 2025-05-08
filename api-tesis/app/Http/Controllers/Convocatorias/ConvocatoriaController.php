@@ -13,30 +13,55 @@ use App\Http\Resources\Convocatorias\ConvocatoriaResource;
 
 class ConvocatoriaController extends Controller
 {
+    public function requisitos($id)
+{
+    try {
+        $convocatoria = Convocatoria::with('requisitos')->findOrFail($id);
+
+        return response()->json([
+            'requisitos' => $convocatoria->requisitos,
+            'status' => 'success'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'requisitos' => [],
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
-    {
-        $search = $request->get("search");
-        $area = $request->get("area");
+{
+    $search = $request->get("search");
+    $estado = $request->get("estado");
+    $area = $request->get("area");
 
-        $convocatorias = Convocatoria::where(function($q) use($search, $area){
-            if($area){
-                $q->where("area", $area);
-            }
-            if($search){
-                $q->whereHas("requisitos", function($q) use($search){
-                    $q->where("descripcion", "ilike", "%".$search."%");
-                });
-            }
+    $convocatorias = Convocatoria::with('requisitos')
+        ->when($area, function ($q) use ($area) {
+            $q->where("area", $area);
         })
-        ->orderBy("id", "desc")->get();
+        ->when($estado, function ($q) use ($estado) {
+            $q->where("estado", $estado);
+        })
+        ->when($search, function ($q) use ($search) {
+            $q->where(function($query) use ($search) {
+                $query->where("titulo", "ilike", "%{$search}%")
+                      ->orWhereHas("requisitos", function($q) use ($search){
+                          $q->where("descripcion", "ilike", "%{$search}%");
+                      });
+            });
+        })
+        ->orderBy("id", "desc")
+        ->paginate(10);
 
-        return response()->json([
-            "convocatorias" => ConvocatoriaCollection::make($convocatorias),
-        ]);
-    }
+    return ConvocatoriaResource::collection($convocatorias);
+}
+
 
     /**
      * Store a newly created resource in storage.

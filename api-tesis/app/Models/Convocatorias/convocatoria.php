@@ -25,7 +25,7 @@ class convocatoria extends Model
     ];
 
     public function requisitos(){
-        return $this->hasMany(Requisitos::class,"id_convocatoria");
+        return $this->hasMany(Requisitos::class,"id_convocatoria","id");
         
     }
     

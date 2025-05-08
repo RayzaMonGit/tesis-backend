@@ -27,4 +27,8 @@ Route::group([
 
     Route::post("convocatorias/{id}", [ConvocatoriaController::class, "update"]); // método POST para actualizar con archivos
     Route::resource("convocatorias", ConvocatoriaController::class);
+
+    Route::get('convocatorias/{id}/requisitos', [ConvocatoriaController::class, 'requisitos']);
+
+
 });
