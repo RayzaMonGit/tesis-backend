@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Convocatorias\Convocatoria;
 
-class requisitos extends Model
+class Requisitos extends Model
 {
     use SoftDeletes;
     use HasFactory;
@@ -19,8 +19,7 @@ class requisitos extends Model
         'tipo',
     ];
 
-    public function convocatoria()
-{
-    return $this->belongsTo(Convocatoria::class, 'id_convocatoria','id');
-}
+    public function convocatoria() {
+        return $this->belongsTo(Convocatoria::class, 'id_convocatoria', 'id');
+    }
 }

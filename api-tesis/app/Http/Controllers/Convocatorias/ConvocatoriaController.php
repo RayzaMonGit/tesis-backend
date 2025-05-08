@@ -13,23 +13,27 @@ use App\Http\Resources\Convocatorias\ConvocatoriaResource;
 
 class ConvocatoriaController extends Controller
 {
-    public function requisitos($id)
-{
-    try {
-        $convocatoria = Convocatoria::with('requisitos')->findOrFail($id);
-
-        return response()->json([
-            'requisitos' => $convocatoria->requisitos,
-            'status' => 'success'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'requisitos' => [],
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ], 500);
+    public function requisitos($id) {
+        try {
+            $convocatoria = Convocatoria::findOrFail($id);
+            \Log::info('Convocatoria encontrada: ' . $convocatoria->id);
+            
+            $requisitos = $convocatoria->requisitos;
+            \Log::info('Requisitos encontrados: ' . count($requisitos));
+            
+            return response()->json([
+                'requisitos' => $requisitos,
+                'status' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error al buscar requisitos: ' . $e->getMessage());
+            return response()->json([
+                'requisitos' => [],
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
-}
 
 
     /**

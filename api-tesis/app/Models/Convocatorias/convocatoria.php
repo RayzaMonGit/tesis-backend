@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 //use App\Models\Convocatorias\requisitos;
 use App\Models\Convocatorias\Requisitos;
 
-class convocatoria extends Model
+class Convocatoria extends Model
 {
     use SoftDeletes;
     use HasFactory;
@@ -25,12 +25,8 @@ class convocatoria extends Model
         'documento',
     ];
 
-    public function requisitos(){
-        //return $this->hasMany(Requisitos::class,"id_convocatoria","id");
-        //return $this->hasMany(Requisitos::class);
+    public function requisitos() {
         return $this->hasMany(Requisitos::class, 'id_convocatoria', 'id');
-
-        
     }
     
 }

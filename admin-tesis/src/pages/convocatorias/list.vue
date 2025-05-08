@@ -75,20 +75,13 @@ const verRequisitos = async (item) => {
         });
 
         console.log("Respuesta requisitos:", resp);
-
+        
         // Manejar diferentes formatos de respuesta
         if (resp && resp.requisitos) {
-            if (Array.isArray(resp.requisitos) && resp.requisitos.length > 0) {
-                requisitosConvocatoria.value = resp.requisitos;
-            } else {
-                console.log("No se encontraron requisitos para esta convocatoria");
-                requisitosConvocatoria.value = [];
-            }
-        } else if (resp && Array.isArray(resp)) {
-            // Si la respuesta es directamente un array
+            requisitosConvocatoria.value = resp.requisitos;
+        } else if (Array.isArray(resp)) {
             requisitosConvocatoria.value = resp;
         } else {
-            console.error("La estructura de respuesta no es la esperada:", resp);
             requisitosConvocatoria.value = [];
         }
     } catch (error) {
