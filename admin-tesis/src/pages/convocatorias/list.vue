@@ -75,12 +75,10 @@ const verRequisitos = async (item) => {
         });
 
         console.log("Respuesta requisitos:", resp);
-        
-        // Manejar diferentes formatos de respuesta
-        if (resp && resp.requisitos) {
+
+        // Validar que la respuesta contenga un array de requisitos
+        if (resp && Array.isArray(resp.requisitos)) {
             requisitosConvocatoria.value = resp.requisitos;
-        } else if (Array.isArray(resp)) {
-            requisitosConvocatoria.value = resp;
         } else {
             requisitosConvocatoria.value = [];
         }
@@ -88,7 +86,7 @@ const verRequisitos = async (item) => {
         console.error("Error al obtener requisitos:", error);
         requisitosConvocatoria.value = [];
     }
-}
+};
 // Esta función reemplazaría tu actual verRequisitos
 /*
 const verRequisitos = async (item) => {
@@ -213,6 +211,9 @@ definePage({
                     <thead>
                         <tr>
                             <th class="text-uppercase">
+                                ID
+                            </th>
+                            <th class="text-uppercase">
                                 Título
                             </th>
                             <th class="text-uppercase">
@@ -239,6 +240,10 @@ definePage({
                     <tbody>
                         <!--para ver  cada convovatoria-->
                         <tr v-for="item in convocatorias" :key="item.id">
+                            <td>
+                                <span class="text-truncate" style="max-width: 250px; display: block;">{{
+                                    item.id }}</span>
+                            </td>
                             <td>
                                 <div class="d-flex align-center">
                                     
@@ -298,7 +303,7 @@ definePage({
   <VCard>
     <VCardTitle>
       <VIcon icon="ri-file-list-3-line" class="me-2" />
-      Requisitos de {{ convocatoriaSeleccionada?.titulo }}
+      Requisitos de {{ convocatoriaSeleccionada?.id }}
     </VCardTitle>
     
     <VDivider />

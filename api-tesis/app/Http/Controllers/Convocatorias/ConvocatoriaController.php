@@ -15,18 +15,15 @@ class ConvocatoriaController extends Controller
 {
     public function requisitos($id) {
         try {
-            $convocatoria = Convocatoria::findOrFail($id);
-            \Log::info('Convocatoria encontrada: ' . $convocatoria->id);
-            
-            $requisitos = $convocatoria->requisitos;
-            \Log::info('Requisitos encontrados: ' . count($requisitos));
-            
+            // Cargar la convocatoria con sus requisitos
+            $convocatoria = Convocatoria::with('requisitos')->findOrFail($id);
+    
             return response()->json([
-                'requisitos' => $requisitos,
+                'requisitos' => $convocatoria->requisitos->toArray(), // Convertir a array
                 'status' => 'success'
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error al buscar requisitos: ' . $e->getMessage());
+            // Manejar errores
             return response()->json([
                 'requisitos' => [],
                 'status' => 'error',
@@ -34,7 +31,6 @@ class ConvocatoriaController extends Controller
             ], 500);
         }
     }
-
 
     /**
      * Display a listing of the resource.

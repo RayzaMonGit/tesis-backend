@@ -14,6 +14,7 @@ class Convocatoria extends Model
     use HasFactory;
     protected $table = 'convocatorias';
     protected $fillable = [
+        'id',
         'estado',
         'titulo',
         'descripcion',
