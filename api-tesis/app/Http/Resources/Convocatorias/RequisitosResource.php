@@ -18,6 +18,7 @@ class RequisitoResource extends JsonResource
             "id" => $this->id,
             "descripcion" => $this->descripcion,
             "tipo" => $this->tipo,
+            "req_sec"=>$this->req_sec,
             "id_convocatoria" => $this->id_convocatoria,
         ];
     }

@@ -23,6 +23,7 @@ declare module 'vue-router/auto-routes' {
     'comisiones-crear': RouteRecordInfo<'comisiones-crear', '/comisiones-crear', Record<never, never>, Record<never, never>>,
     'comisiones-listado': RouteRecordInfo<'comisiones-listado', '/comisiones-listado', Record<never, never>, Record<never, never>>,
     'convocatorias-add': RouteRecordInfo<'convocatorias-add', '/convocatorias/add', Record<never, never>, Record<never, never>>,
+    'convocatorias-edit-id': RouteRecordInfo<'convocatorias-edit-id', '/convocatorias/edit/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'convocatorias-list': RouteRecordInfo<'convocatorias-list', '/convocatorias/list', Record<never, never>, Record<never, never>>,
     'dashboard': RouteRecordInfo<'dashboard', '/dashboard', Record<never, never>, Record<never, never>>,
     'documentos-listado': RouteRecordInfo<'documentos-listado', '/documentos-listado', Record<never, never>, Record<never, never>>,

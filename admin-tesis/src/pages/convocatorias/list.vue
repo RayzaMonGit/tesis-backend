@@ -38,16 +38,16 @@ totalPage.value = resp.meta.last_page;
         console.log("Error de API:", error);
     }
 }
-/*
+
 const editItem = (item) => {
     router.push({
-        name: 'convocatoria-edit-id',
+        name: 'convocatorias-edit-id',
         params: {
             id: item.id
         }
     })
 }
-
+/*
 const deleteItem = (item) => {
     convocatoria_selected_deleted.value = item;
     isDeleteConvocatoriaDialogVisible.value = true;
@@ -284,7 +284,7 @@ definePage({
                             <td>
                                 <div class="d-flex gap-1">
 
-                                    <IconBtn size="small" title="Editar">
+                                    <IconBtn size="small" title="Editar" @click="editItem(item)">
                                         <VIcon icon="ri-pencil-line" />
                                     </IconBtn>
                                     <IconBtn size="small" title="Eliminar">
