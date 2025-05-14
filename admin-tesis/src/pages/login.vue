@@ -93,11 +93,11 @@ const authV2LoginIllustration = useGenerateImageVariant(authV2LoginIllustrationL
       <VCard flat :max-width="500" class="mt-12 mt-sm-0 pa-5 pa-lg-7">
         <VCardText>
           <h4 class="text-h4 mb-1">
-            Welcome to <span class="text-capitalize">{{ themeConfig.app.title }}! 👋🏻</span>
+            Te damos la bienvenida a <span class="text-capitalize">{{ themeConfig.app.title }}! 👋🏻</span>
           </h4>
 
           <p class="mb-0">
-            Please sign-in to your account and start the adventure
+            Por favor, inicie sesión en su cuenta
           </p>
         </VCardText>
 
@@ -128,30 +128,30 @@ const authV2LoginIllustration = useGenerateImageVariant(authV2LoginIllustrationL
 
                 <!-- login button -->
                 <VBtn block type="submit" class="my-2">
-                  Login
+                  Ingresar
                 </VBtn>
               </VCol>
 
               <!-- create account -->
               <VCol cols="12" class="text-body-1 text-center">
                 <span class="d-inline-block">
-                  New on our platform?
+                  No tienes una cuenta Octademic?
                 </span>
-                <a class="text-primary ms-1 d-inline-block text-body-1" href="#">
-                  Create an account
+                <a class="text-primary ms-1 d-inline-block text-body-1" href="/register">
+                  Crear una cuenta
                 </a>
               </VCol>
-
+<!--
               <VCol cols="12" class="d-flex align-center">
                 <VDivider />
                 <span class="mx-4 text-high-emphasis">or</span>
                 <VDivider />
               </VCol>
 
-              <!-- auth providers -->
+               auth providers 
               <VCol cols="12" class="text-center">
                 <AuthProvider />
-              </VCol>
+              </VCol>-->
             </VRow>
           </VForm>
         </VCardText>

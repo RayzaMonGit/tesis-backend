@@ -1,7 +1,7 @@
 <script setup>
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 import avatar1 from '@images/avatars/avatar-1.png'
-
+import { useRouter } from 'vue-router'
 
 const userProfileList = [
   { type: 'divider' },
@@ -43,16 +43,21 @@ const userProfileList = [
   },
 ]
 
-const user=localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')):null;
+const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
 
 const router = useRouter()
 
-const logout = async () =>{
+const logout = async () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
 
   await router.push("/login");
 }
+
+// Verificar si el usuario existe antes de acceder a sus propiedades
+const userAvatar = user?.avatar || avatar1;
+const userName = user ? `${user.name} ${user.surname || ''}` : 'Usuario';
+const userRole = user?.role?.name || '';
 </script>
 
 <template>
@@ -69,7 +74,8 @@ const logout = async () =>{
       class="cursor-pointer"
       size="38"
     >
-      <VImg :src="user.avatar ?user.avatar: avatar1" />
+      <!-- Usar la variable computada en lugar de acceder directamente -->
+      <VImg :src="userAvatar" />
       <!-- SECTION Menu -->
       <VMenu
         activator="parent"
@@ -81,16 +87,30 @@ const logout = async () =>{
           <VListItem class="px-4">
             <div class="d-flex gap-x-2 align-center" v-if="user">
               <VAvatar>
-                <VImg :src="user.avatar ?user.avatar:avatar1 " />
+                <!-- Usar la variable computada aquí también -->
+                <VImg :src="userAvatar" />
               </VAvatar>
 
               <div>
                 <div class="text-body-2 font-weight-medium text-high-emphasis">
-                  {{ user.name+' '+user.surname }}
-                
+                  {{ userName }}
                 </div>
                 <div class="text-capitalize text-caption text-disabled">
-                  {{user.role.name}}
+                  {{ userRole }}
+                </div>
+              </div>
+            </div>
+            <!-- Mostrar un estado alternativo cuando no hay usuario -->
+            <div class="d-flex gap-x-2 align-center" v-else>
+              <VAvatar>
+                <VImg :src="avatar1" />
+              </VAvatar>
+              <div>
+                <div class="text-body-2 font-weight-medium text-high-emphasis">
+                  Invitado
+                </div>
+                <div class="text-caption text-disabled">
+                  Sin sesión
                 </div>
               </div>
             </div>
@@ -134,6 +154,7 @@ const logout = async () =>{
 
             <VListItem class="px-4">
               <VBtn
+                v-if="user"
                 block
                 color="error"
                 size="small"
@@ -141,6 +162,16 @@ const logout = async () =>{
                 @click="logout()"
               >
                 Logout
+              </VBtn>
+              <VBtn
+                v-else
+                block
+                color="primary"
+                size="small"
+                append-icon="ri-login-box-r-line"
+                @click="router.push('/login')"
+              >
+                Login
               </VBtn>
             </VListItem>
           </PerfectScrollbar>

@@ -40,8 +40,20 @@ const router = createRouter({
 
         },
       },
+      // Definición explícita de la ruta register
+      {
+        path: '/register',
+        name: 'register',
+        component: () => import('@/pages/register.vue'),
+        meta: {
+          public: true,
+          unauthenticatedOnly: true,
+          layout: 'blank',
+        }
+      },
     ],
     ...[...pages,...[
+      
       {
         path:'/documentos-lista',
         name:'documentos',

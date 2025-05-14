@@ -30,5 +30,7 @@ Route::group([
 
     Route::get('convocatorias/{id}/requisitos', [ConvocatoriaController::class, 'requisitos']);
 
+    Route::post("postulante/{id}",[PostulanteController::class,"update"]);
+    Route::resource("postulante",PostulanteController::class);
 
 });

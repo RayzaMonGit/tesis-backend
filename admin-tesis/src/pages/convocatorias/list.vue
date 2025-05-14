@@ -151,7 +151,7 @@ onMounted(() => {
 
 definePage({
     meta: {
-        permission: 'list_convocatoria'
+        permission: 'list_convocatories'
     },
 })
 </script>

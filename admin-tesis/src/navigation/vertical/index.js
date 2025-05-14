@@ -97,13 +97,13 @@ export default [
     children: [
       {
         title: 'Registrar',
-        to: { name: 'postulantes-registrar' },
+        to: { name: 'postulantes-add' },
         icon: { icon: 'ri-user-add-line' },
         permission:'register_postulant',
       },
       {
         title: 'Listado',
-        to: { name: 'postulantes-listado' },
+        to: { name: 'postulantes-list' },
         icon: { icon: 'ri-list-unordered' },
         permissions: ["list_postulant"
 ,"edit_postulant"

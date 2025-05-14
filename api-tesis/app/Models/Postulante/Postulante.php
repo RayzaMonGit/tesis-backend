@@ -1,21 +1,18 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Postulante;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject; 
 
-class User extends Authenticatable implements JWTSubject
+class Postulante extends Model
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
-    use HasRoles;
     use SoftDeletes;
 
     /**
@@ -24,17 +21,13 @@ class User extends Authenticatable implements JWTSubject
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'surname',
-        'role_id',
-        'avatar',
-        'telefono',
-        'designacion',
-        'gender',
-        'tipo_doc',
-        'n_doc',
+       'user_id',
+        'convocatoria_id',
+        //'telefono',
+       // 'direccion',
+        'grado_academico',
+        'fecha_nacimiento',
+        'experiencia_años'
     ];
 
     /**
@@ -80,10 +73,16 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
-    public function role(){
-        return $this->belongsTo(Role::class,"role_id");
+
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
-    public function postulante(){
-        return $this->hasOne(Postulante::class);
+
+    public function convocatoria()
+    {
+        return $this->belongsTo(Convocatoria::class);
     }
+
 }
