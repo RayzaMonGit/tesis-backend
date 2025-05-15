@@ -46,6 +46,8 @@ const items = [
     subtitle: 'Detalles académicos',
   }
 ]
+
+const confirmPassword = ref(null)
 const form=ref({
   //usuario
   name: null,
@@ -53,7 +55,6 @@ const form=ref({
     email: null,
     telefono: null,
     password: null,
-    confirmPassword: null,
     designacion: null,
     gender: null,
     role_id: null,
@@ -68,7 +69,7 @@ const form=ref({
 })
 
 const error_exsist=ref(null);
-
+const success=ref(null);
 const warning=ref(null);
 
 const FILE_AVATAR=ref(null);
@@ -88,10 +89,105 @@ const loadFile= ($event)=>{
     reader.readAsDataURL(FILE_AVATAR.value);
     reader.onloadend = () => IMAGEN_PREVIZUALIZA.value = reader.result;
 }
-const onSubmit = () => {
+const store = async () => {
+warning.value = null;
+if(!form.value.email){
+    warning.value = "El campo email es requerido";
+    return;
+}
+if(!form.value.password){
+    warning.value = "El campo password es requerido";
+    return;
+}
+if(!form.value.name){
+    warning.value = "El campo nombre es requerido";
+    return;
+}
+if(!form.value.surname){
+    warning.value = "El campo apellido es requerido";
+    return;
+}
+if(!form.value.gender){
+    warning.value = "El campo genero es requerido";
+    return;
+}
+if(!form.value.telefono){
+    warning.value = "El campo telefono es requerido";
+    return;
+}
+if(!form.value.tipo_doc){
+    warning.value = "El campo tipo de documento es requerido";
+    return;
+}
+if(!form.value.n_doc){
+    warning.value = "El campo numero de documento es requerido";
+    return;
+}
+if(!form.value.grado_academico){
+    warning.value = "El campo grado academico es requerido";
+    return;
+}
+if(!form.value.experiencia_años){
+    warning.value = "El campo años de experiencia es requerido";
+    return;
+}
+if (!FILE_AVATAR.value) {
+        warning.value = "Se debe seleccionar un AVATR para el Usuario";
+        return;
+    }
+let formData = new FormData();
+formData.append('name', form.value.name);
+formData.append('surname', form.value.surname); 
+formData.append('email', form.value.email);
+formData.append('telefono', form.value.telefono); 
+formData.append('password', form.value.password);
+formData.append('gender', form.value.gender);
+formData.append('tipo_doc', form.value.tipo_doc);
+formData.append('n_doc', form.value.n_doc);   
+formData.append('grado_academico', form.value.grado_academico);
+formData.append('experiencia_años', form.value.experiencia_años);
+formData.append('imagen', FILE_AVATAR.value);
 
-// eslint-disable-next-line no-alert
-alert('Submitted..!!')
+try {
+  const resp = await $api('/register', {
+    method: 'POST',
+    body: formData,
+    onResponseError({ response }) {
+      console.log(response)
+      error_exsist.value = response._data?.error || 'Error en el registro'
+    },
+  })
+
+  if (resp.message === 403) {
+    warning.value = resp.message_text
+  } else {
+    success.value = 'El usuario se ha creado correctamente'
+
+    // Guardar token y usuario si el backend lo devuelve
+    localStorage.setItem('token', resp.access_token)
+localStorage.setItem('user', JSON.stringify(resp.user))
+
+
+
+    setTimeout(() => {
+      success.value = null
+      warning.value = null
+      error_exsist.value = null
+      // Limpia campos si lo necesitas
+      // fieldsClean()
+      // Redirige al paso 2 del formulario de postulantes
+      router.push('convocatorias-list')
+    }, 1500)
+  }
+  
+  // eslint-disable-next-line no-alert
+  alert('Submitted..!!')
+} catch (error) {
+  console.error(error)
+  error_exsist.value = 'Error al registrar usuario'
+}
+
+
 }
 </script>
 
@@ -332,6 +428,17 @@ alert('Submitted..!!')
 
                 
               </VRow>
+              <VAlert type="warning" v-if="warning" class="mt-3">
+                    <strong>{{warning}}</strong>
+                </VAlert>
+
+                <VAlert type="error" v-if="error_exsist" class="mt-3">
+                    <strong>hubo un error al guardar en el servidor</strong>
+                </VAlert>
+
+                <VAlert type="success" v-if="success" class="mt-3">
+                    <strong>{{success}}</strong>
+                </VAlert>
             </VWindowItem>
             
           </VForm>
@@ -356,7 +463,7 @@ alert('Submitted..!!')
             v-if="items.length - 1 === currentStep"
             color="success"
             append-icon="ri-check-line"
-            @click="onSubmit"
+            @click="store()"
           >
             Registrarme
           </VBtn>

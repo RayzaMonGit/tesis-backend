@@ -20,6 +20,7 @@ class Postulante extends Model
      *
      * @var list<string>
      */
+    protected $table = 'postulantes';
     protected $fillable = [
        'user_id',
         'convocatoria_id',

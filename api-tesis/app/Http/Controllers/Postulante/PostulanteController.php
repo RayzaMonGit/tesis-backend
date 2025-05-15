@@ -4,6 +4,16 @@ namespace App\Http\Controllers\Postulante;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Resources\User\UserResource;
+use App\Http\Resources\User\UserCollection;
+use App\Models\User;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Postulante;
+use Illuminate\Support\Facades\DB;
+
+use App\Http\Resources\postulante\PostulanteCollection;
+use App\Http\Resources\postulante\PostulanteResource;
+
 
 class PostulanteController extends Controller
 {
@@ -20,7 +30,7 @@ class PostulanteController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        
     }
 
     /**

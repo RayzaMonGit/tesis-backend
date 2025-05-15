@@ -5,6 +5,11 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Rol\RoleController;
 use App\Http\Controllers\Staff\StaffController;
 use App\Http\Controllers\Convocatorias\ConvocatoriaController;
+use App\Http\Controllers\Postulante\PostulanteController;
+use App\Http\Controllers\Postulante\RegisterController;
+
+Route::resource("register",RegisterController::class);
+//Route::post("register/{id}",[RegisterController::class,"update"]);
  
 Route::group([
    // 'middleware' => 'api',
@@ -30,7 +35,7 @@ Route::group([
 
     Route::get('convocatorias/{id}/requisitos', [ConvocatoriaController::class, 'requisitos']);
 
-    Route::post("postulante/{id}",[PostulanteController::class,"update"]);
-    Route::resource("postulante",PostulanteController::class);
+    
+
 
 });
