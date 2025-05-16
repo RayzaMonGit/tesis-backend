@@ -32,6 +32,10 @@ class UserResource extends JsonResource
             'gender'=>$this->resource->gender,
             'tipo_doc'=>$this->resource->tipo_doc,
             'n_doc'=>$this->resource->n_doc,
+            
+           'grado_academico' => optional($this->postulante)->grado_academico,
+'experiencia_años' => optional($this->postulante)->experiencia_años,
+
             ];
     }
 }

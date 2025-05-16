@@ -8,6 +8,7 @@ use App\Http\Controllers\Convocatorias\ConvocatoriaController;
 use App\Http\Controllers\Postulante\PostulanteController;
 use App\Http\Controllers\Postulante\RegisterController;
 
+//para que se registre un usuario sin estar autentificado
 Route::resource("register",RegisterController::class);
 //Route::post("register/{id}",[RegisterController::class,"update"]);
  
@@ -35,7 +36,9 @@ Route::group([
 
     Route::get('convocatorias/{id}/requisitos', [ConvocatoriaController::class, 'requisitos']);
 
-    
+    //Route::resource('postulantes', [PostulanteController::class]);
+    Route::resource("postulantes", PostulanteController::class);
+    Route::post("postulantes/{id}", [PostulanteController::class,"update"]);
 
 
 });

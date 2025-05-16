@@ -160,7 +160,8 @@ const loadFile= ($event)=>{
 }
 const roles=ref([]);
 onMounted(()=>{
-    roles.value=props.roles;
+    //roles.value=props.roles;
+    roles.value = props.roles.filter(role => role.name !== 'Postulante');
 })
 </script>
 
@@ -236,7 +237,9 @@ onMounted(()=>{
                         label="Telefono:" 
                         type="number"
                         v-model="from.telefono" 
-                        placeholder="Ejemplo: 77777777" />
+                        placeholder="Ejemplo: 77777777"
+                         
+                        />
                     </VCol>
                     <VCol cols="4">
                         <VSelect
@@ -311,12 +314,12 @@ onMounted(()=>{
 
             </VCardText>
             <VCardText class="pa-5">
-                <!-- boton crear rol-->
+                <!-- boton crear usuario-->
                 <VBtn @click="store()">
                     Crear Usuario
                     <VIcon end icon="ri-checkbox-circle-line" />
                 </VBtn>
-                <!-- tabla de roles-->
+               
 
 
             </VCardText>

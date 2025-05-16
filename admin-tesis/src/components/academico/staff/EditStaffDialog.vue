@@ -145,6 +145,19 @@ const loadFile= ($event)=>{
     reader.onloadend = () => IMAGEN_PREVIZUALIZA.value = reader.result;
 }
 const roles=ref([]);
+//para controlar los roles de los usuarios dependiendo de su rol
+const isPostulante = computed(() => props.userSelected.role?.name === 'Postulante')
+
+const filteredRoles = computed(() => {
+  if (isPostulante.value) {
+    return props.roles // muestra todos, pero el select estará deshabilitado
+  } else {
+    // excluye el rol Postulante
+    return props.roles.filter(role => role.name !== 'Postulante')
+  }
+})
+
+
 onMounted(()=>{
     //LOS MISMOS QUE EN LA BASDE DE DATOS
     roles.value=props.roles;
@@ -218,12 +231,13 @@ onMounted(()=>{
                     </VCol>
                     <VCol cols="5">
                         <VSelect
-                        :items="roles"
+                        :items="filteredRoles"
                         v-model="from.role_id"
                         label="Rol:"
                         item-title="name"
                         item-value="id"
-                        placeholder="Select Rol"
+                        placeholder="Seleccionar rol"
+                        :disabled="isPostulante"
                         eager
                     />
                     </VCol>

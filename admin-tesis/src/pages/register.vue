@@ -176,7 +176,7 @@ localStorage.setItem('user', JSON.stringify(resp.user))
       // Limpia campos si lo necesitas
       // fieldsClean()
       // Redirige al paso 2 del formulario de postulantes
-      router.push('convocatorias-list')
+      router.push('dashboard')
     }, 1500)
   }
   

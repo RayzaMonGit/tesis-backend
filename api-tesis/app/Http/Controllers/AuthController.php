@@ -91,7 +91,7 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function respondWithToken($token)
+    public function respondWithToken($token)
     {
     /*El getallpermissions devuelve todos lo permisos que tiene asignado
     un usuario a partir de su rol */

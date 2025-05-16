@@ -18,6 +18,10 @@ use App\Http\Resources\Postulante\PostulanteResource;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
 
+use App\Http\Controllers\AuthController;
+
+
+
 
 class RegisterController extends Controller
 {
@@ -81,10 +85,12 @@ $plainPassword = $request->password;
         }
         $request->request->add(["role_id" => $rolPostulante->id]);
     
-        // Crear usuario
+        // Crear usuario y rol
         $user = User::create($request->only([
             'name', 'surname', 'email', 'password', 'telefono', 'gender', 'tipo_doc', 'n_doc', 'avatar', 'role_id'
         ]));
+        $role=Role::findOrFail($rolPostulante->id);
+        $user->assignRole($role);
     
         // Crear postulante
         Postulante::create([
@@ -96,17 +102,15 @@ $plainPassword = $request->password;
         ]);
     
         
-// Generar token JWT
-$token = auth('api')->attempt([
-    'email' => $user->email,
-    'password' => $plainPassword,
-]);
-$user->load('role');
-return response()->json([
-    'message' => 'Usuario y postulante registrados correctamente',
-    'user' => $user,
-    'access_token' => $token, // igual que en login.vue
-]);
+        $token = auth('api')->attempt([
+            'email' => $user->email,
+            'password' => $plainPassword,
+        ]);
+        
+        $authController = new AuthController();
+        
+        return $authController->respondWithToken($token);
+        
     }
 
     /**
