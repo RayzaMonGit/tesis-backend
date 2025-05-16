@@ -157,6 +157,11 @@ const filteredRoles = computed(() => {
   }
 })
 
+const limitPhoneDigits = (e) => {
+  if (from.value.telefono && from.value.telefono.length > 8) {
+    from.value.telefono = from.value.telefono.slice(0, 8)
+  }
+}
 
 onMounted(()=>{
     //LOS MISMOS QUE EN LA BASDE DE DATOS
@@ -188,17 +193,21 @@ onMounted(()=>{
                 </div>
                 <VRow>
                     <!--Nombre y apellido-->
+                    <!--Nombre y apellido-->
                     <VCol cols="6">
                         <VTextField 
                         label="Nombre:" 
                         v-model="from.name" 
-                        placeholder="Ejemplo: Maria" />
+                        placeholder="Ejemplo: Maria"  
+                        :rules="[v => !!v || 'El nombre es obligatorio']" required />
+                       
                     </VCol>
                     <VCol cols="6">
                         <VTextField 
                         label="Apellido:" 
                         v-model="from.surname" 
-                        placeholder="Ejemplo: Sanchez" />
+                        placeholder="Ejemplo: Sanchez" 
+                        :rules="[v => !!v || 'El apellido es obligatorio']" required />
                     </VCol>
                      
                      <!--Genero designacion  y rol-->
@@ -239,16 +248,25 @@ onMounted(()=>{
                         placeholder="Seleccionar rol"
                         :disabled="isPostulante"
                         eager
+                        :rules="[v => !!v || 'Por favor seleccionar un rol']" required 
                     />
                     </VCol>
                     <!--Telefono tipodoc y numdoc-->
                     <VCol cols="4">
                         <VTextField 
-                        label="Telefono:" 
-                        type="number"
-                        v-model="from.telefono" 
-                        placeholder="Ejemplo: 77777777" />
-                    </VCol>
+                            label="Teléfono:"
+                            type="number"
+                            v-model="from.telefono"
+                            placeholder="Ejemplo: 77777777"
+                            maxlength="8"
+                            :rules="[
+                            v => !!v || 'El teléfono es requerido',
+                            v => /^\d{8}$/.test(v) || 'Debe tener exactamente 8 dígitos'
+                            ]"
+                            @input="limitPhoneDigits"
+                        />
+                        </VCol>
+
                     <VCol cols="4">
                         <VSelect
                         :items="type_docs"
@@ -256,13 +274,15 @@ onMounted(()=>{
                         label="Tipo de documento:"
                         placeholder="Select Item"
                         eager
+                        :rules="[v => !!v || 'Por favor seleccionr una opción']" required 
                     />
                     </VCol>
                     <VCol cols="4">
                         <VTextField 
                         label="Nº de documento:" 
                         v-model="from.n_doc" 
-                        placeholder="Ejemplo: 19999991-X" />
+                        placeholder="Ejemplo: 19999991-X" 
+                        :rules="[v => !!v || 'Este campo es obligatorio']" required />
                     </VCol>
                     <!--avatar-->
                     <VCol cols="6">
@@ -286,24 +306,31 @@ onMounted(()=>{
                     </VCol>
                      <!--Email y contraseña-->
                      <VCol cols="6">
-                      <VTextField
-                      v-model="from.email"
-                      label="Email:"
-                      type="email"
-                        placeholder="ejemplo@gmail.com:"
-                      />
-                    </VCol>
-                    <VCol cols="6">
-                        <VTextField
-                        v-model="from.password"
-                        label="Contraseña:"
-                        placeholder="············"
-                        :type="isPasswordVisible ? 'text' : 'password'"
-                        :append-inner-icon="isPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
-                        @click:append-inner="isPasswordVisible = !isPasswordVisible"    
-
+                        <VTextField 
+                            v-model="from.email"
+                            label="Email"
+                            placeholder="ejemplo@correo.com"
+                            :rules="[
+                            v => !!v || 'El correo es requerido',
+                            v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) || 'Ingrese un correo válido'
+                            ]"
                         />
-                    </VCol>
+                        </VCol>
+
+                        <VCol cols="6">
+                            <VTextField
+                                v-model="from.password"
+                                label="Contraseña:"
+                                placeholder="············"
+                                :type="isPasswordVisible ? 'text' : 'password'"
+                                :append-inner-icon="isPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
+                                @click:append-inner="isPasswordVisible = !isPasswordVisible"
+                                :rules="[
+                                v => !!v || 'La contraseña es obligatoria',
+                                v => v.length >= 6 || 'Debe tener al menos 6 caracteres'
+                                ]"
+                            />
+                            </VCol>
                 </VRow>
 
 

@@ -190,6 +190,12 @@ try {
 
 
 }
+const limitPhoneDigits = (e) => {
+  if (form.value.telefono && form.value.telefono.length > 8) {
+    form.value.telefono = form.value.telefono.slice(0, 8)
+  }
+}
+
 </script>
 
 
@@ -229,13 +235,14 @@ try {
                     v-model="form.email"
                     label="Email"
                     placeholder="juanmanuel@email.com"
+                    :rules="[
+                            v => !!v || 'El correo es requerido',
+                            v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) || 'Ingrese un correo válido'
+                            ]"
                   />
                 </VCol>
 
-                <VCol
-                  cols="12"
-                  md="6"
-                >
+                <VCol cols="12" md="6">
                   <VTextField
                     v-model="form.password"
                     label="Password"
@@ -243,24 +250,28 @@ try {
                     :type="isPasswordVisible ? 'text' : 'password'"
                     :append-inner-icon="isPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
                     @click:append-inner="isPasswordVisible = !isPasswordVisible"
+                    :rules="[
+                      v => !!v || 'La contraseña es obligatoria',
+                      v => v.length >= 6 || 'Debe tener al menos 6 caracteres'
+                    ]"
                   />
                 </VCol>
 
-                <VCol
-                  cols="12"
-                  md="6"
-                >
+                <VCol cols="12" md="6">
                   <VTextField
                     v-model="form.confirmPassword"
-                    label="Confirm Password"
-                    placeholder="Enter Confirm Password"
+                    label="Confirmar contraseña"
+                    placeholder="Repetir contraseña"
                     :type="isConfirmPasswordVisible ? 'text' : 'password'"
                     :append-inner-icon="isConfirmPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
                     @click:append-inner="isConfirmPasswordVisible = !isConfirmPasswordVisible"
+                    :rules="[
+                      v => !!v || 'La confirmación es obligatoria',
+                      v => v === form.password || 'Las contraseñas no coinciden'
+                    ]"
                   />
                 </VCol>
 
-                
               </VRow>
             </VWindowItem>
 
@@ -281,6 +292,8 @@ try {
                     v-model="form.name"
                     label="Nombre:"
                     placeholder="Maria"
+                    :rules="[v => !!v || 'El nombre es obligatorio']" required 
+                    
                   />
                 </VCol>
 
@@ -292,6 +305,7 @@ try {
                     v-model="form.surname"
                     label="Apellido:"
                     placeholder="Doe"
+                    :rules="[v => !!v || 'El apellido es obligatorio']" required 
                   />
                 </VCol>
 
@@ -325,7 +339,14 @@ try {
                         label="Telefono:" 
                         type="number"
                         v-model="form.telefono" 
-                        placeholder="Ejemplo: 77777777" />
+                        placeholder="Ejemplo: 77777777"
+                        maxlength="8"
+                        :rules="[
+                            v => !!v || 'El telefono es obligatorio',
+                            v => /^\d{8}$/.test(v) || 'Debe tener exactamente 8 dígitos'
+                        ]"
+                        @imput ="limitPhoneDigits"
+                        ></VTextField>
                 </VCol>
 
                 <VCol cols="12" md="6">
@@ -345,7 +366,9 @@ try {
                 <VTextField 
                         label="Nº de documento:" 
                         v-model="form.n_doc" 
-                        placeholder="Ejemplo: 19999991-X" />
+                        placeholder="Ejemplo: 19999991-X"
+                        :rules="[v => !!v || 'El numero de documento es obligatorio']" required
+                         />
                 </VCol>
                 <VCol
                   cols="12">
@@ -387,6 +410,7 @@ try {
                     v-model="form.grado_academico"
                     label="Grado académico:"
                     placeholder="Seleccionar"
+                    :rules="[v => !!v || 'El grado académico es obligatorio']" required
                     eager></VSelect>
                 </VCol>
 
@@ -401,7 +425,9 @@ try {
                     v-model="form.experiencia_años"
                     label="Años de experiencia:"
                     placeholder="Ejemplo: 2"
-                    type="number"></VTextField>
+                    type="number"
+                    :rules="[v => !!v || 'Los años de experiencia son obligatorios']" required
+                    ></VTextField>
                 </VCol>
 
                 

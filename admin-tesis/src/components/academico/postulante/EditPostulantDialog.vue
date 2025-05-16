@@ -173,6 +173,11 @@ const loadFile= ($event)=>{
     reader.onloadend = () => IMAGEN_PREVIZUALIZA.value = reader.result;
 }
 const roles=ref([]);
+const limitPhoneDigits = (e) => {
+  if (form.value.telefono && form.value.telefono.length > 8) {
+    form.value.telefono = form.value.telefono.slice(0, 8)
+  }
+}
 onMounted(() => {
   const user = props.userSelected
 
@@ -236,36 +241,42 @@ onMounted(() => {
                       v-model="form.email"
                       label="Email"
                       placeholder="juanmanuel@email.com"
+                      :rules="[
+                            v => !!v || 'El correo es requerido',
+                            v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) || 'Ingrese un correo válido'
+                            ]"
                     />
                   </VCol>
   
-                  <VCol
-                    cols="12"
-                    md="6"
-                  >
-                    <VTextField
-                      v-model="form.password"
-                      label="Password"
-                      placeholder="............"
-                      :type="isPasswordVisible ? 'text' : 'password'"
-                      :append-inner-icon="isPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
-                      @click:append-inner="isPasswordVisible = !isPasswordVisible"
-                    />
-                  </VCol>
-  
-                  <VCol
-                    cols="12"
-                    md="6"
-                  >
-                    <VTextField
-                      v-model="form.confirmPassword"
-                      label="Confirm Password"
-                      placeholder="Enter Confirm Password"
-                      :type="isConfirmPasswordVisible ? 'text' : 'password'"
-                      :append-inner-icon="isConfirmPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
-                      @click:append-inner="isConfirmPasswordVisible = !isConfirmPasswordVisible"
-                    />
-                  </VCol>
+                  <VCol cols="12" md="6">
+                  <VTextField
+                    v-model="form.password"
+                    label="Password"
+                    placeholder="............"
+                    :type="isPasswordVisible ? 'text' : 'password'"
+                    :append-inner-icon="isPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
+                    @click:append-inner="isPasswordVisible = !isPasswordVisible"
+                    :rules="[
+                      v => !!v || 'La contraseña es obligatoria',
+                      v => v.length >= 6 || 'Debe tener al menos 6 caracteres'
+                    ]"
+                  />
+                </VCol>
+
+                <VCol cols="12" md="6">
+                  <VTextField
+                    v-model="form.confirmPassword"
+                    label="Confirmar contraseña"
+                    placeholder="Repetir contraseña"
+                    :type="isConfirmPasswordVisible ? 'text' : 'password'"
+                    :append-inner-icon="isConfirmPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
+                    @click:append-inner="isConfirmPasswordVisible = !isConfirmPasswordVisible"
+                    :rules="[
+                      v => !!v || 'La confirmación es obligatoria',
+                      v => v === form.password || 'Las contraseñas no coinciden'
+                    ]"
+                  />
+                </VCol>
   
                   
                 </VRow>
@@ -288,6 +299,7 @@ onMounted(() => {
                       v-model="form.name"
                       label="Nombre:"
                       placeholder="Maria"
+                      :rules="[v => !!v || 'El nombre es obligatorio']" required 
                     />
                   </VCol>
   
@@ -299,6 +311,7 @@ onMounted(() => {
                       v-model="form.surname"
                       label="Apellido:"
                       placeholder="Doe"
+                      :rules="[v => !!v || 'El apellido es obligatorio']" required
                     />
                   </VCol>
   
@@ -328,13 +341,19 @@ onMounted(() => {
                   </VCol>
   
                   <VCol cols="12" md="6">
-                    <VTextField 
-                          label="Telefono:" 
-                          type="number"
-                          v-model="form.telefono" 
-                          placeholder="Ejemplo: 77777777" />
-                  </VCol>
-  
+                        <VTextField 
+                            label="Teléfono:"
+                            type="number"
+                            v-model="form.telefono"
+                            placeholder="Ejemplo: 77777777"
+                            maxlength="8"
+                            :rules="[
+                            v => !!v || 'El teléfono es requerido',
+                            v => /^\d{8}$/.test(v) || 'Debe tener exactamente 8 dígitos'
+                            ]"
+                            @input="limitPhoneDigits"
+                        />
+                        </VCol>
                   <VCol cols="12" md="6">
                     <VSelect
                           :items="type_docs"
@@ -342,6 +361,7 @@ onMounted(() => {
                           label="Tipo de documento:"
                           placeholder="Select Item"
                           eager
+                          :rules="[v => !!v || 'El tipo de documento es obligatorio']" required
                       />
                   </VCol>
   
@@ -352,7 +372,9 @@ onMounted(() => {
                   <VTextField 
                           label="Nº de documento:" 
                           v-model="form.n_doc" 
-                          placeholder="Ejemplo: 19999991-X" />
+                          placeholder="Ejemplo: 19999991-X" 
+                          :rules="[v => !!v || 'El número de documento es requerido']" required
+                          />
                   </VCol>
                   <VCol
                     cols="12">
