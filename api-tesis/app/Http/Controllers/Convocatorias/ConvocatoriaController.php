@@ -58,7 +58,67 @@ public function todosRequisitos($id)
     ]);
 }
 
+public function updateRequisitos(Request $request, $id)
+{
+    DB::beginTransaction();
 
+    try {
+        $convocatoria = Convocatoria::findOrFail($id);
+
+        // Borrar los anteriores
+        Requisitos::where('id_convocatoria', $convocatoria->id)->delete();
+
+        // Guardar obligatorios (Ministerio)
+        if ($request->has('requisitos_obligatorios')) {
+            $requisitosObligatorios = json_decode($request->requisitos_obligatorios, true);
+
+            foreach ($requisitosObligatorios as $req) {
+                if (!empty($req['seleccionado'])) {
+                    Requisitos::create([
+                        'id_convocatoria' => $convocatoria->id,
+                        'descripcion' => $req['texto'],
+                        'tipo' => 'Obligatorio',
+                        'req_sec' => 'Ministerio',
+                    ]);
+                }
+            }
+        }
+
+        // Guardar personalizados
+        if ($request->has('requisitos_personalizados')) {
+            $requisitosPersonalizados = json_decode($request->requisitos_personalizados, true);
+
+            foreach ($requisitosPersonalizados as $req) {
+                Requisitos::create([
+                    'id_convocatoria' => $convocatoria->id,
+                    'descripcion' => $req['nombre'],
+                    'tipo' => $req['tipo'],
+                    'req_sec' => 'Institucion',
+                ]);
+            }
+        }
+
+        // Guardar requisitos ley
+        if ($request->has('requisitos_ley_ids')) {
+            $convocatoria->requisitosLey()->sync($request->requisitos_ley_ids);
+        }
+
+        DB::commit();
+
+        return response()->json([
+            "message" => 200,
+            "msg_text" => "Requisitos actualizados correctamente"
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            "message" => 500,
+            "error" => $e->getMessage()
+        ], 500);
+    }
+}
 
     /**
      * Display a listing of the resource.
@@ -167,7 +227,8 @@ public function todosRequisitos($id)
      */
     public function show(string $id)
     {
-        $convocatoria = Convocatoria::with('requisitos')->findOrFail($id);
+        $convocatoria = Convocatoria::with(['requisitos', 'requisitosLey'])->findOrFail($id);
+
         return response()->json([
             "convocatoria" => ConvocatoriaResource::make($convocatoria),
         ]);

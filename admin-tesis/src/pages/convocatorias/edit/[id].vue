@@ -57,7 +57,7 @@ const loadDocument = ($event) => {
     }
 }
 const edit = async () => {
-    try {
+    
         warning.value = null;
         // Validaciones existentes
         if (!from.value.titulo) {
@@ -98,32 +98,32 @@ const edit = async () => {
         if (FILE_DOCUMENTO.value) {
             formData.append('documento', FILE_DOCUMENTO.value);
         }
-        // Preparar y enviar los requisitos obligatorios
-        formData.append('requisitos_obligatorios', JSON.stringify(requisitosObligatorios.value));
 
-        // Preparar y enviar los requisitos personalizados
-        formData.append('requisitos_personalizados', JSON.stringify(requisitosPersonalizados.value));
-
-        // Preparar requisitos de ley seleccionados
-const requisitosLeyIds = requisitosLey.value
+  // Preparar y enviar los requisitos personalizados
+  const requisitosLeyIds = requisitosLey.value
   .filter(req => req.seleccionado)
   .map(req => req.id);
 
 requisitosLeyIds.forEach(id => {
   formData.append('requisitos_ley_ids[]', id);
 });
+// Enviar los requisitos personalizados
+formData.append('requisitos_personalizados', JSON.stringify(requisitosPersonalizados.value));
 
+console.log('Requisitos personalizados:', requisitosPersonalizados.value);
 
+formData.append('requisitos_obligatorios', JSON.stringify(requisitosObligatorios.value));
 
-        const resp = await $api('/convocatorias/' + route.params.id, {
-            method: 'POST',
-            data: formData,
-            onResponseError({ response }) {
-                console.log(response);
-                error_exists.value = response.data.message;
+try {
+    const resp = await $api('/convocatorias/' + route.params.id + '/todos-requisitos', {
+    method: 'POST',
+    body: formData,
+    onResponseError({ response }) {
+        console.log(response);
+        error_exists.value = response._data?.error ?? 'Error desconocido';
+    }
+});
 
-            }
-        })
         console.log(resp);
         success.value = "Convocatoria editada correctamente";
         setTimeout(() => {
@@ -138,9 +138,6 @@ requisitosLeyIds.forEach(id => {
     }
 }
 
-
-
-
 const show = async () => {
     try {
         const resp = await $api('/convocatorias/' + route.params.id, {
@@ -148,25 +145,29 @@ const show = async () => {
             onResponseError({ response }) {
                 console.log(response);
             }
-        })
+        });
+        
         console.log(resp);
         conv_selected.value = resp.convocatoria;
 
-        //info
+        // Información general
         from.value.titulo = conv_selected.value.titulo;
         from.value.area = conv_selected.value.area;
         from.value.descripcion = conv_selected.value.descripcion;
         from.value.fecha_inicio = new Date(conv_selected.value.fecha_inicio).toISOString().split('T')[0];
         from.value.fecha_fin = new Date(conv_selected.value.fecha_fin).toISOString().split('T')[0];
-
         from.value.plazas_disponibles = conv_selected.value.plazas_disponibles;
         from.value.sueldo_referencial = conv_selected.value.sueldo_referencial;
         from.value.estado = conv_selected.value.estado;
-        //documento
+        
+        // Documento
         FILE_DOCUMENTO.value = conv_selected.value.documento;
         NOMBRE_ARCHIVO_PREVIZUALIZA.value = conv_selected.value.documento;
 
         fechaInicioOriginal.value = new Date(conv_selected.value.fecha_inicio).toISOString().split('T')[0];
+        
+        // Cargar requisitos
+        cargarConvocatoria(conv_selected.value);
     } catch (error) {
         console.error(error);
     }
@@ -174,25 +175,24 @@ const show = async () => {
 const requisitosObligatorios = ref([]);
 const requisitosPersonalizados = ref([]);
 
-function cargarConvocatoria(convocatoria) {
-    // Filtra los requisitos según su origen
-    requisitosObligatorios.value = convocatoria.requisitos
-        .filter(r => r.req_sec === 'Ministerio')
-        .map(r => ({
-            texto: r.descripcion,
-            tipo: r.tipo,
-            seleccionado: r.tipo === 'Obligatorio', // marcar por defecto si era obligatorio
-            
-        }));
+function cargarConvocatoria(data) {
+  // ✅ Requisitos de ley (se marcan luego por ID)
+  // (aunque no los uses aquí, debes asegurar que no sea undefined)
+  if (!Array.isArray(data.requisitos_ley)) {
+    data.requisitos_ley = [];
+  }
 
-    requisitosPersonalizados.value = convocatoria.requisitos
-        .filter(r => r.req_sec === 'Institucion')
-        .map(r => ({
-            nombre: r.descripcion,
-            tipo: r.tipo,
-            
-        }));
+  // ⚠️ Aquí no necesitas usar los requisitos de ley directamente,
+  // porque ya se están marcando aparte por `requisitosLeyDesdeBackend`
+
+  // ✅ Requisitos personalizados
+  requisitosPersonalizados.value = data.requisitos.map(r => ({
+    nombre: r.descripcion,
+    tipo: r.tipo
+  }));
 }
+
+
 const todosSeleccionados = ref(false);
 
 function toggleTodosObligatorios() {
@@ -200,44 +200,75 @@ function toggleTodosObligatorios() {
     req.seleccionado = todosSeleccionados.value;
   });
 }
+
 const mostrarDocumento = ref(false);
 
 const requisitosLeyDesdeBackend = ref([]);
-
-// Llamada al backend
-const fetchConvocatoria = async () => {
-  const resp = await $api(`/convocatorias/${route.params.id}/requisitos-todos`);
-  
-  requisitosLeyDesdeBackend.value = resp.requisitos_ley.map(r => r.id); // 💡 guarda solo los IDs
-  
-  requisitosLey.value.forEach(req => {
-    req.seleccionado = requisitosLeyDesdeBackend.value.includes(req.id);
-  });
-};
-
 const requisitosLey = ref([]);
 
 const fetchRequisitosLey = async () => {
   try {
     const resp = await $api('/requisitosley');
-    console.log('Respuesta requisitos ley:', resp);
 
-    requisitosLey.value = resp.requisitos.map(req => ({
-      id: req.id,
-      descripcion: req.descripcion,
-      seleccionado: false,
-    }));
+    if (resp && resp.requisitos) {
+      // ✅ Aquí convertimos todos los requisitos ley, marcando como "seleccionado" los que coincidan por ID
+      requisitosObligatorios.value = resp.requisitos.map(req => ({
+        id: req.id,
+        texto: req.descripcion,
+        seleccionado: requisitosLeySeleccionados.value.includes(req.id),
+      }));
+    }
   } catch (error) {
     console.error("Error cargando requisitos ley:", error);
   }
 };
 
+const requisitosLeySeleccionados = ref([]); // IDs de requisitos seleccionados
+
+const fetchConvocatoria = async () => {
+  try {
+    const resp = await $api(`/convocatorias/${route.params.id}/todos-requisitos`);
+
+    // ✅ guardar IDs de los requisitos ley seleccionados
+    requisitosLeySeleccionados.value = resp.requisitos_ley.map(r => r.id);
+
+    requisitosPersonalizados.value = resp.requisitos_personalizados.map(req => ({
+    nombre: req.descripcion,
+    tipo: req.tipo,
+  }));
+  } catch (error) {
+    console.error('Error obteniendo requisitos de la convocatoria:', error);
+  }
+};
 
 
-onMounted(() => {
-  show(); // carga los datos de la convocatoria
-  fetchRequisitosLey(); // carga todos los requisitos ley (con ID y descripción)
-  fetchConvocatoria(); // marca los seleccionados
+const marcarRequisitosSeleccionados = () => {
+  requisitosLey.value.forEach(req => {
+    req.seleccionado = requisitosLeyDesdeBackend.value.includes(req.id);
+  });
+};
+const nuevoRequisito = ref({
+  nombre: '',
+  tipo: 'Obligatorio'
+});
+
+const agregarRequisito = () => {
+  if (!nuevoRequisito.value.nombre) return;
+
+  requisitosPersonalizados.value.push({
+    nombre: nuevoRequisito.value.nombre,
+    tipo: nuevoRequisito.value.tipo
+  });
+
+  // Limpiar campos
+  nuevoRequisito.value.nombre = '';
+  nuevoRequisito.value.tipo = 'Obligatorio';
+};
+
+onMounted(async () => {
+    show();
+  await fetchConvocatoria();    // obtiene requisitos seleccionados y personalizados
+  await fetchRequisitosLey();   // carga todos los requisitos ley y marca los seleccionados
 });
 
 

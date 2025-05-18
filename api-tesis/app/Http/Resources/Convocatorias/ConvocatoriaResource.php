@@ -35,6 +35,15 @@ class ConvocatoriaResource extends JsonResource
         "id_convocatoria" => $requisitos->id_convocatoria,
     ];
 }),
+"requisitos_ley" => collect($this->resource->requisitosLey)->map(function($reqLey) {
+    return [
+        "id" => $reqLey->id,
+        "descripcion" => $reqLey->descripcion,
+        "num" => $reqLey->num,
+        "req" => $reqLey->req, // obligatorio u opcional
+    ];
+}),
+
 
         ];
     }

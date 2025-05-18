@@ -30,6 +30,7 @@ Route::group([
     Route::resource("role",RoleController::class);
     //ruta post para actualizar los datos del usuario
     Route::post("staffs/{id}",[StaffController::class,"update"]);
+    //para e index de staff
     Route::resource("staffs",StaffController::class);
 
     Route::post("convocatorias/{id}", [ConvocatoriaController::class, "update"]); // método POST para actualizar con archivos
@@ -47,5 +48,6 @@ Route::group([
     Route::post('/convocatorias/{id}/requisitos-ley', [ConvocatoriaController::class, 'asignarRequisitosLey']);
     // Obtener todos los requisitos (ley + personalizados)
     Route::get('convocatorias/{id}/todos-requisitos', [ConvocatoriaController::class, 'todosRequisitos']);
+    Route::post('convocatorias/{id}/todos-requisitos', [ConvocatoriaController::class, 'updateRequisitos']);
 
 });
