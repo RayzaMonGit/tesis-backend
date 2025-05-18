@@ -23,3 +23,4 @@ class RequisitoResource extends JsonResource
         ];
     }
 }
+

@@ -69,7 +69,7 @@ const form=ref({
     n_doc: null,
     //postulante
     user_id:null,
-    convocatoria_id:null,
+    id_convocatoria:null,
     grado_academico:null,
     fecha_nacimiento:null,
     experiencia_años:null

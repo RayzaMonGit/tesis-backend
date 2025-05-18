@@ -71,7 +71,7 @@ export default [
     ,"delete_documents"] ,
           },
           {
-            title: 'Ver Documentos',
+            title: 'Ver mis documentos',
             to: { name: 'documentos-listado' },
             icon: { icon: 'ri-folder-line' },
             permission: 'list_documents',

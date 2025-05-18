@@ -47,70 +47,35 @@ const editItem = (item) => {
         }
     })
 }
-/*
-const deleteItem = (item) => {
-    convocatoria_selected_deleted.value = item;
-    isDeleteConvocatoriaDialogVisible.value = true;
-}
-
-const deleteConvocatoria = (item) => {
-    let INDEX = convocatorias.value.findIndex((convocatoria) => convocatoria.id == item.id);
-    if (INDEX != -1) {
-        convocatorias.value.splice(INDEX, 1);
-    }
-}*/
 
 const verRequisitos = async (item) => {
-    convocatoriaSeleccionada.value = item;
-    requisitosConvocatoria.value = []; // Reiniciar requisitos
-    showRequisitosDialog.value = true; // Mostrar el diálogo inmediatamente
+  convocatoriaSeleccionada.value = item;
+  requisitosConvocatoria.value = []; // Reiniciar requisitos
+  showRequisitosDialog.value = true;
 
-    try {
-        const resp = await $api('/convocatorias/' + item.id + '/requisitos', {
-            method: 'GET',
-            onResponseError({ response }) {
-                console.error("Error API requisitos:", response);
-                throw new Error("API Error");
-            }
-        });
+  try {
+    const resp = await $api(`/convocatorias/${item.id}/todos-requisitos`, {
+      method: 'GET',
+      onResponseError({ response }) {
+        console.error("Error API requisitos:", response);
+        throw new Error("API Error");
+      }
+    });
 
-        console.log("Respuesta requisitos:", resp);
+    console.log("Requisitos todos:", resp);
 
-        // Validar que la respuesta contenga un array de requisitos
-        if (resp && Array.isArray(resp.requisitos)) {
-            requisitosConvocatoria.value = resp.requisitos;
-        } else {
-            requisitosConvocatoria.value = [];
-        }
-    } catch (error) {
-        console.error("Error al obtener requisitos:", error);
-        requisitosConvocatoria.value = [];
-    }
+    const requisitosPersonalizados = resp.requisitos_personalizados || [];
+    const requisitosLey = resp.requisitos_ley || [];
+
+    // Combinar ambos requisitos
+    requisitosConvocatoria.value = [...requisitosLey, ...requisitosPersonalizados];
+
+  } catch (error) {
+    console.error("Error al obtener requisitos:", error);
+    requisitosConvocatoria.value = [];
+  }
 };
-// Esta función reemplazaría tu actual verRequisitos
-/*
-const verRequisitos = async (item) => {
-    convocatoriaSeleccionada.value = item;
-    console.log("Convocatoria seleccionada:", item);
-    //mostrar requisitos
-    
-    //recuperar datos de requisitos
-    try {
-        const resp = await $api('/convocatorias/' + item.id + '/requisitos', {
-            method: 'GET',
-                    onResponseError({response}){
-                      console.log("Error API:", response);
-                      throw new Error("API Error");
-                    }
-                });
-        
-        console.log("Respuesta requisitos:", resp);
-       
-    } catch (error) {
-        console.error("Error al obtener requisitos:", error);
-        requisitosConvocatoria.value = [];
-    }
-}*/
+
 
 const reset = () => {
     searchQuery.value = null;
@@ -118,15 +83,6 @@ const reset = () => {
     currentPage.value = 1;
     list();
 }
-/*
-const avatarText = value => {
-    if (!value)
-        return ''
-    const nameArray = value.split(' ')
-
-    return nameArray.map(word => word.charAt(0).toUpperCase()).join('')
-}
-*/
 
 watch(currentPage, (val) => {
     console.log(val);

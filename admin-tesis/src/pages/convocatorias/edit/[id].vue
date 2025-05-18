@@ -104,6 +104,17 @@ const edit = async () => {
         // Preparar y enviar los requisitos personalizados
         formData.append('requisitos_personalizados', JSON.stringify(requisitosPersonalizados.value));
 
+        // Preparar requisitos de ley seleccionados
+const requisitosLeyIds = requisitosLey.value
+  .filter(req => req.seleccionado)
+  .map(req => req.id);
+
+requisitosLeyIds.forEach(id => {
+  formData.append('requisitos_ley_ids[]', id);
+});
+
+
+
         const resp = await $api('/convocatorias/' + route.params.id, {
             method: 'POST',
             data: formData,
@@ -191,12 +202,45 @@ function toggleTodosObligatorios() {
 }
 const mostrarDocumento = ref(false);
 
+const requisitosLeyDesdeBackend = ref([]);
+
+// Llamada al backend
+const fetchConvocatoria = async () => {
+  const resp = await $api(`/convocatorias/${route.params.id}/requisitos-todos`);
+  
+  requisitosLeyDesdeBackend.value = resp.requisitos_ley.map(r => r.id); // 💡 guarda solo los IDs
+  
+  requisitosLey.value.forEach(req => {
+    req.seleccionado = requisitosLeyDesdeBackend.value.includes(req.id);
+  });
+};
+
+const requisitosLey = ref([]);
+
+const fetchRequisitosLey = async () => {
+  try {
+    const resp = await $api('/requisitosley');
+    console.log('Respuesta requisitos ley:', resp);
+
+    requisitosLey.value = resp.requisitos.map(req => ({
+      id: req.id,
+      descripcion: req.descripcion,
+      seleccionado: false,
+    }));
+  } catch (error) {
+    console.error("Error cargando requisitos ley:", error);
+  }
+};
 
 
 
 onMounted(() => {
-    show();
-})
+  show(); // carga los datos de la convocatoria
+  fetchRequisitosLey(); // carga todos los requisitos ley (con ID y descripción)
+  fetchConvocatoria(); // marca los seleccionados
+});
+
+
 definePage({
     meta: {
         permissions: 'editar-convocatoria',

@@ -1,6 +1,25 @@
 <script setup>
 import { VExpansionPanelTitle } from 'vuetify/components';
 import { load } from 'webfontloader';
+//parte nueva
+const requisitosLey = ref([]);
+
+const fetchRequisitosLey = async () => {
+  try {
+    const response = await $api('/requisitosley');
+    console.log('Respuesta requisitos ley:', response)
+
+    requisitosLey.value = response.requisitos.map(req => ({
+  ...req,
+  seleccionado: false,
+}));
+
+  } catch (error) {
+    console.error("Error cargando requisitos ley:", error);
+  }
+}
+
+
 
 const activeTab = ref('info');
 const estados = [
@@ -106,13 +125,20 @@ const store = async () => {
     formData.append('documento', FILE_DOCUMENTO.value);
   }
 
-  // Preparar y enviar los requisitos obligatorios
-  formData.append('requisitos_obligatorios', JSON.stringify(requisitosObligatorios.value));
-  
   // Preparar y enviar los requisitos personalizados
-  formData.append('requisitos_personalizados', JSON.stringify(requisitosPersonalizados.value));
+  const requisitosLeyIds = requisitosLey.value
+  .filter(req => req.seleccionado)
+  .map(req => req.id);
 
-  try {
+requisitosLeyIds.forEach(id => {
+  formData.append('requisitos_ley_ids[]', id);
+});
+// Enviar los requisitos personalizados
+formData.append('requisitos_personalizados', JSON.stringify(requisitosPersonalizados.value));
+
+console.log('Requisitos personalizados:', requisitosPersonalizados.value)
+
+try {
     const resp = await $api('/convocatorias', {
       method: 'POST',
       body: formData,
@@ -145,7 +171,7 @@ const store = async () => {
 //para los requisitos 
 const mostrarDocumento = ref(false);
 const todosSeleccionados = ref(false);
-const requisitosObligatorios = ref([
+/*const requisitosObligatorios = ref([
   { texto: "1. Cédula de Identidad Vigente", seleccionado: false },
   { texto: "2. Libreta de Servicio Militar (Para varones)", seleccionado: false },
   { texto: "3. Título en Provisión Nacional o Título Profesional con grado académico de Técnico Superior o Licenciatura en el área establecido en el cuadro de cargos convocados.", seleccionado: false },
@@ -157,10 +183,11 @@ const requisitosObligatorios = ref([
   { texto: "9. Certificación de No contar con procesos administrativos con Resolución Final Sancionatoria Ejecutoriada, certificado emitido por la Dirección Departamental de Educación.", seleccionado: false },
   { texto: "10. Certificación de No contar con imputación formal en los casos de acoso y violencia sexual contra estudiantes en el marco del Decreto Supremo N° 1302 de 1 de agosto de 2012 modificado por Decreto Supremo N° 1320 de 8 de agosto de 2012, emitida por la Unidad de Asuntos Jurídicos de las Direcciones Departamentales de Educación o Dirección General de Asuntos Jurídicos del Ministerio de Educación.", seleccionado: false },
   { texto: "11. Declaración jurada de incompatibilidad laboral y Salarial.", seleccionado: false },
-]);
+]);*/
 function toggleTodosObligatorios() {
-  requisitosObligatorios.value.forEach(r => (r.seleccionado = todosSeleccionados.value));
+  requisitosLey.value.forEach(r => (r.seleccionado = todosSeleccionados.value));
 }
+
 definePage({
   meta: {
     permissions: ["register_convocatories"
@@ -198,25 +225,16 @@ const fileClean=()=>{
   from.value.plazas_disponibles = null;
   from.value.sueldo_referencial = null;
   from.value.estado = 'Borrador';
-  requisitosObligatorios.value = [
-    { texto: "1. Cédula de Identidad Vigente", seleccionado: false },
-    { texto: "2. Libreta de Servicio Militar (Para varones)", seleccionado: false },
-    { texto: "3. Título en Provisión Nacional o Título Profesional con grado académico de Técnico Superior o Licenciatura en el área establecido en el cuadro de cargos convocados.", seleccionado: false },
-    { texto: "4. Diploma de Posgrado en Educación Superior", seleccionado: false },
-    { texto: "5. Experiencia Profesional Específica de dos (2) años en el área de su formación,certificada por instituciones legalmente constituidas.", seleccionado: false },
-    { texto: "6. Certificado de Lengua Originaria, emitido por instituciones reconocidas por el Ministerio de Educación (EGPP, IPLC y UNEFCO) y Viceministerio de Descolonización (de cualquier idioma oficial del Estado Plurinacional de Bolivia).", seleccionado: false },
-    { texto: "7. Certificación REJAP, que acredite No contar con procesos y antecedentes penales.", seleccionado: false },
-    { texto: "8. Certificación CENVI (ex SIPASSE), que acredite No contar con procesos antecedentes de violencia ejercida contra la mujer o cualquier miembro de familia.", seleccionado: false },
-    { texto: "9. Certificación de No contar con procesos administrativos con Resolución Final Sancionatoria Ejecutoriada, certificado emitido por la Dirección Departamental de Educación.", seleccionado: false },
-    { texto: "10. Certificación de No contar con imputación formal en los casos de acoso y violencia sexual contra estudiantes en el marco del Decreto Supremo N° 1302 de 1 de agosto de 2012 modificado por Decreto Supremo N° 1320 de 8 de agosto de 2012, emitida por la Unidad de Asuntos Jurídicos de las Direcciones Departamentales de Educación o Dirección General de Asuntos Jurídicos del Ministerio de Educación.", seleccionado: false },
-    { texto: "11. Declaración jurada de incompatibilidad laboral y Salarial.", seleccionado: false },
-  ];
   requisitosPersonalizados.value = [];
 todosSeleccionados.value = false;
 mostrarDocumento.value = false;
 
 
 }
+
+onMounted(() => {
+  fetchRequisitosLey();
+});
 
 </script>
 <template>
@@ -346,11 +364,17 @@ mostrarDocumento.value = false;
                   <VExpansionPanelText>
                     <VCheckbox v-model="todosSeleccionados" label="Seleccionar / Quitar todos"
                 @change="toggleTodosObligatorios" />
-              <VList dense>
-                <VListItem v-for="(req, index) in requisitosObligatorios" :key="'obligatorio-' + index">
-                  <VCheckbox v-model="req.seleccionado" :label="req.texto" hide-details />
-                </VListItem>
-              </VList>
+                <VList dense>
+  <VListItem v-for="(req, index) in requisitosLey" :key="'ley-' + index">
+    <VCheckbox
+      v-model="req.seleccionado"
+      :label="req.num + req.descripcion"
+      hide-details
+    />
+  </VListItem>
+</VList>
+
+
 
                   </VExpansionPanelText>
                 </VExpansionPanel>

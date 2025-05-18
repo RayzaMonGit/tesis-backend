@@ -7,6 +7,7 @@ use App\Http\Controllers\Staff\StaffController;
 use App\Http\Controllers\Convocatorias\ConvocatoriaController;
 use App\Http\Controllers\Postulante\PostulanteController;
 use App\Http\Controllers\Postulante\RegisterController;
+use App\Http\Controllers\Requisitos\RequisitosLeyController;
 
 //para que se registre un usuario sin estar autentificado
 Route::resource("register",RegisterController::class);
@@ -32,7 +33,7 @@ Route::group([
     Route::resource("staffs",StaffController::class);
 
     Route::post("convocatorias/{id}", [ConvocatoriaController::class, "update"]); // método POST para actualizar con archivos
-    Route::resource("convocatorias", ConvocatoriaController::class);
+    Route::resource("convocatorias", ConvocatoriaController::class);//esto en teoria ya estaba bien
 
     Route::get('convocatorias/{id}/requisitos', [ConvocatoriaController::class, 'requisitos']);
 
@@ -40,5 +41,11 @@ Route::group([
     Route::resource("postulantes", PostulanteController::class);
     Route::post("postulantes/{id}", [PostulanteController::class,"update"]);
 
+    Route::resource("requisitosley", RequisitosLeyController::class);
+
+    // Asignar requisitos ley a una convocatoria
+    Route::post('/convocatorias/{id}/requisitos-ley', [ConvocatoriaController::class, 'asignarRequisitosLey']);
+    // Obtener todos los requisitos (ley + personalizados)
+    Route::get('convocatorias/{id}/todos-requisitos', [ConvocatoriaController::class, 'todosRequisitos']);
 
 });

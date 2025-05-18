@@ -6,10 +6,15 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\Requisitos;
+use App\Models\Convocatorias\RequisitosLey;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\Convocatorias\ConvocatoriaCollection;
 use App\Http\Resources\Convocatorias\ConvocatoriaResource;
+use App\Http\Resources\Convocatorias\RequisitoResource;
+use App\Http\Resources\Requisitos\RequisitosLeyResource;
+
+
 
 class ConvocatoriaController extends Controller
 {
@@ -31,6 +36,29 @@ class ConvocatoriaController extends Controller
             ], 500);
         }
     }
+
+    public function asignarRequisitosLey(Request $request, $id)
+{
+    $convocatoria = Convocatoria::findOrFail($id);
+    $convocatoria->requisitosLey()->sync($request->requisitos_ley_ids); // sincroniza
+
+    return response()->json([
+        'message' => 'Requisitos ley asignados correctamente',
+        'requisitos' => $convocatoria->requisitosLey,
+    ]);
+}
+
+public function todosRequisitos($id)
+{
+    $convocatoria = Convocatoria::with(['requisitos', 'requisitosLey'])->findOrFail($id);
+
+    return response()->json([
+        'requisitos_personalizados' => RequisitoResource::collection($convocatoria->requisitos),
+        'requisitos_ley' => RequisitosLeyResource::collection($convocatoria->requisitosLey),
+    ]);
+}
+
+
 
     /**
      * Display a listing of the resource.
@@ -92,21 +120,17 @@ class ConvocatoriaController extends Controller
                 'sueldo_referencial' => $request->sueldo_referencial,
                 'documento' => $documentoPath,
             ]);
-            
-            // Procesar requisitos obligatorios seleccionados
-            if ($request->has('requisitos_obligatorios')) {
-                $requisitosObligatorios = json_decode($request->requisitos_obligatorios, true);
-                
-                foreach ($requisitosObligatorios as $req) {
-                    if ($req['seleccionado']) {
-                        Requisitos::create([
-                            'id_convocatoria' => $convocatoria->id,
-                            'descripcion' => $req['texto'],
-                            'tipo' => 'Obligatorio'
-                        ]);
-                    }
+
+            // sincroniza los requisitos de ley si se enviaron desde el frontend
+                if ($request->has('requisitos_ley_ids')) {
+                    $convocatoria->requisitosLey()->sync($request->requisitos_ley_ids);
                 }
-            }
+                            
+            // Asume que requisitos_ley_ids es un array de IDs seleccionados, como [1, 3, 5].
+            if ($request->has('requisitos_ley_ids')) {
+                $convocatoria->requisitosLey()->sync($request->requisitos_ley_ids);
+            }            
+            
             
             // Procesar requisitos personalizados
             if ($request->has('requisitos_personalizados')) {
@@ -215,7 +239,11 @@ class ConvocatoriaController extends Controller
                     }
                 }
             }
-            
+            // Sincronizar requisitos de ley si se enviaron
+if ($request->has('requisitos_ley_ids')) {
+    $convocatoria->requisitosLey()->sync($request->requisitos_ley_ids);
+}
+
             DB::commit();
             
             return response()->json([
