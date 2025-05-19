@@ -25,7 +25,8 @@ const estados = [
 const hoy = new Date().toISOString().split('T')[0];
 
 const error_exsist = ref(null);
-
+const requisitosObligatorios = ref([]);
+const requisitosPersonalizados = ref([]);
 const FILE_DOCUMENTO = ref(null)
 const NOMBRE_ARCHIVO_PREVIZUALIZA = ref(null)
 const conv_selected = ref({
@@ -102,11 +103,12 @@ const edit = async () => {
   // Preparar y enviar los requisitos personalizados
   const requisitosLeyIds = requisitosLey.value
   .filter(req => req.seleccionado)
-  .map(req => req.id);
+  .map(req => req.id)
 
 requisitosLeyIds.forEach(id => {
-  formData.append('requisitos_ley_ids[]', id);
-});
+  formData.append('requisitos_ley_ids[]', id)
+})
+
 // Enviar los requisitos personalizados
 formData.append('requisitos_personalizados', JSON.stringify(requisitosPersonalizados.value));
 
@@ -119,8 +121,8 @@ try {
     method: 'POST',
     body: formData,
     onResponseError({ response }) {
-        console.log(response);
-        error_exists.value = response._data?.error ?? 'Error desconocido';
+        console.log(response)
+        error_exists.value = response._data?.error || 'Error desconocido';
     }
 });
 
@@ -172,8 +174,7 @@ const show = async () => {
         console.error(error);
     }
 }
-const requisitosObligatorios = ref([]);
-const requisitosPersonalizados = ref([]);
+
 
 function cargarConvocatoria(data) {
   // ✅ Requisitos de ley (se marcan luego por ID)
@@ -196,13 +197,14 @@ function cargarConvocatoria(data) {
 const todosSeleccionados = ref(false);
 
 function toggleTodosObligatorios() {
-  requisitosObligatorios.value.forEach(req => {
+  requisitosLey.value.forEach(req => {
     req.seleccionado = todosSeleccionados.value;
   });
 }
 
-const mostrarDocumento = ref(false);
 
+const mostrarDocumento = ref(false);
+/*
 const requisitosLeyDesdeBackend = ref([]);
 const requisitosLey = ref([]);
 
@@ -221,9 +223,33 @@ const fetchRequisitosLey = async () => {
   } catch (error) {
     console.error("Error cargando requisitos ley:", error);
   }
-};
+};*/
 
-const requisitosLeySeleccionados = ref([]); // IDs de requisitos seleccionados
+const requisitosLey = ref([])
+const requisitosLeySeleccionados = ref([])
+
+const fetchTodosRequisitos = async () => {
+  const resp = await $api(`/convocatorias/${route.params.id}/todos-requisitos`)
+  const convocatoria = resp
+
+  // IDs ya seleccionados
+  requisitosLeySeleccionados.value = convocatoria.requisitos_ley.map(r => r.id)
+
+  // Mostrar todos, marcando los seleccionados
+  requisitosLey.value = resp.todos_requisitos_ley.map(req => ({
+    id: req.id,
+    texto: req.descripcion,
+    seleccionado: requisitosLeySeleccionados.value.includes(req.id),
+  }))
+
+  // Requisitos personalizados
+  requisitosPersonalizados.value = convocatoria.requisitos_personalizados.map(req => ({
+    nombre: req.descripcion,
+    tipo: req.tipo,
+  }))
+}
+
+//const requisitosLeySeleccionados = ref([]); // contiene los IDs
 
 const fetchConvocatoria = async () => {
   try {
@@ -231,11 +257,16 @@ const fetchConvocatoria = async () => {
 
     // ✅ guardar IDs de los requisitos ley seleccionados
     requisitosLeySeleccionados.value = resp.requisitos_ley.map(r => r.id);
-
+/*
     requisitosPersonalizados.value = resp.requisitos_personalizados.map(req => ({
     nombre: req.descripcion,
     tipo: req.tipo,
-  }));
+  }));*/
+requisitosLey.value.forEach(req => {
+    req.seleccionado = requisitosLeySeleccionados.value.includes(req.id);
+  });
+
+
   } catch (error) {
     console.error('Error obteniendo requisitos de la convocatoria:', error);
   }
@@ -267,8 +298,8 @@ const agregarRequisito = () => {
 
 onMounted(async () => {
     show();
-  await fetchConvocatoria();    // obtiene requisitos seleccionados y personalizados
-  await fetchRequisitosLey();   // carga todos los requisitos ley y marca los seleccionados
+    await fetchConvocatoria();    // obtiene requisitos seleccionados y personalizados
+    await fetchTodosRequisitos();   // carga todos los requisitos ley y marca los seleccionados
 });
 
 
@@ -408,10 +439,11 @@ definePage({
                                         <VCheckbox v-model="todosSeleccionados" label="Seleccionar / Quitar todos"
                                             @change="toggleTodosObligatorios" />
                                         <VList dense>
-                                            <VListItem v-for="(req, index) in requisitosObligatorios"
-                                                :key="'obligatorio-' + index">
-                                                <VCheckbox v-model="req.seleccionado" :label="req.texto" hide-details />
-                                            </VListItem>
+                                            <VListItem v-for="(req, index) in requisitosLey" :key="'ley-' + index">
+  <VCheckbox v-model="req.seleccionado" :label="req.texto" hide-details />
+</VListItem>
+
+
                                         </VList>
                                     </VExpansionPanelText>
                                 </VExpansionPanel>

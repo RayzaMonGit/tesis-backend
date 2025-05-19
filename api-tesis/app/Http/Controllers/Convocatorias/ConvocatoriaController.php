@@ -55,6 +55,7 @@ public function todosRequisitos($id)
     return response()->json([
         'requisitos_personalizados' => RequisitoResource::collection($convocatoria->requisitos),
         'requisitos_ley' => RequisitosLeyResource::collection($convocatoria->requisitosLey),
+        'todos_requisitos_ley' => RequisitosLeyResource::collection(\App\Models\Convocatorias\RequisitosLey::all()),
     ]);
 }
 
@@ -65,26 +66,35 @@ public function updateRequisitos(Request $request, $id)
     try {
         $convocatoria = Convocatoria::findOrFail($id);
 
-        // Borrar los anteriores
-        Requisitos::where('id_convocatoria', $convocatoria->id)->delete();
+        // Actualizar datos generales
+        $convocatoria->update([
+            'titulo' => $request->titulo,
+            'descripcion' => $request->descripcion,
+            'area' => $request->area,
+            'fecha_inicio' => $request->fecha_inicio,
+            'fecha_fin' => $request->fecha_fin,
+            'estado' => $request->estado,
+            'plazas_disponibles' => $request->plazas_disponibles,
+            'sueldo_referencial' => $request->sueldo_referencial,
+        ]);
 
-        // Guardar obligatorios (Ministerio)
-        if ($request->has('requisitos_obligatorios')) {
-            $requisitosObligatorios = json_decode($request->requisitos_obligatorios, true);
-
-            foreach ($requisitosObligatorios as $req) {
-                if (!empty($req['seleccionado'])) {
-                    Requisitos::create([
-                        'id_convocatoria' => $convocatoria->id,
-                        'descripcion' => $req['texto'],
-                        'tipo' => 'Obligatorio',
-                        'req_sec' => 'Ministerio',
-                    ]);
-                }
+        // Documento (opcional)
+        if ($request->hasFile('documento')) {
+            if ($convocatoria->documento) {
+                Storage::delete($convocatoria->documento);
             }
+            $documentoPath = $request->file("documento")->store("convocatorias", "public");
+            $convocatoria->update(['documento' => $documentoPath]);
         }
 
-        // Guardar personalizados
+        // Requisitos de ley
+        if ($request->has('requisitos_ley_ids')) {
+            $convocatoria->requisitosLey()->sync($request->requisitos_ley_ids);
+        }
+
+        // Eliminar y reemplazar requisitos personalizados
+        Requisitos::where('id_convocatoria', $convocatoria->id)->delete();
+
         if ($request->has('requisitos_personalizados')) {
             $requisitosPersonalizados = json_decode($request->requisitos_personalizados, true);
 
@@ -93,32 +103,27 @@ public function updateRequisitos(Request $request, $id)
                     'id_convocatoria' => $convocatoria->id,
                     'descripcion' => $req['nombre'],
                     'tipo' => $req['tipo'],
-                    'req_sec' => 'Institucion',
+                    'req_sec' => 'Institucion'
                 ]);
             }
-        }
-
-        // Guardar requisitos ley
-        if ($request->has('requisitos_ley_ids')) {
-            $convocatoria->requisitosLey()->sync($request->requisitos_ley_ids);
         }
 
         DB::commit();
 
         return response()->json([
-            "message" => 200,
-            "msg_text" => "Requisitos actualizados correctamente"
+            'message' => 200,
+            'msg_text' => 'Requisitos actualizados correctamente'
         ]);
-
     } catch (\Exception $e) {
         DB::rollBack();
-
         return response()->json([
-            "message" => 500,
-            "error" => $e->getMessage()
+            'message' => 500,
+            'error' => $e->getMessage()
         ], 500);
     }
 }
+
+
 
     /**
      * Display a listing of the resource.
@@ -324,37 +329,37 @@ if ($request->has('requisitos_ley_ids')) {
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        DB::beginTransaction();
-        
-        try {
-            $convocatoria = Convocatoria::findOrFail($id);
-            
-            // Eliminar documento asociado
-            if($convocatoria->documento){
-                Storage::delete($convocatoria->documento);
-            }
-            
-            // Eliminar requisitos asociados
-            Requisitos::where('id_convocatoria', $convocatoria->id)->delete();
-            
-            // Eliminar convocatoria
-            $convocatoria->delete();
-            
-            DB::commit();
-            
-            return response()->json([
-                "message" => 200
-            ]);
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            return response()->json([
-                "message" => 500,
-                "error" => $e->getMessage()
-            ], 500);
+    public function destroy($id)
+{
+    DB::beginTransaction();
+
+    try {
+        $convocatoria = Convocatoria::findOrFail($id);
+
+        // Eliminar documento asociado si existe
+        if ($convocatoria->documento) {
+            Storage::delete($convocatoria->documento);
         }
+
+        // Eliminar relaciones (requisitos personalizados y de ley)
+        $convocatoria->requisitos()->delete();
+        $convocatoria->requisitosLey()->detach();
+
+        $convocatoria->delete();
+
+        DB::commit();
+
+        return response()->json([
+            'message' => 200,
+            'msg_text' => 'Convocatoria eliminada correctamente'
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'message' => 500,
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
+
 }

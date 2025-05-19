@@ -14,6 +14,9 @@ const showRequisitosDialog = ref(false);
 const requisitosConvocatoria = ref([]);
 const convocatoriaSeleccionada = ref(null);
 
+const success = ref(null)
+const error_exsist = ref(null)
+
 
 
 const list = async () => {
@@ -83,6 +86,40 @@ const reset = () => {
     currentPage.value = 1;
     list();
 }
+
+const confirmDelete = (item) => {
+  convocatoria_selected_deleted.value = item;
+  isDeleteConvocatoriaDialogVisible.value = true;
+};
+const confirmarEliminacion = (item) => {
+  convocatoria_selected_deleted.value = item;
+  isDeleteConvocatoriaDialogVisible.value = true;
+};
+
+
+
+const eliminarConvocatoria = async () => {
+  if (!convocatoria_selected_deleted.value) return;
+
+  try {
+    const resp = await $api(`/convocatorias/${convocatoria_selected_deleted.value.id}`, {
+      method: 'DELETE',
+    });
+
+    if (resp.message === 200) {
+      success.value = "Convocatoria eliminada correctamente";
+      list(); // Recargar el listado
+    } else {
+      warning.value = "No se pudo eliminar la convocatoria";
+    }
+  } catch (error) {
+    console.error("Error al eliminar:", error);
+    error_exsist.value = "Error inesperado al eliminar";
+  } finally {
+    isDeleteConvocatoriaDialogVisible.value = false;
+  }
+};
+
 
 watch(currentPage, (val) => {
     console.log(val);
@@ -243,9 +280,16 @@ definePage({
                                     <IconBtn size="small" title="Editar" @click="editItem(item)">
                                         <VIcon icon="ri-pencil-line" />
                                     </IconBtn>
-                                    <IconBtn size="small" title="Eliminar">
-                                        <VIcon icon="ri-delete-bin-line" />
-                                    </IconBtn>
+                                    <IconBtn
+  size="small"
+  title="Eliminar"
+  @click="confirmarEliminacion(item)"
+>
+  <VIcon icon="ri-delete-bin-line" />
+</IconBtn>
+
+
+
                                 </div>
                             </td>
                         </tr>
@@ -280,8 +324,8 @@ definePage({
         <VListItem v-for="req in requisitosConvocatoria" :key="req.id">
           <template #prepend>
             <VIcon 
-              :icon="req.tipo && req.tipo.toLowerCase() === 'obligatorio' ? 'ri-checkbox-circle-fill' : 'ri-checkbox-blank-circle-line'" 
-              :color="req.tipo && req.tipo.toLowerCase() === 'obligatorio' ? 'error' : 'info'"
+              :icon="req.req && req.req.toLowerCase() === 'obligatorio' ? 'ri-checkbox-circle-fill' : 'ri-checkbox-blank-circle-line'" 
+              :color="req.req && req.req.toLowerCase() === 'obligatorio' ? 'error' : 'info'"
               class="me-2"
             />
           </template>
@@ -289,11 +333,11 @@ definePage({
           <template #append>
             <VChip
               size="small" 
-              :color="req.tipo && req.tipo.toLowerCase() === 'obligatorio' ? 'error' : 'info'" 
+              :color="req.req && req.req.toLowerCase() === 'obligatorio' ? 'error' : 'info'" 
               variant="outlined"
               class="ms-2"
             >
-              {{ req.tipo || 'No especificado' }}
+              {{ req.req || 'No especificado' }}
             </VChip>
           </template>
         </VListItem>
@@ -305,6 +349,21 @@ definePage({
       <VBtn color="primary" @click="showRequisitosDialog = false">
         Cerrar
       </VBtn>
+    </VCardActions>
+  </VCard>
+</VDialog>
+
+
+<VDialog v-model="isDeleteConvocatoriaDialogVisible" max-width="500">
+  <VCard>
+    <VCardTitle class="text-h6">¿Estás seguro de que deseas eliminar esta convocatoria?</VCardTitle>
+    <VCardText>
+      Esta acción no se puede deshacer.
+    </VCardText>
+    <VCardActions>
+      <VSpacer />
+      <VBtn color="grey" text @click="isDeleteConvocatoriaDialogVisible = false">Cancelar</VBtn>
+      <VBtn color="red" @click="eliminarConvocatoria">Eliminar</VBtn>
     </VCardActions>
   </VCard>
 </VDialog>
