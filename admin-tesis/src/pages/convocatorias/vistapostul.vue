@@ -24,8 +24,9 @@ const fetchConvocatoriasAbiertas = async () => {
 }
 
 const verConvocatoria = (id) => {
-  router.push({ name: 'postulante-convocatoria-detalle', params: { id } })
+  router.push(`/convocatorias/detalles/${id}`)
 }
+
 
 onMounted(() => {
   fetchConvocatoriasAbiertas()

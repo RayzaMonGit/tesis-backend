@@ -53,6 +53,7 @@ public function todosRequisitos($id)
     $convocatoria = Convocatoria::with(['requisitos', 'requisitosLey'])->findOrFail($id);
 
     return response()->json([
+        //'convocatoria' => new ConvocatoriaResource($convocatoria), // ✅ Agrega esto
         'requisitos_personalizados' => RequisitoResource::collection($convocatoria->requisitos),
         'requisitos_ley' => RequisitosLeyResource::collection($convocatoria->requisitosLey),
         'todos_requisitos_ley' => RequisitosLeyResource::collection(\App\Models\Convocatorias\RequisitosLey::all()),
