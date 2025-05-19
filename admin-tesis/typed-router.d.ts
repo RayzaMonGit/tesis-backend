@@ -25,6 +25,7 @@ declare module 'vue-router/auto-routes' {
     'convocatorias-add': RouteRecordInfo<'convocatorias-add', '/convocatorias/add', Record<never, never>, Record<never, never>>,
     'convocatorias-edit-id': RouteRecordInfo<'convocatorias-edit-id', '/convocatorias/edit/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'convocatorias-list': RouteRecordInfo<'convocatorias-list', '/convocatorias/list', Record<never, never>, Record<never, never>>,
+    'convocatorias-vistapostul': RouteRecordInfo<'convocatorias-vistapostul', '/convocatorias/vistapostul', Record<never, never>, Record<never, never>>,
     'dashboard': RouteRecordInfo<'dashboard', '/dashboard', Record<never, never>, Record<never, never>>,
     'documentos-listado': RouteRecordInfo<'documentos-listado', '/documentos-listado', Record<never, never>, Record<never, never>>,
     'documentos-subir': RouteRecordInfo<'documentos-subir', '/documentos-subir', Record<never, never>, Record<never, never>>,

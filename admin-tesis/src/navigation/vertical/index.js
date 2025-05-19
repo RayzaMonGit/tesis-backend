@@ -36,7 +36,8 @@ export default [
     ,"register_convocatories"
     ,"list_convocatories"
     ,"edit_convocatories"
-    ,"delete_convocatories"
+    ,"delete_convocatories",
+    "calendar",
       ] },
       {
         title: 'Convocatorias',
@@ -47,8 +48,8 @@ export default [
             to: { name: 'convocatorias-add' },
             icon: { icon: 'ri-add-circle-line' },
             permissions:["register_convocatories"
-    ,"edit_convocatories"
-    ,"delete_convocatories"],
+                        ,"edit_convocatories"
+                        ,"delete_convocatories"],
           },
           {
             title: 'Ver Convocatorias',
@@ -56,6 +57,14 @@ export default [
             icon: { icon: 'ri-calendar-event-line' },
             permission:'list_convocatories',
           },
+          {
+            title: 'Ver Convocatorias por Postulante',
+            to: { name: 'convocatorias-vistapostul' },
+            icon: { icon: 'ri-calendar-event-line' },
+            permission:'calendar',
+            
+          }
+          
         ],
       },
       {
