@@ -154,8 +154,10 @@ try {
         success.value = null;
         warning.value = null;
         error_exsist.value = null;
+        //redirigir a list.vue
+        router.push('/convocatorias/list');
         // Limpiar formulario
-        fileClean();
+        //fileClean();
         // Navegar a la lista de convocatorias o limpiar formulario
         // router.push('/convocatorias');
       }, 1000)

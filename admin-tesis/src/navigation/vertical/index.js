@@ -58,7 +58,7 @@ export default [
             permission:'list_convocatories',
           },
           {
-            title: 'Ver Convocatorias por Postulante',
+            title: 'Convocatorias Vigentes',
             to: { name: 'convocatorias-vistapostul' },
             icon: { icon: 'ri-calendar-event-line' },
             permission:'calendar',

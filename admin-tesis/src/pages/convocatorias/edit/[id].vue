@@ -177,16 +177,13 @@ const show = async () => {
 
 
 function cargarConvocatoria(data) {
-  // ✅ Requisitos de ley (se marcan luego por ID)
-  // (aunque no los uses aquí, debes asegurar que no sea undefined)
+  //  Requisitos de ley (se marcan luego por ID)
+  // asegurar que no sea undefined
   if (!Array.isArray(data.requisitos_ley)) {
     data.requisitos_ley = [];
   }
 
-  // ⚠️ Aquí no necesitas usar los requisitos de ley directamente,
-  // porque ya se están marcando aparte por `requisitosLeyDesdeBackend`
-
-  // ✅ Requisitos personalizados
+  // Requisitos personalizados
   requisitosPersonalizados.value = data.requisitos.map(r => ({
     nombre: r.descripcion,
     tipo: r.tipo
@@ -501,14 +498,21 @@ definePage({
                 <strong>{{ success }}</strong>
             </VAlert>
         </VWindow>
+        <!-- Botón Volver a lista de convovcatorias -->
+        <VCardText class="pa-5 d-flex justify-space-between align-center">
+  <!-- Botón Volver a la izquierda -->
+  <VBtn @click="$router.push('/convocatorias/list')" color="primary">
+    <VIcon start icon="ri-arrow-left-line" />
+    Volver a la lista
+  </VBtn>
 
-        <!-- Botón Guardar -->
-        <VCardText class="pa-5">
-            <VBtn @click="edit()">
-                Guardar convocatoria
-                <VIcon end icon="ri-checkbox-circle-line" />
-            </VBtn>
-        </VCardText>
+  <!-- Botón Guardar a la derecha -->
+  <VBtn @click="edit()" color="success">
+    Guardar convocatoria
+    <VIcon end icon="ri-checkbox-circle-line" />
+  </VBtn>
+</VCardText>
+
     </VCard>
 
 
