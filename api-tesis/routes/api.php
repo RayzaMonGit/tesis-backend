@@ -8,6 +8,7 @@ use App\Http\Controllers\Convocatorias\ConvocatoriaController;
 use App\Http\Controllers\Postulante\PostulanteController;
 use App\Http\Controllers\Postulante\RegisterController;
 use App\Http\Controllers\Requisitos\RequisitosLeyController;
+use App\Http\Controllers\Comision\ComisionController;
 
 //para que se registre un usuario sin estar autentificado
 Route::resource("register",RegisterController::class);
@@ -50,4 +51,7 @@ Route::group([
     Route::get('convocatorias/{id}/todos-requisitos', [ConvocatoriaController::class, 'todosRequisitos']);
     Route::post('convocatorias/{id}/todos-requisitos', [ConvocatoriaController::class, 'updateRequisitos']);
 
+    //comisiones
+    Route::get('convocatorias/{id}/comision', [ComisionController::class, 'obtenerComision']);
+    Route::post('convocatorias/{id}/comision', [ComisionController::class, 'asignarComision']);
 });

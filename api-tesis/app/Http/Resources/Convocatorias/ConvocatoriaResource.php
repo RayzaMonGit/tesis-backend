@@ -43,6 +43,15 @@ class ConvocatoriaResource extends JsonResource
         "req" => $reqLey->req, // obligatorio u opcional
     ];
 }),
+"evaluadores" => $this->evaluadores->map(function($user) {
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'surname' => $user->surname,
+        'email' => $user->email,
+        'avatar' => $user->avatar ? env("APP_URL") . 'storage/' . $user->avatar : null,
+    ];
+}),
 
 
         ];

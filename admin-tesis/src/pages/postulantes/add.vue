@@ -19,7 +19,7 @@ definePage({
     permissions: ["register_postulant"]
   },
 })
-// Aquí puedes definir la lógica de tu componente con composition API
+// definir la lógica de tu componente con composition API
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 

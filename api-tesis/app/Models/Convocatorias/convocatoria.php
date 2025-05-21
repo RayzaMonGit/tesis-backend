@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 //use App\Models\Convocatorias\requisitos;
 use App\Models\Convocatorias\Requisitos;
 use App\Models\Convocatorias\RequisitosLey;
+use App\Models\User;
+
+
 
 class Convocatoria extends Model
 {
@@ -41,6 +44,15 @@ class Convocatoria extends Model
 public function requisitosLey()
 {
     return $this->belongsToMany(RequisitosLey::class, 'convocatoria_requisito_ley');
+}/*
+public function comision()
+{
+    return $this->belongsToMany(User::class, 'user_id');
+}
+*/
+public function evaluadores()
+{
+    return $this->belongsToMany(User::class, 'convocatoria_comision', 'convocatoria_id', 'user_id');
 }
 
     

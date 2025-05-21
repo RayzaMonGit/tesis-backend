@@ -87,4 +87,15 @@ class User extends Authenticatable implements JWTSubject
     public function postulante(){
         return $this->hasOne(Postulante::class);
     }
+    public function comision()
+{
+    return $this->belongsToMany(User::class, 'convocatoria_comision')->withTimestamps();
+}
+public function convocatorias()
+{
+    return $this->belongsToMany(Convocatoria::class, 'convocatoria_comision', 'user_id', 'convocatoria_id');
+}
+
+
+
 }

@@ -135,7 +135,7 @@ public function updateRequisitos(Request $request, $id)
     $estado = $request->get("estado");
     $area = $request->get("area");
 
-    $convocatorias = Convocatoria::with('requisitos')
+    $convocatorias = Convocatoria::with(['requisitos', 'evaluadores'])
         ->when($area, function ($q) use ($area) {
             $q->where("area", $area);
         })

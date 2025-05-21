@@ -16,6 +16,7 @@ const show = async () => {
 function obtenerNombreArchivo(url) {
   return url.split('/').pop()
 }
+//para que un postulante se postule a una convocatoria
 const postularme = async () => {
   try {
     const resp = await $api('/postulaciones', {
