@@ -26,7 +26,7 @@ class UserResource extends JsonResource
             ],
             "role_name" => $this->resource->role->name,
                 //http://127.0.0.1:8000/storage/calamardo.png
-            'avatar' => $this->resource->avatar ? env("APP_URL")."storage/".$this->resource->avatar : NULL,
+            'avatar' => $this->resource->avatar ? rtrim(env("APP_URL"), '/') . '/storage/' . $this->resource->avatar : NULL,
             'telefono'=>$this->resource->telefono,
             'designacion'=>$this->resource->designacion,
             'gender'=>$this->resource->gender,

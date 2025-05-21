@@ -32,6 +32,7 @@ declare module 'vue-router/auto-routes' {
     'documentos-subir': RouteRecordInfo<'documentos-subir', '/documentos-subir', Record<never, never>, Record<never, never>>,
     'evaluaciones-listado': RouteRecordInfo<'evaluaciones-listado', '/evaluaciones-listado', Record<never, never>, Record<never, never>>,
     'evaluaciones-registrar': RouteRecordInfo<'evaluaciones-registrar', '/evaluaciones-registrar', Record<never, never>, Record<never, never>>,
+    'formularios-add': RouteRecordInfo<'formularios-add', '/Formularios/add', Record<never, never>, Record<never, never>>,
     'instituciones-listado': RouteRecordInfo<'instituciones-listado', '/instituciones-listado', Record<never, never>, Record<never, never>>,
     'instituciones-registrar': RouteRecordInfo<'instituciones-registrar', '/instituciones-registrar', Record<never, never>, Record<never, never>>,
     'login': RouteRecordInfo<'login', '/login', Record<never, never>, Record<never, never>>,

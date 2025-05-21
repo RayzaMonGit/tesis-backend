@@ -15,7 +15,6 @@ export default [
 "edit_rol",
 "delete_rol"],
     icon: { icon: 'ri-user-3-line' },
-    // Aquí no especificaste permiso, podrías agregarlo si lo deseas (ej: 'list_staff')
   },
   {
     title: 'Roles y Permisos',
@@ -125,19 +124,19 @@ export default [
     icon: { icon: 'ri-team-line' },
     children: [
       {
-        title: 'Crear Comisión',
+        title: 'Asignaciones',
         to: { name: 'comisiones-crear' },
         icon: { icon: 'ri-user-add-line' },
         permission:'register_comission',
       },
-      {
+      /*{
         title: 'Ver Comisiones',
         to: { name: 'comisiones-listado' },
         icon: { icon: 'ri-group-line' },
         permissions:["list_comission"
 ,"edit_comission"
 ,"delete_comission"],
-      },
+      },*/
     ],
   },
  
