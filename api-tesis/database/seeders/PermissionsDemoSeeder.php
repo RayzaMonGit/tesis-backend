@@ -6,6 +6,64 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
+use App\Models\User;
+
+class PermissionsDemoSeeder extends Seeder
+{
+    public function run()
+    {
+        // Reset cache de permisos y roles
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        $permisos = [
+            'register_rol', 'list_rol', 'edit_rol', 'delete_rol',
+            'register_institution', 'list_institution', 'edit_institution', 'delete_institution', 'profile_institution',
+            'register_postulant', 'list_postulant', 'edit_postulant', 'delete_postulant', 'profile_postulant',
+            'register_comission', 'list_comission', 'edit_comission', 'delete_comission',
+            'register_documents', 'list_documents', 'edit_documents', 'delete_documents',
+            'register_convocatories', 'list_convocatories', 'edit_convocatories', 'delete_convocatories',
+            'calendar',
+            'register_evaluation', 'list_evaluation', 'edit_evaluation', 'delete_evaluation', 'assign_evaluation_to_postulant',
+            'show_report_grafics',
+
+            // Agregá tus nuevos permisos aquí
+            'crear_formulario_evaluacion',
+            'editar_formulario_evaluacion',
+            'eliminar_formulario_evaluacion',
+            'listar_fomulario_evaluacion',
+            'convocatoria_para_postulantes'
+        ];
+
+        foreach ($permisos as $permiso) {
+            Permission::firstOrCreate(['guard_name' => 'api', 'name' => $permiso]);
+        }
+
+        // Crear rol Super-Admin si no existe
+        $role = Role::firstOrCreate(['guard_name' => 'api', 'name' => 'Super-Admin']);
+
+        // Crear usuario solo si no existe
+        $user = User::where('email', 'raypy@gmail.com')->first();
+        if (!$user) {
+            $user = User::create([
+                'name' => 'Raypy',
+            'email' => 'raypy@gmail.com',
+            'password' => bcrypt('123456')
+            ]);
+        }
+
+        $user->assignRole($role);
+
+        $this->command->info('Permisos y rol Super-Admin actualizados correctamente.');
+    }
+}
+
+/*
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class PermissionsDemoSeeder extends Seeder
 {
@@ -14,7 +72,7 @@ class PermissionsDemoSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    /*public function run()
     {
         // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
@@ -74,4 +132,4 @@ class PermissionsDemoSeeder extends Seeder
         ]);
         $user->assignRole($role3);
     }
-}
+}*/

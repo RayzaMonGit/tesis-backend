@@ -1,5 +1,7 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Formulario;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\FormularioEvaluacion;
 use App\Models\SeccionFormulario;
@@ -57,7 +59,12 @@ class FormularioEvaluacionController extends Controller
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            return response()->json(['error' => 'Error al crear formulario.', 'detail' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Error al crear formulario.',
+                'detail' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+            
         }
     }
 

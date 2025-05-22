@@ -61,6 +61,7 @@ export const PERMISOS = [
         { name: 'Listado', permiso: 'list_convocatories' },
         { name: 'Edición', permiso: 'edit_convocatories' },
         { name: 'Eliminar', permiso: 'delete_convocatories' },
+        { name: 'Listado para postulantes', permiso:'convocatoria_para_postulantes'}
       ]
     },
     {
@@ -77,6 +78,16 @@ export const PERMISOS = [
       name: 'Calendario',
       permisos: [
         { name: 'Disponibilidad', permiso: 'calendar' },
+      ]
+    },
+    {
+      name: 'Formulario de evaluación',
+      permisos: [
+        { name: 'Listar', permiso: 'listar_fomulario_evaluacion' },
+        { name: 'Crear', permiso: 'crear_formulario_evaluacion' },
+        { name: 'Edición', permiso: 'editar_formulario_evaluacion' },
+        { name: 'Eliminación', permiso: 'eliminar_formulario_evaluacion' },
+        
       ]
     },
   ]

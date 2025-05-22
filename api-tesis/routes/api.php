@@ -60,10 +60,10 @@ Route::group([
     //Formulario
 
     Route::get('formularios-evaluacion', [FormularioEvaluacionController::class, 'index']);
-Route::post('formularios-evaluacion', [FormularioEvaluacionController::class, 'store']);
-Route::get('formularios-evaluacion/{id}', [FormularioEvaluacionController::class, 'show']);
-Route::post('formularios-evaluacion/{id}', [FormularioEvaluacionController::class, 'update']); // POST en vez de PUT
-Route::delete('formularios-evaluacion/{id}', [FormularioEvaluacionController::class, 'destroy']);
+    Route::post('formularios-evaluacion', [FormularioEvaluacionController::class, 'store']);
+    Route::get('formularios-evaluacion/{id}', [FormularioEvaluacionController::class, 'show']);
+    Route::post('formularios-evaluacion/{id}', [FormularioEvaluacionController::class, 'update']); // POST en vez de PUT
+    Route::delete('formularios-evaluacion/{id}', [FormularioEvaluacionController::class, 'destroy']);
 
 
 });

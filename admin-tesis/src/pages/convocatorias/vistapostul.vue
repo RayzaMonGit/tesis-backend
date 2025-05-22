@@ -2,7 +2,7 @@
 
 definePage({
   meta: {
-    permissions: ["calendar"]
+    permissions: ["convocatoria_para_postulantes"]
   },
 })
 import { ref, onMounted } from 'vue'
