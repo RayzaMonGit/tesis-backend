@@ -6,136 +6,136 @@
       </v-card-title>
 
       <v-row dense>
+        <!--nombre, puntaje maxaximo y descripcion-->
         <v-col cols="12" md="8">
-          <v-text-field
-            v-model="formulario.nombre"
-            label="Nombre del Formulario"
-            outlined
-            dense
-            required
-          ></v-text-field>
+          <v-text-field v-model="formulario.nombre" label="Nombre del Formulario"
+            placeholder="Ej: Formulario de Calificación de méritos para docentes iterinos" outlined dense
+            required></v-text-field>
         </v-col>
         <v-col cols="12" md="4">
-          <v-text-field
-            v-model="formulario.resolucion"
-            label="Resolución"
-            outlined
-            dense
-          ></v-text-field>
+          <v-text-field v-model="formulario.puntaje_total" label="Puntaje total del formulario" type="number"
+            placeholder="Ej: 100" outlined dense></v-text-field>
         </v-col>
         <v-col cols="12">
-          <v-textarea
-            v-model="formulario.descripcion"
-            label="Descripción"
-            outlined
-            rows="2"
-            auto-grow
-            dense
-          ></v-textarea>
+          <v-textarea v-model="formulario.descripcion" label="Descripción"
+            placeholder="Ej: Formulario para la calificación de méritos para docentes interinos bajo resolucion HCF .Nº XXXX/202X"
+            outlined rows="2" auto-grow dense></v-textarea>
         </v-col>
       </v-row>
 
       <v-divider class="my-4"></v-divider>
+      <v-alert
+            v-if="sumaPuntajes > formulario.puntaje_total"
+            type="error"
+            class="mt-2"
+            dense
+            border="start"
+            border-color="error"
+          >
+            La suma de puntajes por sección supera el puntaje total del formulario ({{ formulario.puntaje_total }}).
+          </v-alert>
+
+          <v-alert
+            v-else-if="sumaPuntajes < formulario.puntaje_total"
+            type="warning"
+            class="mt-2"
+            dense
+            border="start"
+            border-color="warning"
+          >
+            La suma de puntajes por sección es menor al puntaje total del formulario.
+          </v-alert>
+
+
 
       <div v-for="(seccion, i) in formulario.secciones" :key="i" class="mb-6">
+        
+
         <v-card class="pa-4" variant="outlined">
-          <v-card-title class="text-subtitle-1 font-weight-medium">
-            Sección {{ i + 1 }}
-            <v-spacer />
-            <v-btn icon color="error" variant="text" @click="eliminarSeccion(i)">
-              <v-icon>mdi-delete</v-icon>
-            </v-btn>
+          <v-card-title class="d-flex align-center justify-space-between">
+            <span class="text-subtitle-1 font-weight-medium">
+              Sección {{ i + 1 }}
+            </span>
+            <VBtn color="error" variant="outlined" @click="eliminarSeccion(i)">
+              <VIcon icon="ri-prohibited-line" />
+            </VBtn>
           </v-card-title>
 
+          <!--Secciones del formulario ttulo, puntaje max,-->
           <v-row dense>
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="seccion.titulo"
-                label="Título de la Sección"
-                outlined
-                dense
-              ></v-text-field>
+              <v-text-field 
+              v-model="seccion.titulo" 
+              label="Título de la Sección" 
+              placeholder="Ej: CURSOS Y SEMINARIOS"
+              outlined dense></v-text-field>
             </v-col>
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model.number="seccion.puntaje_max"
-                label="Puntaje Máximo de la Sección"
+              <v-text-field 
+                v-model.number="seccion.puntaje_max" 
+                label="Puntaje Máximo de la Sección" 
                 type="number"
+                placeholder="Ej: 10"
+                :rules="[
+                  v => v >= 0 || 'Debe ser mayor o igual a 0',
+                  v => v <= formulario.puntaje_total || `No puede exceder el puntaje máximo del formulario (${formulario.puntaje_total})`
+                ]"
                 outlined
                 dense
               ></v-text-field>
             </v-col>
+
+
           </v-row>
 
           <v-divider class="my-3"></v-divider>
-
+          <!--Criterios de seleccion segun seccion-->
           <div v-for="(criterio, j) in seccion.criterios" :key="j" class="mb-3">
             <v-row dense align="center">
               <v-col cols="12" md="4">
-                <v-text-field
-                  v-model="criterio.nombre"
-                  label="Nombre del Criterio"
-                  outlined
-                  dense
-                ></v-text-field>
+                <v-text-field 
+                v-model="criterio.nombre" 
+                label="Nombre del Criterio" 
+                placeholder="Ej: Asistencia a congresos"
+                outlined dense></v-text-field>
               </v-col>
               <v-col cols="12" md="3">
-                <v-text-field
-                  v-model.number="criterio.puntaje_por_item"
-                  label="Puntaje por ítem"
-                  type="number"
-                  outlined
-                  dense
-                ></v-text-field>
+                <v-text-field 
+                v-model.number="criterio.puntaje_por_item" 
+                label="Puntaje por ítem"
+                placeholder="Ej: 0,5"
+                 type="number" outlined
+                dense></v-text-field>
               </v-col>
               <v-col cols="12" md="3">
-                <v-text-field
-                  v-model.number="criterio.puntaje_maximo"
-                  label="Puntaje máximo acumulable"
-                  type="number"
-                  outlined
-                  dense
-                ></v-text-field>
+                <v-text-field 
+                v-model.number="criterio.max_items" 
+                label="Cantidad maxima de ítems" 
+                placeholder="Ej: 2"
+                type="number"
+                outlined dense></v-text-field>
               </v-col>
               <v-col cols="12" md="2" class="text-right">
-                <v-btn icon color="error" variant="text" @click="eliminarCriterio(i, j)">
-                  <v-icon>mdi-delete</v-icon>
-                </v-btn>
+                <VBtn color="error"  @click="eliminarCriterio(i, j)">
+                  <v-icon>ri-delete-bin-3-line</v-icon>
+                </VBtn>
               </v-col>
             </v-row>
           </div>
 
-          <v-btn
-            prepend-icon="mdi-plus"
-            variant="text"
-            color="primary"
-            class="mt-2"
-            @click="agregarCriterio(i)"
-          >
+          <v-btn prepend-icon="mdi-plus" variant="text" color="primary" class="mt-2" @click="agregarCriterio(i)">
             Añadir Criterio
           </v-btn>
         </v-card>
       </div>
 
-      <v-btn
-        prepend-icon="mdi-plus-box"
-        color="secondary"
-        variant="tonal"
-        class="mt-2"
-        @click="agregarSeccion"
-      >
+      <v-btn prepend-icon="mdi-plus-box" color="secondary" variant="tonal" class="mt-2" @click="agregarSeccion">
         Añadir Sección
       </v-btn>
 
       <v-divider class="my-6"></v-divider>
 
-      <v-btn
-        color="primary"
-        class="mt-4"
-        size="large"
-        block
-        @click="enviarFormulario"
-      >
+      <v-btn color="primary" class="mt-4" size="large" block @click="enviarFormulario">
         Guardar Formulario
       </v-btn>
     </v-card>
@@ -144,20 +144,34 @@
 
 
 <script setup>
+
 import { ref } from 'vue'
 import axios from 'axios'
+import { p } from '@antfu/utils';
+
+
+const error_exsist = ref(null);
+const success = ref(null);
+const warning = ref(null);
 
 const formulario = ref({
   nombre: '',
   descripcion: '',
-  resolucion: '',
+  puntaje_total: 0,
   secciones: [
-  {
-    titulo: '',
-    puntaje_max: null,
-    criterios: [],
-  },
-],
+    {
+      titulo: '',
+      puntaje_max: null,
+      criterios: [
+        {
+          nombre: '',
+          puntaje_por_item: 0,
+          max_items: 0,
+          
+        }
+      ],
+    },
+  ],
 
 })
 
@@ -183,16 +197,16 @@ const enviarFormulario = async () => {
   console.log(formulario.value)
 
   const formData = {
-    nombre: formulario.value.nombre,
-    resolucion: formulario.value.resolucion,
-    descripcion: formulario.value.descripcion,
-    secciones: (formulario.value.secciones || []).map((s) => ({
+    nombre:  formulario.value.nombre,
+  descripcion: formulario.value.descripcion,
+  puntaje_total: formulario.value.puntaje_total,
+  secciones: (formulario.value.secciones || []).map((s) => ({
       titulo: s.titulo,
       puntaje_max: s.puntaje_max,
       criterios: (s.criterios || []).map((c) => ({
         nombre: c.nombre,
         puntaje_por_item: c.puntaje_por_item,
-        puntaje_maximo: c.puntaje_maximo,
+          max_items: c.max_items,
       })),
     })),
   }
@@ -216,14 +230,20 @@ const enviarFormulario = async () => {
         success.value = null
         warning.value = null
         error_exsist.value = null
-        router.push('/formularios-evaluacion/list') // ajusta esta ruta si es diferente
+        router.push('/formularios/list') // ajusta esta ruta si es diferente
       }, 1500)
     }
   } catch (error) {
     console.error(error)
     error_exsist.value = 'Error al registrar el formulario'
   }
-}
+};
+//validando que la suma de los puntajes de las secciones no exceda el puntaje total del formulario
+const sumaPuntajes = computed(() => {
+  return formulario.value.secciones.reduce((total, seccion) => {
+    return total + (seccion.puntaje_max || 0)
+  }, 0)
+})
 
 
 </script>

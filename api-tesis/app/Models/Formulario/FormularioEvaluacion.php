@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\formulario;
+namespace App\Models\Formulario;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +14,7 @@ class FormularioEvaluacion extends Model
     protected $fillable = [
         'nombre',
         'descripcion',
-        'resolucion',
+        //'resolucion',
         'puntaje_total',
     ];
 

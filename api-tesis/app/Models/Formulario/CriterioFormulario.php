@@ -1,5 +1,5 @@
 <?php
-namespace App\Models;
+namespace App\Models\Formulario;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,9 +10,11 @@ class CriterioFormulario extends Model
     protected $fillable = [
         'seccion_id',
         'nombre',
-        'puntaje',
+        //'puntaje',
         'max_items',
-        'orden',
+        //'orden',
+        'puntaje_por_item',
+        'puntaje_maximo',
     ];
 
     public function seccion()

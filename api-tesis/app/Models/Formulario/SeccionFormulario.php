@@ -1,5 +1,5 @@
 <?php
-namespace App\Models\formulario;
+namespace App\Models\Formulario;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +14,7 @@ class SeccionFormulario extends Model
         'formulario_id',
         'titulo',
         'puntaje_max',
-        'orden',
+        //'orden',
     ];
 
     public function formulario()

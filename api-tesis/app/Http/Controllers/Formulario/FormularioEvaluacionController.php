@@ -3,11 +3,12 @@ namespace App\Http\Controllers\Formulario;
 
 use App\Http\Controllers\Controller;
 
-use App\Models\FormularioEvaluacion;
-use App\Models\SeccionFormulario;
-use App\Models\CriterioFormulario;
+use App\Models\Formulario\FormularioEvaluacion;
+use App\Models\Formulario\SeccionFormulario;
+use App\Models\Formulario\CriterioFormulario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\Formularios\FormularioEvaluacionResource;
 
 class FormularioEvaluacionController extends Controller
 {
@@ -16,20 +17,30 @@ class FormularioEvaluacionController extends Controller
         return FormularioEvaluacion::with('secciones.criterios')->get();
     }
 
-    public function show($id)
-    {
-        $formulario = FormularioEvaluacion::with('secciones.criterios')->findOrFail($id);
-        return response()->json($formulario);
-    }
+
+public function show($id)
+{
+    $formulario = FormularioEvaluacion::with('secciones.criterios')->findOrFail($id);
+
+    return new FormularioEvaluacionResource($formulario);
+}
+
 
     public function store(Request $request)
     {
         $validated = $request->validate([
+            
+            //'resolucion' => 'nullable|string|max:255',
             'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
-            'resolucion' => 'nullable|string|max:255',
-            'puntaje_total' => 'required|numeric',
-            'secciones' => 'required|array',
+        'descripcion' => 'nullable|string',
+        'puntaje_total' => 'required|numeric',
+        'secciones' => 'required|array|min:1',
+        'secciones.*.titulo' => 'required|string|max:255',
+        'secciones.*.puntaje_max' => 'required|numeric',
+        'secciones.*.criterios' => 'required|array|min:1',
+        'secciones.*.criterios.*.nombre' => 'required|string|max:255',
+        'secciones.*.criterios.*.puntaje_por_item' => 'nullable|numeric',
+        'secciones.*.criterios.*.max_items' => 'nullable|integer',
         ]);
 
         DB::beginTransaction();
@@ -41,15 +52,16 @@ class FormularioEvaluacionController extends Controller
                 $seccion = $formulario->secciones()->create([
                     'titulo' => $s['titulo'],
                     'puntaje_max' => $s['puntaje_max'],
-                    'orden' => $s['orden'],
+                    //'orden' => $s['orden'],
                 ]);
 
                 foreach ($s['criterios'] as $c) {
                     $seccion->criterios()->create([
                         'nombre' => $c['nombre'],
-                        'puntaje' => $c['puntaje'],
+                        'puntaje_por_item'=> $c['puntaje_por_item'],
+                        //'puntaje' => $c['puntaje'],
                         'max_items' => $c['max_items'],
-                        'orden' => $c['orden'],
+                        //'orden' => $c['orden'],
                     ]);
                 }
             }
@@ -73,11 +85,11 @@ class FormularioEvaluacionController extends Controller
         $formulario = FormularioEvaluacion::findOrFail($id);
 
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'string|max:255',
             'descripcion' => 'nullable|string',
-            'resolucion' => 'nullable|string|max:255',
-            'puntaje_total' => 'required|numeric',
-            'secciones' => 'required|array',
+            //'resolucion' => 'nullable|string|max:255',
+            'puntaje_total' => 'numeric',
+            'secciones' => 'array',
         ]);
 
         DB::beginTransaction();
@@ -96,15 +108,15 @@ class FormularioEvaluacionController extends Controller
                 $seccion = $formulario->secciones()->create([
                     'titulo' => $s['titulo'],
                     'puntaje_max' => $s['puntaje_max'],
-                    'orden' => $s['orden'],
+                    //'orden' => $s['orden'],
                 ]);
 
                 foreach ($s['criterios'] as $c) {
                     $seccion->criterios()->create([
                         'nombre' => $c['nombre'],
-                        'puntaje' => $c['puntaje'],
+                        //'puntaje' => $c['puntaje'],
                         'max_items' => $c['max_items'],
-                        'orden' => $c['orden'],
+                        //'orden' => $c['orden'],
                     ]);
                 }
             }
