@@ -82,28 +82,34 @@ public function show($id)
 
     public function update(Request $request, $id)
     {
-        $formulario = FormularioEvaluacion::findOrFail($id);
-
+        
         $validated = $request->validate([
-            'nombre' => 'string|max:255',
-            'descripcion' => 'nullable|string',
+            
             //'resolucion' => 'nullable|string|max:255',
-            'puntaje_total' => 'numeric',
-            'secciones' => 'array',
+            'nombre' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'puntaje_total' => 'required|numeric',
+            'secciones' => 'required|array|min:1',
+            'secciones.*.titulo' => 'required|string|max:255',
+            'secciones.*.puntaje_max' => 'required|numeric',
+            'secciones.*.criterios' => 'required|array|min:1',
+            'secciones.*.criterios.*.nombre' => 'required|string|max:255',
+            'secciones.*.criterios.*.puntaje_por_item' => 'nullable|numeric',
+            'secciones.*.criterios.*.max_items' => 'nullable|integer',
         ]);
-
+        
         DB::beginTransaction();
-
         try {
+            $formulario = FormularioEvaluacion::findOrFail($id);
             $formulario->update($validated);
 
-            // Borrar secciones y criterios anteriores
+            // Eliminar secciones y criterios existentes
             foreach ($formulario->secciones as $s) {
                 $s->criterios()->delete();
+                $s->delete();
             }
-            $formulario->secciones()->delete();
 
-            // Volver a crear secciones y criterios
+            // Crear nuevas secciones y criterios
             foreach ($validated['secciones'] as $s) {
                 $seccion = $formulario->secciones()->create([
                     'titulo' => $s['titulo'],
@@ -114,6 +120,7 @@ public function show($id)
                 foreach ($s['criterios'] as $c) {
                     $seccion->criterios()->create([
                         'nombre' => $c['nombre'],
+                        'puntaje_por_item'=> $c['puntaje_por_item'],
                         //'puntaje' => $c['puntaje'],
                         'max_items' => $c['max_items'],
                         //'orden' => $c['orden'],
@@ -123,7 +130,7 @@ public function show($id)
 
             DB::commit();
             return response()->json(['message' => 'Formulario actualizado correctamente.']);
-
+            
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json(['error' => 'Error al actualizar formulario.', 'detail' => $e->getMessage()], 500);

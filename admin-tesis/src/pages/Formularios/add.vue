@@ -113,7 +113,11 @@
                 label="Cantidad maxima de ítems" 
                 placeholder="Ej: 2"
                 type="number"
-                outlined dense></v-text-field>
+                outlined dense
+                @blur="() => criterio.max_items = criterio.max_items ?? 0"
+
+                :value="criterio.max_items ?? 0"
+                ></v-text-field>
               </v-col>
               <v-col cols="12" md="2" class="text-right">
                 <VBtn color="error"  @click="eliminarCriterio(i, j)">
@@ -134,7 +138,17 @@
       </v-btn>
 
       <v-divider class="my-6"></v-divider>
+      <VAlert type="warning" v-if="warning" class="mt-3">
+                    <strong>{{warning}}</strong>
+                </VAlert>
 
+                <VAlert type="error" v-if="error_exsist" class="mt-3">
+                    <strong>hubo un error al guardar en el servidor</strong>
+                </VAlert>
+
+                <VAlert type="success" v-if="success" class="mt-3">
+                    <strong>{{success}}</strong>
+                </VAlert>
       <v-btn color="primary" class="mt-4" size="large" block @click="enviarFormulario">
         Guardar Formulario
       </v-btn>
@@ -145,19 +159,22 @@
 
 <script setup>
 
-import { ref } from 'vue'
+
 import axios from 'axios'
 import { p } from '@antfu/utils';
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 
 
 const error_exsist = ref(null);
 const success = ref(null);
 const warning = ref(null);
+const router = useRouter()
 
 const formulario = ref({
   nombre: '',
   descripcion: '',
-  puntaje_total: 0,
+  puntaje_total: null,
   secciones: [
     {
       titulo: '',
@@ -165,8 +182,8 @@ const formulario = ref({
       criterios: [
         {
           nombre: '',
-          puntaje_por_item: 0,
-          max_items: 0,
+          puntaje_por_item: null,
+          max_items: null,
           
         }
       ],
@@ -179,11 +196,13 @@ function agregarSeccion() {
   formulario.value.secciones.push({
     titulo: '',
     puntaje_max: 0,
-    orden: formulario.value.secciones.length + 1,
+    //orden: formulario.value.secciones.length + 1,
     criterios: []
   })
 }
-
+function eliminarSeccion(index) {
+  formulario.value.secciones.splice(index, 1)
+}
 function agregarCriterio(seccionIndex) {
   formulario.value.secciones[seccionIndex].criterios.push({
     nombre: '',
@@ -192,24 +211,91 @@ function agregarCriterio(seccionIndex) {
     orden: formulario.value.secciones[seccionIndex].criterios.length + 1
   })
 }
+function eliminarCriterio(seccionIndex, criterioIndex) {
+  formulario.value.secciones[seccionIndex].criterios.splice(criterioIndex, 1)
+}
 
 const enviarFormulario = async () => {
   console.log(formulario.value)
-
-  const formData = {
-    nombre:  formulario.value.nombre,
-  descripcion: formulario.value.descripcion,
-  puntaje_total: formulario.value.puntaje_total,
-  secciones: (formulario.value.secciones || []).map((s) => ({
-      titulo: s.titulo,
-      puntaje_max: s.puntaje_max,
-      criterios: (s.criterios || []).map((c) => ({
-        nombre: c.nombre,
-        puntaje_por_item: c.puntaje_por_item,
-          max_items: c.max_items,
-      })),
-    })),
+  //validaciones basicas
+  warning.value = null
+  if(!formulario.value.nombre){
+    warning.value = 'El nombre del formulario es obligatorio'
+    return;
   }
+  if(!formulario.value.descripcion){
+    warning.value = 'La descripcion del formulario es obligatorio'
+    return;
+  }
+  if(!formulario.value.puntaje_total){
+    warning.value = 'El puntaje total del formulario es obligatorio'
+    return;
+  }
+  
+// Validar secciones
+if (!formulario.value.secciones || formulario.value.secciones.length === 0) {
+  warning.value = 'Debe agregar al menos una sección'
+  return
+}
+
+for (let i = 0; i < formulario.value.secciones.length; i++) {
+  const seccion = formulario.value.secciones[i]
+
+  if (!seccion.titulo) {
+    warning.value = `El título de la sección #${i + 1} es obligatorio`
+    return
+  }
+
+  if (seccion.puntaje_max == null || seccion.puntaje_max === '') {
+    warning.value = `El puntaje máximo de la sección #${i + 1} es obligatorio`
+    return
+  }
+
+  // Validar criterios
+  if (!seccion.criterios || seccion.criterios.length === 0) {
+    warning.value = `Debe agregar al menos un criterio en la sección #${i + 1}`
+    return
+  }
+
+  for (let j = 0; j < seccion.criterios.length; j++) {
+    const criterio = seccion.criterios[j]
+
+    if (!criterio.nombre) {
+      warning.value = `El nombre del criterio #${j + 1} en la sección #${i + 1} es obligatorio`
+      return
+    }
+
+    if (criterio.puntaje_por_item == null || criterio.puntaje_por_item === '') {
+      warning.value = `El puntaje por ítem del criterio #${j + 1} en la sección #${i + 1} es obligatorio`
+      return
+    }
+
+    // max_items puede ser opcional; si quieres que sea obligatorio, descomenta lo siguiente:
+    /*
+    if (criterio.max_items == null || criterio.max_items === '') {
+      warning.value = `La cantidad máxima de ítems del criterio #${j + 1} en la sección #${i + 1} es obligatoria`
+      return
+    }
+    */
+  }
+}
+
+
+const formData = {
+  nombre: formulario.value.nombre,
+  descripcion: formulario.value.descripcion,
+  puntaje_total: Number(formulario.value.puntaje_total),
+  secciones: (formulario.value.secciones || []).map((s) => ({
+    titulo: s.titulo,
+    puntaje_max: Number(s.puntaje_max),
+    criterios: (s.criterios || []).map((c) => ({
+      nombre: c.nombre,
+      puntaje_por_item: Number(c.puntaje_por_item),
+      max_items: Number(c.max_items ?? 0), // Si viene undefined, lo pone como 0
+    })),
+  })),
+}
+
 
   try {
     const resp = await $api('/formularios-evaluacion', {
@@ -227,11 +313,11 @@ const enviarFormulario = async () => {
       success.value = 'Formulario guardado correctamente'
 
       setTimeout(() => {
-        success.value = null
-        warning.value = null
-        error_exsist.value = null
-        router.push('/formularios/list') // ajusta esta ruta si es diferente
-      }, 1500)
+        success.value = null;
+        warning.value = null;
+        error_exsist.value = null;
+        router.push('/formularios/list');
+      }, 1000)
     }
   } catch (error) {
     console.error(error)

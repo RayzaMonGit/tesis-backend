@@ -27,71 +27,6 @@ export default [
       "delete_rol"],
   },
 
-
-
-  {
-    heading: 'Documentacion', permissions: [
-      "register_documents"
-      , "list_documents"
-      , "edit_documents"
-      , "delete_documents"
-      , "register_convocatories"
-      , "list_convocatories"
-      , "edit_convocatories"
-      , "delete_convocatories",
-      "convocatoria_para_postulantes",
-    ]
-  },
-  {
-    title: 'Convocatorias',
-    icon: { icon: 'ri-megaphone-line' },
-    children: [
-      {
-        title: 'Crear Convocatoria',
-        to: { name: 'convocatorias-add' },
-        icon: { icon: 'ri-add-circle-line' },
-        permissions: ["register_convocatories"
-          , "edit_convocatories"
-          , "delete_convocatories"],
-      },
-      {
-        title: 'Ver Convocatorias',
-        to: { name: 'convocatorias-list' },
-        icon: { icon: 'ri-calendar-event-line' },
-        permission: 'list_convocatories',
-      },
-      {
-        title: 'Convocatorias Vigentes',
-        to: { name: 'convocatorias-vistapostul' },
-        icon: { icon: 'ri-calendar-event-line' },
-        permission: 'convocatoria_para_postulantes',
-
-      }
-
-    ],
-  },
-  {
-    title: 'Documentos',
-    icon: { icon: 'ri-file-upload-line' },
-    children: [
-      {
-        title: 'Subir Documento',
-        to: { name: 'documentos-subir' },
-        icon: { icon: 'ri-upload-cloud-line' },
-        permissions: ["register_documents",
-          , "edit_documents"
-          , "delete_documents"],
-      },
-      {
-        title: 'Ver mis documentos',
-        to: { name: 'documentos-listado' },
-        icon: { icon: 'ri-folder-line' },
-        permission: 'list_documents',
-      },
-    ],
-  },
-
-
   {
     heading: 'Gestión', permissions: ["register_postulant",
       "list_postulant"
@@ -145,9 +80,6 @@ export default [
       },*/
     ],
   },
-
-
-
   {
     heading: 'Evaluaciones', permissions: [
       "register_evaluation"
@@ -158,8 +90,41 @@ export default [
       'crear_formulario_evaluacion',
       'editar_formulario_evaluacion',
       'eliminar_formulario_evaluacion',
-      'listar_fomulario_evaluacion',
+      'listar_fomulario_evaluacion'
+      , "register_convocatories"
+      , "list_convocatories"
+      , "edit_convocatories"
+      , "delete_convocatories",
+      "convocatoria_para_postulantes",
     ]
+  },
+  {
+    title: 'Convocatorias',
+    icon: { icon: 'ri-megaphone-line' },
+    children: [
+      {
+        title: 'Crear Convocatoria',
+        to: { name: 'convocatorias-add' },
+        icon: { icon: 'ri-add-circle-line' },
+        permissions: ["register_convocatories"
+          , "edit_convocatories"
+          , "delete_convocatories"],
+      },
+      {
+        title: 'Ver Convocatorias',
+        to: { name: 'convocatorias-list' },
+        icon: { icon: 'ri-calendar-event-line' },
+        permission: 'list_convocatories',
+      },
+      {
+        title: 'Convocatorias Vigentes',
+        to: { name: 'convocatorias-vistapostul' },
+        icon: { icon: 'ri-calendar-event-line' },
+        permission: 'convocatoria_para_postulantes',
+
+      }
+
+    ],
   },
   {
     title: 'Formulario de evaluación',
@@ -209,6 +174,10 @@ export default [
     ],
   },
 
+ 
+
+
+
   /* {
      title: 'Instituciones',
      icon: { icon: 'ri-building-line' },
@@ -235,7 +204,37 @@ export default [
      icon: { icon: 'ri-calendar-line' },
      permissions:[] 'calendar',
    },*/
+   {
+    heading: 'Documentacion', permissions: [
+      "register_documents"
+      , "list_documents"
+      , "edit_documents"
+      , "delete_documents"
+      
+    ]
+  },
+  
   {
+    title: 'Documentos',
+    icon: { icon: 'ri-file-upload-line' },
+    children: [
+      {
+        title: 'Subir Documento',
+        to: { name: 'documentos-subir' },
+        icon: { icon: 'ri-upload-cloud-line' },
+        permissions: ["register_documents",
+          , "edit_documents"
+          , "delete_documents"],
+      },
+      {
+        title: 'Ver mis documentos',
+        to: { name: 'documentos-listado' },
+        icon: { icon: 'ri-folder-line' },
+        permission: 'list_documents',
+      },
+    ],
+  },
+   {
     heading: 'Configuración', permissions: [
       "register_rol"
       , "list_rol"

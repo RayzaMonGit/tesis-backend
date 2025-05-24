@@ -42,6 +42,7 @@ declare module 'vue' {
     DeleteRoleDialog: typeof import('./src/components/academico/role/DeleteRoleDialog.vue')['default']
     DeleteStaffDialog: typeof import('./src/components/academico/staff/DeleteStaffDialog.vue')['default']
     DialogCloseBtn: typeof import('./src/@core/components/DialogCloseBtn.vue')['default']
+    EditFormularioDialog: typeof import('./src/components/academico/formulario/EditFormularioDialog.vue')['default']
     EditPostulantDialog: typeof import('./src/components/academico/postulante/EditPostulantDialog.vue')['default']
     EditRoleDialog: typeof import('./src/components/academico/role/EditRoleDialog.vue')['default']
     EditStaffDialog: typeof import('./src/components/academico/staff/EditStaffDialog.vue')['default']
