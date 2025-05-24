@@ -87,4 +87,11 @@ class Postulante extends Model
         return $this->belongsTo(Convocatoria::class);
     }
 
+   
+public function postulaciones()
+{
+    return $this->hasMany(Postulacion::class);
+}
+
+
 }

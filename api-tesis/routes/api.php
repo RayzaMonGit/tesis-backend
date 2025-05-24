@@ -10,7 +10,8 @@ use App\Http\Controllers\Postulante\RegisterController;
 use App\Http\Controllers\Requisitos\RequisitosLeyController;
 use App\Http\Controllers\Comision\ComisionController;
 use App\Http\Controllers\Formulario\FormularioEvaluacionController;
-
+use App\Http\Controllers\Postulacion\PostulacionController;
+use App\Http\Controllers\Postulacion\PostulacionDocumentoController;
 
 //para que se registre un usuario sin estar autentificado
 Route::resource("register",RegisterController::class);
@@ -64,6 +65,23 @@ Route::group([
     Route::get('formularios-evaluacion/{id}', [FormularioEvaluacionController::class, 'show']);
     Route::post('formularios-evaluacion/{id}', [FormularioEvaluacionController::class, 'update']); // POST en vez de PUT
     Route::delete('formularios-evaluacion/{id}', [FormularioEvaluacionController::class, 'destroy']);
+
+    //para postulaciones
+    // Postulaciones
+Route::get('postulaciones', [PostulacionController::class, 'index']);
+Route::get('postulaciones/{id}', [PostulacionController::class, 'show']);
+Route::post('postulaciones', [PostulacionController::class, 'store']);
+Route::post('postulaciones/{id}', [PostulacionController::class, 'update']);
+Route::delete('postulaciones/{id}', [PostulacionController::class, 'destroy']);
+
+//nosecreoqaunnlovibien
+Route::get('convocatorias/{convocatoria}/postulaciones', [PostulacionController::class, 'porConvocatoria']);
+
+Route::post('postulacion-documentos', [PostulacionDocumentoController::class, 'store']);
+Route::get('postulacion-documentos', [PostulacionDocumentoController::class, 'all']);
+Route::get('postulaciones/{id}/documentos', [PostulacionDocumentoController::class, 'index']);
+
+Route::delete('postulacion-documentos/{id}', [PostulacionDocumentoController::class, 'destroy']);
 
 
 });
