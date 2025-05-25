@@ -49,6 +49,7 @@ return UserResource::collection($usuarios);
         
     }
 
+
     /**
      * Display the specified resource.
      */
@@ -127,4 +128,27 @@ return UserResource::collection($usuarios);
         "message" => 200,
     ]);
     }
+
+    /**
+     * Get the authenticated user's profile.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function miPerfil()
+{
+    $user = auth()->user();
+
+    // Verifica si el usuario tiene un perfil de postulante
+    $postulante = Postulante::where('user_id', $user->id)->first();
+
+    if (!$postulante) {
+        return response()->json(['error' => 'No se encontró el perfil del postulante.'], 404);
+    }
+
+    return response()->json([
+        'postulante_id' => $postulante->id,
+        'postulante' => new PostulanteResource($postulante), // opcional, por si quieres más info
+    ]);
+}
+
 }

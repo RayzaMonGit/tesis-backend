@@ -1,6 +1,19 @@
 <script setup>
 import { VExpansionPanelTitle } from 'vuetify/components';
 import { load } from 'webfontloader';
+
+const formularios = ref([]);
+
+const obtenerFormularios = async () => {
+  try {
+    const res = await $api('/formularios-evaluacion');
+    formularios.value = res;
+    console.log('Formularios cargados:', formularios);
+  } catch (error) {
+    console.error('Error al cargar formularios:', error);
+  }
+};
+
 //parte nueva
 const requisitosLey = ref([]);
 
@@ -10,9 +23,9 @@ const fetchRequisitosLey = async () => {
     console.log('Respuesta requisitos ley:', response)
 
     requisitosLey.value = response.requisitos.map(req => ({
-  ...req,
-  seleccionado: false,
-}));
+      ...req,
+      seleccionado: false,
+    }));
 
   } catch (error) {
     console.error("Error cargando requisitos ley:", error);
@@ -41,6 +54,8 @@ const from = ref({
   plazas_disponibles: null,
   sueldo_referencial: null,
   estado: 'Borrador',
+  formulario_id: null,
+
 
   //documento: null,
 });
@@ -101,7 +116,12 @@ const store = async () => {
   } if (!from.value.fecha_fin) {
     warning.value = "Se debe llenar la FECHA FIN del cargo";
     return;
-  }  if (!from.value.plazas_disponibles) {
+  }
+  if (!from.value.formulario_id) {
+    warning.value = "Se debe seleccionar un FORMULARIO de evaluación";
+    return;
+  } 
+  if (!from.value.plazas_disponibles) {
     warning.value = "Se debe llenar la PLAZAS DISPONIBLES del cargo";
     return;
   } if (!FILE_DOCUMENTO.value) {
@@ -117,28 +137,29 @@ const store = async () => {
   formData.append('fecha_fin', from.value.fecha_fin);
   formData.append('estado', from.value.estado);
   formData.append('plazas_disponibles', from.value.plazas_disponibles);
-  
+  formData.append('formulario_id', from.value.formulario_id);
+
   if (from.value.sueldo_referencial) {
     formData.append('sueldo_referencial', from.value.sueldo_referencial);
-  } 
+  }
   if (FILE_DOCUMENTO.value) {
     formData.append('documento', FILE_DOCUMENTO.value);
   }
 
   // Preparar y enviar los requisitos personalizados
   const requisitosLeyIds = requisitosLey.value
-  .filter(req => req.seleccionado)
-  .map(req => req.id);
+    .filter(req => req.seleccionado)
+    .map(req => req.id);
 
-requisitosLeyIds.forEach(id => {
-  formData.append('requisitos_ley_ids[]', id);
-});
-// Enviar los requisitos personalizados
-formData.append('requisitos_personalizados', JSON.stringify(requisitosPersonalizados.value));
+  requisitosLeyIds.forEach(id => {
+    formData.append('requisitos_ley_ids[]', id);
+  });
+  // Enviar los requisitos personalizados
+  formData.append('requisitos_personalizados', JSON.stringify(requisitosPersonalizados.value));
 
-console.log('Requisitos personalizados:', requisitosPersonalizados.value)
+  console.log('Requisitos personalizados:', requisitosPersonalizados.value)
 
-try {
+  try {
     const resp = await $api('/convocatorias', {
       method: 'POST',
       body: formData,
@@ -203,11 +224,11 @@ const agregarRequisito = () => {
   nuevoRequisito.value.nombre = '';
   nuevoRequisito.value.tipo = 'Obligatorio';
 };
-const fileClean=()=>{
+const fileClean = () => {
   FILE_DOCUMENTO.value = null;
   NOMBRE_ARCHIVO_PREVIZUALIZA.value = null;
   from.value.id = null;
-  from.value.titulo = null;  
+  from.value.titulo = null;
   from.value.descripcion = null;
   from.value.area = null;
   from.value.fecha_inicio = null;
@@ -216,14 +237,15 @@ const fileClean=()=>{
   from.value.sueldo_referencial = null;
   from.value.estado = 'Borrador';
   requisitosPersonalizados.value = [];
-todosSeleccionados.value = false;
-mostrarDocumento.value = false;
+  todosSeleccionados.value = false;
+  mostrarDocumento.value = false;
 
 
 }
 
 onMounted(() => {
   fetchRequisitosLey();
+  obtenerFormularios();
 });
 
 </script>
@@ -265,18 +287,26 @@ onMounted(() => {
             </VCol>
 
             <!-- FECHA INICIO -->
-            <VCol cols="12" md="6">
+            <VCol cols="12" md="4">
               <VTextField v-model="from.fecha_inicio" label="Fecha de inicio" type="date" :min="hoy"
                 :rules="[v => !!v || 'Obligatorio', v => v >= hoy || 'La fecha de inicio no puede ser anterior a la fecha actual']"
                 required />
             </VCol>
 
             <!-- FECHA FIN -->
-            <VCol cols="12" md="6">
+            <VCol cols="12" md="4">
               <VTextField v-model="from.fecha_fin" label="Fecha de finalización" type="date" :min="from.fecha_inicio"
                 :rules="[v => !!v || 'Obligatorio', v => v >= from.fecha_inicio || 'La fecha de finalización no puede ser anterior a la fecha de inicio']"
                 required />
             </VCol>
+            <!-- FORMULARIO -->
+            <VCol cols="12" md="4">
+              <v-select v-model="from.formulario_id" :items="formularios" item-title="nombre" item-value="id"
+                label="Formulario de evaluación" clearable />
+
+            </VCol>
+
+
 
             <!-- PLAZAS DISPONIBLES -->
             <VCol cols="12" md="4">
@@ -287,19 +317,13 @@ onMounted(() => {
             <!-- SUELDO REFERENCIAL -->
             <VCol cols="12" md="4">
               <VTextField v-model="from.sueldo_referencial" label="Sueldo referencial" placeholder="Ej: 3500 Bs."
-                type="number" :rules="[v => v >= 0 || 'Debe ser un número válido']"  />
+                type="number" :rules="[v => v >= 0 || 'Debe ser un número válido']" />
             </VCol>
             <!-- ESTADO -->
             <VCol cols="12" md="4">
-          <VSelect
-            v-model="from.estado"
-            :items="estados"
-            label="Estado"
-            placeholder="Selecciona un estado"
-            :rules="[v => !!v || 'Selecciona un estado']"
-            required
-          />
-        </VCol>
+              <VSelect v-model="from.estado" :items="estados" label="Estado" placeholder="Selecciona un estado"
+                :rules="[v => !!v || 'Selecciona un estado']" required />
+            </VCol>
 
             <!-- DOCUMENTO -->
             <VCol cols="12" md="12">
@@ -349,18 +373,14 @@ onMounted(() => {
 
               <VExpansionPanels variant="accordion">
                 <!-- 🔹 Sección 2: Requisitos obligatorios con seleccionar todos -->
-                <VExpansionPanel >
+                <VExpansionPanel>
                   <VExpansionPanelTitle>Requisitos obligatorios (Ministerio de Educación)</VExpansionPanelTitle>
                   <VExpansionPanelText>
                     <VCheckbox v-model="todosSeleccionados" label="Seleccionar / Quitar todos"
-                @change="toggleTodosObligatorios" />
-                <VList dense>
+                      @change="toggleTodosObligatorios" />
+                    <VList dense>
                       <VListItem v-for="(req, index) in requisitosLey" :key="'ley-' + index">
-                        <VCheckbox
-                          v-model="req.seleccionado"
-                          :label="req.num + req.descripcion"
-                          hide-details
-                        />
+                        <VCheckbox v-model="req.seleccionado" :label="req.num + req.descripcion" hide-details />
                       </VListItem>
                     </VList>
 
@@ -370,38 +390,31 @@ onMounted(() => {
                 </VExpansionPanel>
 
                 <!-- 🔹 Sección 3: Requisitos personalizados -->
-                <VExpansionPanel >
+                <VExpansionPanel>
                   <VExpansionPanelTitle>Requisitos personalizados</VExpansionPanelTitle>
                   <VExpansionPanelText>
-    <VRow>
-      <VCol cols="6">
-        <VTextField label="Nombre del requisito" v-model="nuevoRequisito.nombre" />
-      </VCol>
-      <VCol cols="4">
-        <VSelect
-          :items="['Obligatorio', 'Opcional']"
-          v-model="nuevoRequisito.tipo"
-          label="Tipo"
-        />
-      </VCol>
-      <VCol cols="2">
-        <VBtn @click="agregarRequisito" color="primary">Agregar</VBtn>
-      </VCol>
-    </VRow>
+                    <VRow>
+                      <VCol cols="6">
+                        <VTextField label="Nombre del requisito" v-model="nuevoRequisito.nombre" />
+                      </VCol>
+                      <VCol cols="4">
+                        <VSelect :items="['Obligatorio', 'Opcional']" v-model="nuevoRequisito.tipo" label="Tipo" />
+                      </VCol>
+                      <VCol cols="2">
+                        <VBtn @click="agregarRequisito" color="primary">Agregar</VBtn>
+                      </VCol>
+                    </VRow>
 
-    <VList dense>
-      <VListItem
-        v-for="(req, index) in requisitosPersonalizados"
-        :key="index"
-      >
-        <VListItemTitle>{{ req.nombre }} ({{ req.tipo }})</VListItemTitle>
-        <VBtn icon="mdi-delete" @click="requisitosPersonalizados.splice(index, 1)" />
-      </VListItem>
-    </VList>
-  </VExpansionPanelText>
-                  
+                    <VList dense>
+                      <VListItem v-for="(req, index) in requisitosPersonalizados" :key="index">
+                        <VListItemTitle>{{ req.nombre }} ({{ req.tipo }})</VListItemTitle>
+                        <VBtn icon="mdi-delete" @click="requisitosPersonalizados.splice(index, 1)" />
+                      </VListItem>
+                    </VList>
+                  </VExpansionPanelText>
+
                 </VExpansionPanel>
-                
+
               </VExpansionPanels>
               <!--<VList>
                 <VListItem v-for="(req, index) in requisitosPersonalizados" :key="'personalizado-' + index">

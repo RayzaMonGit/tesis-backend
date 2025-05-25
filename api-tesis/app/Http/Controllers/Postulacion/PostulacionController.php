@@ -29,29 +29,42 @@ class PostulacionController extends Controller
     }
 
     public function store(Request $request)
-    {
-        
-        $validated =$request->validate([
-            'postulante_id' => 'required|exists:postulantes,id',
-            'convocatoria_id' => 'required|exists:convocatorias,id',
-        ]);
-        DB::beginTransaction();
+{
+    $validated = $request->validate([
+        'postulante_id' => 'required|exists:postulantes,id',
+        'convocatoria_id' => 'required|exists:convocatorias,id',
+    ]);
 
-        try{
-            $postulacion = Postulacion::create($validated);
-            
-            DB::commit();
-            
-            return response()->json(['message' => 'Formulario creado correctamente.'], 201);
+    // Verificar si ya existe una postulación para ese postulante y convocatoria
+    $existe = Postulacion::where('postulante_id', $validated['postulante_id'])
+        ->where('convocatoria_id', $validated['convocatoria_id'])
+        ->first();
 
-        }catch(\Exception $e){
-            DB::rollBack(); // Asegúrate de hacer rollback en caso de error
-    return response()->json([
-        'error' => 'Error al crear la postulacion',
-        'details' => $e->getMessage(), // Esto te dará más información
-    ], 500);
-        }
+    if ($existe) {
+        return response()->json([
+            'message' => 'Ya estás postulado a esta convocatoria.',
+            'redirect' => true, // bandera para frontend
+            'postulacion_id' => $existe->id // para redireccionar a los documentos
+        ], 200);
     }
+
+    DB::beginTransaction();
+    try {
+        $postulacion = Postulacion::create($validated);
+        DB::commit();
+        return response()->json([
+            'message' => 'Formulario creado correctamente.',
+            'postulacion_id' => $postulacion->id
+        ], 201);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'error' => 'Error al crear la postulación',
+            'details' => $e->getMessage(),
+        ], 500);
+    }
+}
+
 
     public function show($id)
     {

@@ -1,6 +1,7 @@
 <script setup>
 const route = useRoute()
 const convocatoria = ref(null)
+import { router } from '@/plugins/1.router';
 import { onMounted } from 'vue';
 
 const show = async () => {
@@ -17,6 +18,7 @@ function obtenerNombreArchivo(url) {
   return url.split('/').pop()
 }
 //para que un postulante se postule a una convocatoria
+/*
 const postularme = async () => {
   try {
     const resp = await $api('/postulaciones', {
@@ -35,8 +37,44 @@ const postularme = async () => {
     console.error("Error al postular:", error);
     warning.value = 'Ocurrió un error al postularse';
   }
+};*/
+
+const obtenerPostulanteId = async () => {
+  const res = await $api('/postulantes-perfil');
+  console.log('ID del postulante:', res);
+  return res.postulante_id;
 };
 
+
+const postularme = async (convocatoriaId) => {
+  try {
+    const postulanteId = await obtenerPostulanteId();
+    
+    const response = await $api('/postulaciones', {
+      method: 'POST',
+      body: {
+        convocatoria_id: convocatoriaId,
+        postulante_id: postulanteId
+      }
+    });
+
+    if (response.redirect) {
+      // Ya está postulado → redirige
+      //router.push(`/postulaciones/${response.postulacion_id}/documentos`);
+      //hasta mientras una ruta  sinn iel id
+      router.push("/documentos-listado");
+    } else {
+      // Postulación nueva
+      console.log('Postulación exitosa:', response);
+      //router.push(`/postulaciones/${response.postulacion_id}/documentos`);
+      //hasta mientras una ruta  sinn iel id
+      router.push("/documentos-listado");
+    }
+  } catch (error) {
+    console.error(error);
+    alert('Error al postularse. Verifica si ya estás registrado como postulante.');
+  }
+};
 
 onMounted(async () => {
 
@@ -144,7 +182,7 @@ onMounted(async () => {
               cols="12"
               sm="6"
             >
-              <VBtn block color="success" prepend-icon="ri-verified-badge-line" @click="postularme">
+              <VBtn block color="success" prepend-icon="ri-verified-badge-line" @click="postularme(convocatoria.id)">
                 Postularme a esta convocatoria
               </VBtn>
             </VCol>

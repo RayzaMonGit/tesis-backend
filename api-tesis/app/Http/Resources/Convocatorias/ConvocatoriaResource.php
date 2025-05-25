@@ -26,6 +26,7 @@ class ConvocatoriaResource extends JsonResource
             "plazas_disponibles" => $this->resource->plazas_disponibles,
             "sueldo_referencial" => $this->resource->sueldo_referencial,
             'documento' => $this->resource->documento ? env("APP_URL")."storage/".$this->resource->documento : NULL,
+            "formulario_id" => $this->resource->formulario_id,
             "requisitos" => collect($this->resource->requisitos)->map(function($requisitos) {
     return [
         "id" => $requisitos->id,
@@ -52,6 +53,16 @@ class ConvocatoriaResource extends JsonResource
         'avatar' => $user->avatar ? env("APP_URL") . 'storage/' . $user->avatar : null,
     ];
 }),
+//añadir e formulario
+"formulario" => $this->whenLoaded('formulario', function () {
+    return [
+        'id' => $this->formulario->id,
+        'nombre' => $this->formulario->nombre,
+        // puedes añadir más campos si lo necesitas
+    ];
+}),
+
+
 
 
         ];

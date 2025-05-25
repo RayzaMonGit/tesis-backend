@@ -6,6 +6,20 @@ const success = ref(null);
 const error_exists = ref(null);
 const route = useRoute('convocatorias-edit-id');
 const fechaInicioOriginal = ref(null);
+
+
+const formularios = ref([]);
+
+const obtenerFormularios = async () => {
+  try {
+    const res = await $api('/formularios-evaluacion');
+    formularios.value = res;
+    console.log('Formularios cargados:', formularios);
+  } catch (error) {
+    console.error('Error al cargar formularios:', error);
+  }
+};
+
 const from = ref({
     titulo: null,
     descripcion: null,
@@ -14,6 +28,7 @@ const from = ref({
     fecha_fin: null,
     plazas_disponibles: null,
     sueldo_referencial: null,
+      formulario_id: null,
 });
 import { VExpansionPanelTitle } from 'vuetify/components';
 
@@ -82,7 +97,10 @@ const edit = async () => {
         } if (!FILE_DOCUMENTO.value) {
             warning.value = "Se debe seleccionar un DOCUMENTO para el cargo";
             return;
-        }
+        } if (!from.value.formulario_id) {
+    warning.value = "Se debe seleccionar un FORMULARIO de evaluación";
+    return;
+  } 
 
         let formData = new FormData();
         formData.append('titulo', from.value.titulo);
@@ -92,6 +110,7 @@ const edit = async () => {
         formData.append('fecha_fin', from.value.fecha_fin);
         formData.append('estado', from.value.estado);
         formData.append('plazas_disponibles', from.value.plazas_disponibles);
+        formData.append('formulario_id', from.value.formulario_id);
 
         if (from.value.sueldo_referencial) {
             formData.append('sueldo_referencial', from.value.sueldo_referencial);
@@ -161,6 +180,7 @@ const show = async () => {
         from.value.plazas_disponibles = conv_selected.value.plazas_disponibles;
         from.value.sueldo_referencial = conv_selected.value.sueldo_referencial;
         from.value.estado = conv_selected.value.estado;
+        from.value.formulario_id = conv_selected.value.formulario_id;
         
         // Documento
         FILE_DOCUMENTO.value = conv_selected.value.documento;
@@ -294,6 +314,7 @@ const agregarRequisito = () => {
 };
 
 onMounted(async () => {
+     obtenerFormularios();
     show();
     await fetchConvocatoria();    // obtiene requisitos seleccionados y personalizados
     await fetchTodosRequisitos();   // carga todos los requisitos ley y marca los seleccionados
@@ -345,7 +366,7 @@ definePage({
                         </VCol>
 
                         <!-- FECHA INICIO -->
-                        <VCol cols="12" md="6">
+                        <VCol cols="12" md="4">
                             <VTextField v-model="from.fecha_inicio" label="Fecha de inicio" type="date"
                                 :min="fechaInicioOriginal" :rules="[
                                     v => !!v || 'Obligatorio',
@@ -354,13 +375,20 @@ definePage({
                         </VCol>
 
                         <!-- FECHA FIN -->
-                        <VCol cols="12" md="6">
+                        <VCol cols="12" md="4">
                             <VTextField v-model="from.fecha_fin" label="Fecha de finalización" type="date"
                                 :min="from.fecha_inicio" :rules="[
                                     v => !!v || 'Obligatorio',
                                     v => v >= from.fecha_inicio || 'La fecha de finalización no puede ser anterior a la fecha de inicio'
                                 ]" required />
                         </VCol>
+
+                        <!-- FORMULARIO -->
+            <VCol cols="12" md="4">
+              <v-select v-model="from.formulario_id" :items="formularios" item-title="nombre" item-value="id"
+                label="Formulario de evaluación" clearable />
+
+            </VCol>
 
                         <!-- PLAZAS DISPONIBLES -->
                         <VCol cols="12" md="4">

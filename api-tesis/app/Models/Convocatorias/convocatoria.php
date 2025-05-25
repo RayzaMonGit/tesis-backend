@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Convocatorias\Requisitos;
 use App\Models\Convocatorias\RequisitosLey;
 use App\Models\User;
+use App\Models\Formulario\FormularioEvaluacion;
 
 
 
@@ -28,6 +29,7 @@ class Convocatoria extends Model
         'plazas_disponibles',
         'sueldo_referencial',
         'documento',
+        'formulario_id',
     ];
 /*
     public function requisitos() {
@@ -54,6 +56,12 @@ public function evaluadores()
 {
     return $this->belongsToMany(User::class, 'convocatoria_comision', 'convocatoria_id', 'user_id');
 }
+
+public function formulario()
+{
+    return $this->belongsTo(FormularioEvaluacion::class, 'formulario_id');
+}
+
 
     
 }

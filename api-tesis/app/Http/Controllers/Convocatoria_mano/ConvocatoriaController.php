@@ -63,6 +63,7 @@ class ConvocatoriaController extends Controller
                 'plazas_disponibles' => 'required|integer|min:1',
                 'sueldo_referencial' => 'required|numeric|min:0',
                 'documento' => 'required|file|mimes:pdf,doc,docx',
+                'formulario_id'=>'required',
             ]);
         }
 
@@ -99,6 +100,7 @@ class ConvocatoriaController extends Controller
                 'plazas_disponibles' => 'required|integer|min:1',
                 'sueldo_referencial' => 'required|numeric|min:0',
                 'documento' => 'nullable|file|mimes:pdf,doc,docx',
+                'formulario_id'=>'required',
             ]);
         }
 

@@ -46,6 +46,10 @@ Route::group([
     Route::resource("postulantes", PostulanteController::class);
     Route::post("postulantes/{id}", [PostulanteController::class,"update"]);
 
+    //para devolver el perfil del postulante
+    Route::get('postulantes-perfil', [PostulanteController::class, 'miPerfil']);
+
+
     Route::resource("requisitosley", RequisitosLeyController::class);
 
     // Asignar requisitos ley a una convocatoria

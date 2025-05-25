@@ -16,6 +16,7 @@ use App\Http\Resources\Requisitos\RequisitosLeyResource;
 
 
 
+
 class ConvocatoriaController extends Controller
 {
     public function requisitos($id) {
@@ -50,13 +51,16 @@ class ConvocatoriaController extends Controller
 
 public function todosRequisitos($id)
 {
-    $convocatoria = Convocatoria::with(['requisitos', 'requisitosLey'])->findOrFail($id);
+    $convocatoria = Convocatoria::with(['requisitos', 'requisitosLey', 'formulario'])->findOrFail($id);
+
 
     return response()->json([
         //'convocatoria' => new ConvocatoriaResource($convocatoria), // ✅ Agrega esto
         'requisitos_personalizados' => RequisitoResource::collection($convocatoria->requisitos),
         'requisitos_ley' => RequisitosLeyResource::collection($convocatoria->requisitosLey),
         'todos_requisitos_ley' => RequisitosLeyResource::collection(\App\Models\Convocatorias\RequisitosLey::all()),
+        'formulario' => $convocatoria->formulario,
+
     ]);
 }
 
@@ -77,6 +81,7 @@ public function updateRequisitos(Request $request, $id)
             'estado' => $request->estado,
             'plazas_disponibles' => $request->plazas_disponibles,
             'sueldo_referencial' => $request->sueldo_referencial,
+            'formulario_id' => $request->formulario_id,
         ]);
 
         // Documento (opcional)
@@ -135,7 +140,8 @@ public function updateRequisitos(Request $request, $id)
     $estado = $request->get("estado");
     $area = $request->get("area");
 
-    $convocatorias = Convocatoria::with(['requisitos', 'evaluadores'])
+$convocatorias = Convocatoria::with(['requisitos', 'evaluadores', 'formulario'])
+
         ->when($area, function ($q) use ($area) {
             $q->where("area", $area);
         })
@@ -185,6 +191,7 @@ public function updateRequisitos(Request $request, $id)
                 'plazas_disponibles' => $request->plazas_disponibles,
                 'sueldo_referencial' => $request->sueldo_referencial,
                 'documento' => $documentoPath,
+                'formulario_id' => $request->formulario_id,
             ]);
 
             // sincroniza los requisitos de ley si se enviaron desde el frontend
@@ -233,10 +240,13 @@ public function updateRequisitos(Request $request, $id)
      */
     public function show(string $id)
     {
-        $convocatoria = Convocatoria::with(['requisitos', 'requisitosLey'])->findOrFail($id);
+        $convocatoria = Convocatoria::with(['requisitos', 'requisitosLey', 'formulario'])->findOrFail($id);
+
 
         return response()->json([
             "convocatoria" => ConvocatoriaResource::make($convocatoria),
+            'formulario' => $convocatoria->formulario,
+
         ]);
     }
 
@@ -271,6 +281,7 @@ public function updateRequisitos(Request $request, $id)
                 'plazas_disponibles' => $request->plazas_disponibles ?? $convocatoria->plazas_disponibles,
                 'sueldo_referencial' => $request->sueldo_referencial ?? $convocatoria->sueldo_referencial,
                 'documento' => $request->documento ?? $convocatoria->documento,
+                'formulario_id' => $request->formulario_id ?? $convocatoria->formulario_id ,
             ]);
             
             // Si se están actualizando los requisitos, eliminar los anteriores

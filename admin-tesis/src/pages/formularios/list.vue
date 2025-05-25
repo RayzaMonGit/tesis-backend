@@ -68,20 +68,7 @@
       
     </v-row>
 
-    <!-- Modal de edición 
-    <v-dialog v-model="dialogoActivo" max-width="800px">
-      <v-card>
-        <v-card-title>Editar Formulario</v-card-title>
-        <v-card-text>
-          <FormularioEditor :formulario="formularioSeleccionado" @guardado="recargarFormularios" />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn text @click="dialogoActivo = false">Cerrar</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>-->
-
+    
     <!-- Confirmación de borrado -->
     <v-dialog v-model="dialogoBorrar" max-width="500px">
       <v-card>
@@ -113,45 +100,7 @@ const formularios = ref([])
 const dialogoActivo = ref(false)
 const dialogoBorrar = ref(false)
 const formularioSeleccionado = ref(null)
-/*
-import axios from 'axios'
-const cargarFormularios = async () => {
-  try {
-    const res = await axios.get('/api/formularios-evaluacion');
-    console.log('Datos recibidos:', res.data);
-    formularios.value = res.data;
-  } catch (error) {
-    console.error('Error al cargar formularios:', error);
-  }
-};*/
-/*
-const cargarFormularios = async () => {
-  const res = await $api('/formularios-evaluacion')
-  console.log(res)
-  //console.log(res.data?.data)
-  formularios.value = res
-}
 
-const abrirDialogoEdicion = (formulario) => {
-  dialogoActivo.value = true
-  formularioSeleccionado.value = formulario
-}
-watch(dialogoActivo, (event) => {
-  console.log(event);
-  if (event == false) {
-    formularioSeleccionado.value = null;
-  }
-})
-const editFormulario=(editForm) => {
-  console.log('Formulario editado:', editForm)
-  // Aquí puedes realizar la lógica para actualizar el formulario en la lista
-  // Por ejemplo, buscar el formulario editado en la lista y actualizarlo
-  let index = formularios.value.findIndex((f) => f.id === editForm.id)
-  if (index !== -1) {
-    formularios.value[index] = editFormulario
-  }
-}
-*/
 import EditFormularioDialog from '/src/components/academico/formulario/EditFormularioDialog.vue'
 
 

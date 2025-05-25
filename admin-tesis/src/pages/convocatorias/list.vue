@@ -19,6 +19,20 @@ const error_exsist = ref(null)
 
 
 
+const formularios = ref([]);
+
+const obtenerFormularios = async () => {
+  try {
+    const res = await $api('/formularios-evaluacion');
+    formularios.value = res;
+    console.log('Formularios cargados:', formularios);
+  } catch (error) {
+    console.error('Error al cargar formularios:', error);
+  }
+};
+
+
+
 const list = async () => {
     try {
             // Intenta usar la API real primero
@@ -140,6 +154,7 @@ watch(showRequisitosDialog, (val) => {
 })
 onMounted(() => {
     list()
+    obtenerFormularios();
 })
 
 definePage({
@@ -213,10 +228,10 @@ definePage({
                                 Descripción
                             </th>
                             <th class="text-uppercase">
-                                Fecha Inicio
+                                Rango de fechas
                             </th>
                             <th class="text-uppercase">
-                                Fecha Cierre
+                                Formulario
                             </th>
                             <th class="text-uppercase">
                                 Estado
@@ -250,12 +265,24 @@ definePage({
                                 <span class="text-truncate" style="max-width: 250px; display: block;">{{
                                     item.descripcion }}</span>
                             </td>
+                            <!--fechas-->
                             <td>
-                                {{ new Date(item.fecha_inicio).toLocaleDateString() }}
+                              <div class="d-flex align-center">
+                                    <div class="d-flex flex-column ms-3">
+                                      Desde <span class="d-block font-weight-medium text-high-emphasis text-truncate">{{ new Date(item.fecha_inicio).toLocaleDateString() }}</span>
+                                      Hasta <span class="d-block font-weight-medium text-high-emphasis text-truncate">{{ new Date(item.fecha_fin).toLocaleDateString() }}</span>
+                                      
+                                    </div>
+                                  </div>
+                               
                             </td>
                             <td>
-                                {{ new Date(item.fecha_fin).toLocaleDateString() }}
-                            </td>
+                            <span v-if="item.formulario">{{ item.formulario.nombre }}</span>
+                            <span v-else class="text-muted">No asignado</span>
+
+                          </td>
+
+
                             <td>
                                 <VChip :color="item.estado === 'Abierta' ? 'success' :
                                     item.estado === 'Cerrado' ? 'error' :
