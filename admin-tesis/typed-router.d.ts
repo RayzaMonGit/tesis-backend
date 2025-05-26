@@ -39,6 +39,7 @@ declare module 'vue-router/auto-routes' {
     'login': RouteRecordInfo<'login', '/login', Record<never, never>, Record<never, never>>,
     'modulos-operaciones': RouteRecordInfo<'modulos-operaciones', '/modulos-operaciones', Record<never, never>, Record<never, never>>,
     'not-authorized': RouteRecordInfo<'not-authorized', '/not-authorized', Record<never, never>, Record<never, never>>,
+    'postulaciones-postulacion_id-documentos': RouteRecordInfo<'postulaciones-postulacion_id-documentos', '/postulaciones/:postulacion_id/documentos', { postulacion_id: ParamValue<true> }, { postulacion_id: ParamValue<false> }>,
     'postulantes-add': RouteRecordInfo<'postulantes-add', '/postulantes/add', Record<never, never>, Record<never, never>>,
     'postulantes-list': RouteRecordInfo<'postulantes-list', '/postulantes/list', Record<never, never>, Record<never, never>>,
     'register': RouteRecordInfo<'register', '/register', Record<never, never>, Record<never, never>>,

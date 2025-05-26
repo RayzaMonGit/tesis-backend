@@ -60,15 +60,15 @@ const postularme = async (convocatoriaId) => {
 
     if (response.redirect) {
       // Ya está postulado → redirige
-      //router.push(`/postulaciones/${response.postulacion_id}/documentos`);
+      router.push(`/postulaciones/${response.postulacion_id}/documentos`);
       //hasta mientras una ruta  sinn iel id
-      router.push("/documentos-listado");
+      //router.push("/documentos-listado");
     } else {
       // Postulación nueva
       console.log('Postulación exitosa:', response);
-      //router.push(`/postulaciones/${response.postulacion_id}/documentos`);
+      router.push(`/postulaciones/${response.postulacion_id}/documentos`);
       //hasta mientras una ruta  sinn iel id
-      router.push("/documentos-listado");
+      //router.push("/documentos-listado");
     }
   } catch (error) {
     console.error(error);

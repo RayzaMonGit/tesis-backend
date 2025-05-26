@@ -82,6 +82,7 @@ Route::delete('postulaciones/{id}', [PostulacionController::class, 'destroy']);
 Route::get('convocatorias/{convocatoria}/postulaciones', [PostulacionController::class, 'porConvocatoria']);
 
 Route::post('postulacion-documentos', [PostulacionDocumentoController::class, 'store']);
+Route::post('postulacion-documentos/multiple', [PostulacionDocumentoController::class, 'storeMultiple']);
 Route::get('postulacion-documentos', [PostulacionDocumentoController::class, 'all']);
 Route::get('postulaciones/{id}/documentos', [PostulacionDocumentoController::class, 'index']);
 

@@ -22,11 +22,17 @@ use App\Http\Resources\Convocatoria\ConvocatoriaCollection;
 class PostulacionController extends Controller
 {
     public function index()
-    {
-        
-    $postulaciones = Postulacion::with(['postulante.user', 'convocatoria'])->get();
+{
+    $postulaciones = Postulacion::with([
+        'postulante.user',
+        'convocatoria.formulario.secciones.criterios', 
+        'convocatoria.requisitosLey',
+        'convocatoria.evaluadores'
+    ])->get();
+
     return PostulacionResource::collection($postulaciones);
-    }
+}
+
 
     public function store(Request $request)
 {
@@ -67,13 +73,17 @@ class PostulacionController extends Controller
 
 
     public function show($id)
-    {
-       // Carga las relaciones 'postulante.user' y 'convocatoria'
-    $postulacion= Postulacion::with(['postulante.user', 'convocatoria'])->findOrFail($id);
+{
+    $postulacion = Postulacion::with([
+        'postulante.user',
+        'convocatoria.formulario.secciones.criterios', 
+        'convocatoria.requisitosLey',
+        'convocatoria.evaluadores'
+    ])->findOrFail($id);
 
-    // Devuelve la postulación como un recurso
     return new PostulacionResource($postulacion);
-    }
+}
+
 
     public function update(Request $request, $id)
 {
@@ -110,7 +120,12 @@ class PostulacionController extends Controller
     public function porConvocatoria($convocatoriaId)
 {
     $postulaciones = Postulacion::where('convocatoria_id', $convocatoriaId)
-        ->with(['postulante.user', 'convocatoria'])
+        ->with([
+            'postulante.user',
+            'convocatoria.formulario.secciones.criterios', 
+            'convocatoria.requisitosLey',
+            'convocatoria.evaluadores'
+        ])
         ->get();
 
     return PostulacionResource::collection($postulaciones);

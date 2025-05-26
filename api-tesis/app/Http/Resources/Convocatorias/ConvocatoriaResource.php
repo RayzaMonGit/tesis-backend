@@ -5,6 +5,7 @@ namespace App\Http\Resources\Convocatorias;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Carbon\Carbon;
+use App\Http\Resources\Formularios\FormularioEvaluacionResource;
 
 class ConvocatoriaResource extends JsonResource
 {
@@ -55,11 +56,7 @@ class ConvocatoriaResource extends JsonResource
 }),
 //añadir e formulario
 "formulario" => $this->whenLoaded('formulario', function () {
-    return [
-        'id' => $this->formulario->id,
-        'nombre' => $this->formulario->nombre,
-        // puedes añadir más campos si lo necesitas
-    ];
+    return new FormularioEvaluacionResource($this->formulario);
 }),
 
 
