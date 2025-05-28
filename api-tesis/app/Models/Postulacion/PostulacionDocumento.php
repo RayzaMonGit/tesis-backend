@@ -19,11 +19,11 @@ class PostulacionDocumento extends Model
         'es_requisito_ley',
         'es_requisito_personalizado',
     ];
-
+/*
     protected $casts = [
         'es_requisito_ley' => 'boolean',
         'es_requisito_personalizado' => 'boolean',
-    ];
+    ];*/
 
     // Relación con Postulacion
     public function postulacion()

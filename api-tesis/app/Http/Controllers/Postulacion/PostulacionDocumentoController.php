@@ -37,41 +37,45 @@ public function all()
 
     public function store(Request $request)
 {
-     \Log::info('📥 Datos recibidos en store:', [
-        'postulacion_id' => $request->input('postulacion_id'),
-        'requisito_id' => $request->input('requisito_id'),
-        'nombre' => $request->input('nombre'),
-        'es_requisito_ley' => $request->input('es_requisito_ley'),
-        'es_requisito_personalizado' => $request->input('es_requisito_personalizado'),
-        'archivo_presente' => $request->hasFile('archivo'),
-        'archivo_nombre' => $request->file('archivo')?->getClientOriginalName(),
-        'archivo_tamaño' => $request->file('archivo')?->getSize(),
-    ]);
-   
-
-
     $request->validate([
-        'postulacion_id' => 'required|exists:postulaciones,id',
-        'requisito_id' => 'required|exists:requisitos,id',
-        'nombre' => 'required|string',
-        'archivo' => 'required|file',
-        'es_requisito_ley' => 'required|boolean',
+        'postulacion_id'             => 'required|exists:postulaciones,id',
+        'requisito_id'               => 'required|integer',
+        'nombre'                     => 'required|string',
+        'archivo'                    => 'required|file',
+        'es_requisito_ley'           => 'required|boolean',
         'es_requisito_personalizado' => 'required|boolean',
     ]);
 
-    $ruta = $request->file('archivo')->store("postulacion-documentos/{$request->postulacion_id}/requisitos", 'public');
+    if ($request->es_requisito_ley) {
+        if (!\DB::table('requisitos_ley')->where('id', $request->requisito_id)->exists()) {
+            return response()->json(['error' => 'Requisito de ley no válido'], 422);
+        }
+    }
+
+    if ($request->es_requisito_personalizado) {
+        if (!\DB::table('requisitos')->where('id', $request->requisito_id)->exists()) {
+            return response()->json(['error' => 'Requisito personalizado no válido'], 422);
+        }
+    }
+
+    $tipo = $request->es_requisito_ley ? 'ley' : 'personalizado';
+    $ruta = $request->file('archivo')->store(
+        "postulacion-documentos/{$request->postulacion_id}/requisitos/{$tipo}",
+        'public'
+    );
 
     PostulacionDocumento::create([
-        'postulacion_id' => $request->postulacion_id,
-        'requisito_id' => $request->requisito_id,
-        'nombre' => $request->nombre,
-        'archivo' => $ruta,
-        'es_requisito_ley' => $request->es_requisito_ley,
+        'postulacion_id'             => $request->postulacion_id,
+        'requisito_id'               => $request->requisito_id,
+        'nombre'                     => $request->nombre,
+        'archivo'                    => $ruta,
+        'es_requisito_ley'           => $request->es_requisito_ley,
         'es_requisito_personalizado' => $request->es_requisito_personalizado,
     ]);
 
     return response()->json(['message' => 'Documento guardado correctamente']);
 }
+
 
 /*
     public function storeMultiple(Request $request)

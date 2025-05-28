@@ -13,56 +13,59 @@
           <VCardText>
             <VWindow v-model="currentTab">
               <VWindowItem :value="0">
-                <VBtn
-  color="success"
-  class="mt-4"
-  :loading="guardando"
-  @click="guardarRequisitos"
->
-  Guardar requisitos
-  <VIcon
-        end
-        icon="ri-upload-cloud-line"
-      />
-</VBtn>
+                <VBtn color="success" class="mt-4" :loading="guardando" @click="guardarRequisitos">
+                  Guardar requisitos
+                  <VIcon end icon="ri-upload-cloud-line" />
+                </VBtn>
 
-              <!-- Primera pestaña: Requisitos -->
-              <VTimeline>
-               <VTimelineItem
-  v-for="requisito in requisitosTodos"
-  :key="requisito.id"
-  :dot-color="archivosRequisitos[requisito.id] ? 'success' : 'primary'"
-  size="x-small"
->
-  <div class="d-flex justify-space-between align-center gap-2 flex-wrap mb-2">
-    <span class="app-timeline-title">{{ requisito.nombre }}</span>
-    <span class="app-timeline-meta">Requisito obligatorio</span>
-  </div>
+                <!-- Primera pestaña: Requisitos -->
+                <VTimeline>
+                  <VTimelineItem v-for="requisito in requisitosLey" :key="requisito.id + 'ley'"
+                    :dot-color="archivosRequisitos[requisito.id] ? 'success' : 'primary'" size="x-small">
+                    <div class="d-flex justify-space-between align-center gap-2 flex-wrap mb-2">
+                      <span class="app-timeline-title">{{ requisito.nombre }}</span>
+                      <span class="app-timeline-meta">Requisito: {{ requisito.req }}</span>
+                    </div>
 
-  <div class="app-timeline-text mt-1">
-    {{ requisito.descripcion ?? 'Debe subir un documento que respalde este requisito.' }}
-  </div>
+                    <div class="app-timeline-text mt-1">
+                      {{ requisito.descripcion ?? 'Debe subir un documento que respalde este requisito de ley.' }}
+                    </div>
 
-  <div class="my-2">
-    <VFileInput
-      label="Subir archivo"
-      accept=".pdf,.jpg,.png"
-      prepend-icon="mdi-paperclip"
-      :model-value="archivosRequisitos[requisito.id]"
-      @update:modelValue="file => handleFileChange(requisito.id, file)"
-      hide-details
-      dense
-    />
-    <div v-if="archivosRequisitos[requisito.id]" class="d-inline-flex align-center mt-1">
-      <VIcon icon="mdi-file-document-outline" class="me-1" />
-      <span>{{ archivosRequisitos[requisito.id]?.name }}</span>
-    </div>
-  </div>
-</VTimelineItem>
+                    <div class="my-2">
+                      <VFileInput label="Subir archivo" accept=".pdf,.jpg,.png" prepend-icon="mdi-paperclip"
+                          @change="(e) => loadFile('ley', requisito.id, e)" dense />
 
-              </VTimeline>
+                      <div v-if="archivosRequisitos[requisito.id]" class="d-inline-flex align-center mt-1">
+                        <VIcon icon="mdi-file-document-outline" class="me-1" />
+                        <span>{{ archivosRequisitos[requisito.id]?.name }}</span>
+                      </div>
+                    </div>
+                  </VTimelineItem>
+                  <VTimelineItem v-for="requisito in requisitosPersonalizados" :key="requisito.id + 'personalizado'"
+                    :dot-color="archivosRequisitos[requisito.id] ? 'success' : 'primary'" size="x-small">
+                    <div class="d-flex justify-space-between align-center gap-2 flex-wrap mb-2">
+                      <span class="app-timeline-title">{{ requisito.nombre }}</span>
+                      <span class="app-timeline-meta">Requisito: {{ requisito.tipo }}</span>
+                    </div>
 
-</VWindowItem>
+                    <div class="app-timeline-text mt-1">
+                      {{ requisito.descripcion ?? 'Debe subir un documento que respalde este requisito de ley.' }}
+                    </div>
+
+                    <div class="my-2">
+                      <VFileInput label="Subir archivo" accept=".pdf,.jpg,.png" prepend-icon="mdi-paperclip"
+                        @change="(e) => loadFile('personalizado', requisito.id, e)" dense />
+
+                      <div v-if="archivosRequisitos[requisito.id]" class="d-inline-flex align-center mt-1">
+                        <VIcon icon="mdi-file-document-outline" class="me-1" />
+                        <span>{{ archivosRequisitos[requisito.id]?.name }}</span>
+                      </div>
+                    </div>
+                    </VTimelineItem>
+
+                </VTimeline>
+
+              </VWindowItem>
               <!-- Segunda pestaña: CV o formulario evaluación (a completar luego) -->
               <VWindowItem :value="1">
                 <p>Aquí irá el formulario evaluativo o CV (a implementar luego)</p>
@@ -127,95 +130,125 @@ const secciones = ref([])
 const loading = ref(true)
 const requisitosTotales = ref([])
 
+//const archivosRequisitos = ref({});
+
+
+const from = ref({
+  postulacion_id: parseInt(postulacionId),
+  requisito_id: null,
+  //archivo: null,
+  nombre: '',
+  es_requisito_ley: false,
+  es_requisito_personalizado: false,
+})
+
+const FILE_DOCUMENTO = ref(null)
+const NOMBRE_ARCHIVO_PREVIZUALIZA = ref(null)
+
+const archivosRequisitos = reactive({
+  ley: {},
+  personalizado: {},
+});
+function loadFile(tipo, id, event) {
+  const file = event?.target?.files?.[0] || event?.[0]; // compatible con VFileInput y nativo
+
+  if (file instanceof File) {
+    archivosRequisitos[tipo][id] = file;
+    console.log(`📎 Archivo cargado para requisito [${tipo}] ${id}:`, file);
+  } else {
+    console.warn(`❌ Archivo inválido para requisito [${tipo}] ${id}`, event);
+    archivosRequisitos[tipo][id] = null;
+  }
+}
+
+
 
 
 const guardando = ref(false)
-
-async function guardarRequisitos() {
-  guardando.value = true
-
-  const documentos = []
-
-  // Paso 1: Preparar los documentos
-  for (const requisitoId in archivosRequisitos.value) {
-    const archivoArray = archivosRequisitos.value[requisitoId]
-    const archivo = archivoArray?.[0]
-
-    // Validación del archivo
-    if (archivo instanceof File) {
-      const reqId = parseInt(requisitoId)
-      if (isNaN(reqId)) {
-        console.warn(`❌ requisitoId inválido: ${requisitoId}`)
-        continue
+//const documentos = ref([]);
+/*
+const documentosAGuardar = computed(() => {
+  return requisitosTodos.value
+    .filter(req => archivosRequisitos.value[req.id])
+    .map(req => {
+      return {
+        requisito_id: req.id,
+        archivo: archivosRequisitos.value[req.id],
+        nombre: archivosRequisitos.value[req.id]?.name || '',
+        es_requisito_ley: requisitosLey.value.some(r => r.id === req.id),
+        es_requisito_personalizado: requisitosPersonalizados.value.some(r => r.id === req.id),
       }
+    })
+})
+*/
 
-      const req = requisitosTotales.value.find(r => parseInt(r.id) === reqId)
 
-      if (!req) {
-        console.warn(`❌ No se encontró el requisito con ID ${reqId}`)
-        continue
-      }
+const guardarRequisitos = async () => {
+  guardando.value = true;
 
-      documentos.push({
-        requisito_id: reqId,
-        archivo,
-        nombre: archivo.name,
-        es_requisito_ley: !!req.es_requisito_ley,
-        es_requisito_personalizado: !!req.es_requisito_personalizado,
-      })
-    } else {
-      console.warn(`⚠️ El archivo para requisito ${requisitoId} no es válido`)
-    }
-  }
+  // Guardar requisitos de ley
+  for (const [requisitoId, archivo] of Object.entries(archivosRequisitos.ley)) {
+    if (!(archivo instanceof File)) continue;
 
-  console.log('✅ Documentos preparados para enviar:', documentos)
+    const formData = new FormData();
+    formData.append('postulacion_id', postulacionId);
+    formData.append('requisito_id', requisitoId);
+    formData.append('archivo', archivo);
+    formData.append('nombre', archivo.name);
+    formData.append('es_requisito_ley', '1');
+    formData.append('es_requisito_personalizado', '0');
 
-  // Paso 2: Enviar uno por uno
-  try {
-    for (const doc of documentos) {
-      let formData = new FormData()
-
-      formData.append('postulacion_id', parseInt(postulacionId))
-      formData.append('requisito_id', parseInt(doc.requisito_id))
-      formData.append('archivo', doc.archivo)
-      formData.append('nombre', doc.nombre)
-      formData.append('es_requisito_ley', doc.es_requisito_ley ? 1 : 0)
-      formData.append('es_requisito_personalizado', doc.es_requisito_personalizado ? 1 : 0)
-
-      console.log('📦 Enviando FormData:')
-      for (const [key, value] of formData.entries()) {
-        console.log(`${key}:`, value instanceof File ? value.name : value)
-      }
-
-      try {
-        const res = await $api('/postulacion-documentos', formData, {
-          method: 'POST',
-        })
-
-        console.log(`✅ Guardado exitoso para requisito ${doc.requisito_id}:`, res.data)
-      } catch (error) {
-        if (error.response?.status === 422) {
-          console.error('❌ Error de validación:', error.response.data.errors)
-        } else {
-          console.error('❌ Error inesperado:', error)
+    try {
+      const res = await $api('/postulacion-documentos', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+          //'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
-
-        throw error // Detener todo si falla uno
-      }
+      });
+      console.log(`✅ Guardado requisito de ley ${requisitoId}`, res);
+    } catch (err) {
+      console.error(`❌ Error guardando requisito de ley ${requisitoId}`, err);
     }
-
-    alert('✅ Todos los documentos fueron guardados correctamente.')
-  } catch (error) {
-    alert('❌ Ocurrió un error al guardar uno de los documentos. Revisa la consola.')
-  } finally {
-    guardando.value = false
   }
-}
+
+  // Guardar requisitos personalizados
+  for (const [requisitoId, archivo] of Object.entries(archivosRequisitos.personalizado)) {
+    if (!(archivo instanceof File)) continue;
+
+    const formData = new FormData();
+    formData.append('postulacion_id', postulacionId);
+    formData.append('requisito_id', requisitoId);
+    formData.append('archivo', archivo);
+    formData.append('nombre', archivo.name);
+    formData.append('es_requisito_ley', '0');
+    formData.append('es_requisito_personalizado', '1');
+
+    try {
+      const res = await $api('/postulacion-documentos', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
+      console.log(`✅ Guardado requisito personalizado ${requisitoId}`, res);
+    } catch (err) {
+      console.error(`❌ Error guardando requisito personalizado ${requisitoId}`, err);
+    }
+  }
+
+  guardando.value = false;
+};
+
+
 
 // También actualiza la función handleFileChange para mejor manejo
 function handleFileChange(id, file) {
   console.log(`Archivo recibido para requisito ${id}:`, file)
-  
+
   if (!file || (Array.isArray(file) && file.length === 0)) {
     archivosRequisitos.value[id] = null
     console.log(`Archivo removido para requisito ${id}`)
@@ -225,13 +258,15 @@ function handleFileChange(id, file) {
   }
 }
 
-const archivosRequisitos = ref({})
+//const archivosRequisitos = ref({})
 
 // Computado que une todos los requisitos
 const requisitosTodos = computed(() => [
   ...requisitosLey.value,
   ...requisitosPersonalizados.value,
 ])
+//mostrar requisitosTodos.value en el template
+console.log('Requisitos totales:', requisitosTodos)
 
 const requisitos = async () => {
   try {
@@ -261,26 +296,26 @@ const requisitos = async () => {
         console.log('Usuario:', usuario.value)
         console.log('Convocatoria:', convocatoria.value)
         */console.log('Requisitos de ley:', requisitosLey.value)
-        console.log('Requisitos personalizados:', requisitosPersonalizados.value)
-        /*console.log('Evaluadores:', evaluadores.value)
-        console.log('Formulario:', formulario.value)
-        console.log('Secciones del formulario:', secciones.value)
-    */
-   
-requisitosTotales.value = [
-  ...requisitosLey.value.map(r => ({
-    id: r.id,
-    descripcion: r.descripcion,
-    es_requisito_ley: true,
-    es_requisito_personalizado: false,
-  })),
-  ...requisitosPersonalizados.value.map(r => ({
-    id: r.id,
-    descripcion: r.descripcion,
-    es_requisito_ley: false,
-    es_requisito_personalizado: true,
-  })),
-]
+    console.log('Requisitos personalizados:', requisitosPersonalizados.value)
+    /*console.log('Evaluadores:', evaluadores.value)
+    console.log('Formulario:', formulario.value)
+    console.log('Secciones del formulario:', secciones.value)
+*/
+
+    requisitosTotales.value = [
+      ...requisitosLey.value.map(r => ({
+        id: r.id,
+        descripcion: r.descripcion,
+        //es_requisito_ley: true,
+        //es_requisito_personalizado: false,
+      })),
+      ...requisitosPersonalizados.value.map(r => ({
+        id: r.id,
+        descripcion: r.descripcion,
+        //es_requisito_ley: false,
+        //es_requisito_personalizado: true,
+      })),
+    ]
 
   } catch (error) {
     console.error('Error al cargar la convocatoria:', error)
@@ -310,10 +345,10 @@ const cargarDocumentosGuardados = async () => {
 }
 
 
-onMounted(async() => {
+onMounted(async () => {
   requisitos()
-await cargarDocumentosGuardados()
-  
+  await cargarDocumentosGuardados()
+
 })
 </script>
 
