@@ -19,9 +19,10 @@ class PostulacionDocumentoResource extends JsonResource
             'id' => $this->id,
             'postulacion_id' => $this->postulacion_id,
             'nombre' => $this->nombre,
-            //'archivo' => Storage::url($this->archivo), // genera URL pública si usás storage:link
-            //'es_requisito_ley' => $this->es_requisito_ley,
-            //'es_requisito_personalizado' => $this->es_requisito_personalizado,
+            'requisito_id' => $this->requisito_id,
+            'archivo' => $this->archivo ? env('APP_URL') . 'storage/' . $this->archivo : null,
+            'es_requisito_ley' => $this->es_requisito_ley,
+            'es_requisito_personalizado' => $this->es_requisito_personalizado,
             'created_at' => $this->created_at->toDateTimeString(),
         ];
     }

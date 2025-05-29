@@ -21,7 +21,7 @@
                 <!-- Primera pestaña: Requisitos -->
                 <VTimeline>
                   <VTimelineItem v-for="requisito in requisitosLey" :key="requisito.id + 'ley'"
-                    :dot-color="archivosRequisitos[requisito.id] ? 'success' : 'primary'" size="x-small">
+                    :dot-color="archivosRequisitos.ley?.[requisito.id] ? 'success' : 'primary'" size="x-small">
                     <div class="d-flex justify-space-between align-center gap-2 flex-wrap mb-2">
                       <span class="app-timeline-title">{{ requisito.nombre }}</span>
                       <span class="app-timeline-meta">Requisito: {{ requisito.req }}</span>
@@ -35,14 +35,21 @@
                       <VFileInput label="Subir archivo" accept=".pdf,.jpg,.png" prepend-icon="mdi-paperclip"
                           @change="(e) => loadFile('ley', requisito.id, e)" dense />
 
-                      <div v-if="archivosRequisitos[requisito.id]" class="d-inline-flex align-center mt-1">
+                      <div v-if="archivosRequisitos.ley?.[requisito.id]?.yaSubido" class="d-inline-flex align-center mt-1">
                         <VIcon icon="mdi-file-document-outline" class="me-1" />
-                        <span>{{ archivosRequisitos[requisito.id]?.name }}</span>
+                        <a
+                              :href="archivosRequisitos.ley?.[requisito.id].url"
+                                target="_blank"
+                                class="text-primary text-decoration-underline"
+                              >
+                                {{ archivosRequisitos.ley?.[requisito.id].name }}
+                              </a>
+                       <!-- <span>{{ archivosRequisitos[requisito.id]?.name }}</span>-->
                       </div>
                     </div>
                   </VTimelineItem>
                   <VTimelineItem v-for="requisito in requisitosPersonalizados" :key="requisito.id + 'personalizado'"
-                    :dot-color="archivosRequisitos[requisito.id] ? 'success' : 'primary'" size="x-small">
+                    :dot-color="archivosRequisitos.personalizado?.[requisito.id] ? 'success' : 'primary'" size="x-small">
                     <div class="d-flex justify-space-between align-center gap-2 flex-wrap mb-2">
                       <span class="app-timeline-title">{{ requisito.nombre }}</span>
                       <span class="app-timeline-meta">Requisito: {{ requisito.tipo }}</span>
@@ -56,9 +63,16 @@
                       <VFileInput label="Subir archivo" accept=".pdf,.jpg,.png" prepend-icon="mdi-paperclip"
                         @change="(e) => loadFile('personalizado', requisito.id, e)" dense />
 
-                      <div v-if="archivosRequisitos[requisito.id]" class="d-inline-flex align-center mt-1">
+                      <div v-if="archivosRequisitos.personalizado?.[requisito.id]?.yaSubido" class="d-inline-flex align-center mt-1">
                         <VIcon icon="mdi-file-document-outline" class="me-1" />
-                        <span>{{ archivosRequisitos[requisito.id]?.name }}</span>
+                        <a
+                          :href="archivosRequisitos.personalizado?.[requisito.id].url"
+                            target="_blank"
+                            class="text-primary text-decoration-underline"
+                          >
+                            {{ archivosRequisitos.personalizado?.[requisito.id].name }}
+                          </a>
+                       <!-- <span>{{ archivosRequisitos[requisito.id]?.name }}</span>-->
                       </div>
                     </div>
                     </VTimelineItem>
@@ -132,6 +146,25 @@ const requisitosTotales = ref([])
 
 //const archivosRequisitos = ref({});
 
+const eliminarDocumentoPrevio = async (postulacionId, requisitoId) => {
+  try {
+    await $api('/postulacion-documentos/eliminar', {
+      method: 'DELETE',
+      body: {
+        postulacion_id: postulacionId,
+        requisito_id: requisitoId,
+      },
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+      }
+    });
+    console.log(`🗑️ Documento previo eliminado para requisito ${requisitoId}`);
+  } catch (err) {
+    console.warn(`⚠️ No se pudo eliminar el documento previo para requisito ${requisitoId}`, err);
+  }
+};
+
 
 const from = ref({
   postulacion_id: parseInt(postulacionId),
@@ -142,13 +175,13 @@ const from = ref({
   es_requisito_personalizado: false,
 })
 
-const FILE_DOCUMENTO = ref(null)
-const NOMBRE_ARCHIVO_PREVIZUALIZA = ref(null)
 
 const archivosRequisitos = reactive({
   ley: {},
   personalizado: {},
 });
+
+
 function loadFile(tipo, id, event) {
   const file = event?.target?.files?.[0] || event?.[0]; // compatible con VFileInput y nativo
 
@@ -161,27 +194,7 @@ function loadFile(tipo, id, event) {
   }
 }
 
-
-
-
 const guardando = ref(false)
-//const documentos = ref([]);
-/*
-const documentosAGuardar = computed(() => {
-  return requisitosTodos.value
-    .filter(req => archivosRequisitos.value[req.id])
-    .map(req => {
-      return {
-        requisito_id: req.id,
-        archivo: archivosRequisitos.value[req.id],
-        nombre: archivosRequisitos.value[req.id]?.name || '',
-        es_requisito_ley: requisitosLey.value.some(r => r.id === req.id),
-        es_requisito_personalizado: requisitosPersonalizados.value.some(r => r.id === req.id),
-      }
-    })
-})
-*/
-
 
 const guardarRequisitos = async () => {
   guardando.value = true;
@@ -189,8 +202,11 @@ const guardarRequisitos = async () => {
   // Guardar requisitos de ley
   for (const [requisitoId, archivo] of Object.entries(archivosRequisitos.ley)) {
     if (!(archivo instanceof File)) continue;
+    await eliminarDocumentoPrevio(postulacionId, requisitoId);
 
-    const formData = new FormData();
+const formData = new FormData();
+
+   
     formData.append('postulacion_id', postulacionId);
     formData.append('requisito_id', requisitoId);
     formData.append('archivo', archivo);
@@ -208,6 +224,7 @@ const guardarRequisitos = async () => {
         }
       });
       console.log(`✅ Guardado requisito de ley ${requisitoId}`, res);
+      cargarDocumentosGuardados();
     } catch (err) {
       console.error(`❌ Error guardando requisito de ley ${requisitoId}`, err);
     }
@@ -243,30 +260,6 @@ const guardarRequisitos = async () => {
   guardando.value = false;
 };
 
-
-
-// También actualiza la función handleFileChange para mejor manejo
-function handleFileChange(id, file) {
-  console.log(`Archivo recibido para requisito ${id}:`, file)
-
-  if (!file || (Array.isArray(file) && file.length === 0)) {
-    archivosRequisitos.value[id] = null
-    console.log(`Archivo removido para requisito ${id}`)
-  } else {
-    archivosRequisitos.value[id] = file
-    console.log(`Archivo asignado para requisito ${id}:`, file instanceof File ? file.name : file)
-  }
-}
-
-//const archivosRequisitos = ref({})
-
-// Computado que une todos los requisitos
-const requisitosTodos = computed(() => [
-  ...requisitosLey.value,
-  ...requisitosPersonalizados.value,
-])
-//mostrar requisitosTodos.value en el template
-console.log('Requisitos totales:', requisitosTodos)
 
 const requisitos = async () => {
   try {
@@ -324,25 +317,33 @@ const requisitos = async () => {
   }
 }
 
-
 const cargarDocumentosGuardados = async () => {
   try {
-    const response = await $api(`/postulaciones/${postulacionId}/documentos`)
-    const documentos = response.data
+    const res = await $api(`/postulaciones/${postulacionId}/documentos`);
+    console.log('Documentos previos cargados:', res.data);
 
-    documentos.forEach(doc => {
-      archivosRequisitos.value[doc.requisito_id] = {
-        id: doc.id,
-        nombre: doc.nombre, // nombre original
-        url: `/storage/${doc.archivo}`, // asumiendo que ya hiciste `php artisan storage:link`
-      }
-    })
+    res.data.forEach(doc => {
+  const tipo = doc.es_requisito_ley ? 'ley' : 'personalizado';
 
-    console.log('Documentos cargados:', archivosRequisitos.value)
-  } catch (error) {
-    console.error('Error cargando documentos previos:', error)
+  // Aseguramos que la categoría exista en el objeto
+  if (!archivosRequisitos[tipo]) {
+    archivosRequisitos[tipo] = {};
   }
-}
+
+  archivosRequisitos[tipo][doc.requisito_id] = {
+    name: doc.nombre,
+    url: doc.archivo, // ya es una URL absoluta
+    yaSubido: true
+  };
+});
+
+
+    console.log('📂 Documentos previos cargados:', archivosRequisitos);
+  } catch (err) {
+    console.error('❌ Error al cargar documentos previos:', err);
+  }
+};
+
 
 
 onMounted(async () => {
@@ -351,8 +352,6 @@ onMounted(async () => {
 
 })
 </script>
-
-
 
 <style lang="scss" scoped>
 .card-list {

@@ -75,6 +75,28 @@ public function all()
 
     return response()->json(['message' => 'Documento guardado correctamente']);
 }
+public function destroyByPostulacionAndRequisito(Request $request)
+{
+    $request->validate([
+        'postulacion_id' => 'required|integer',
+        'requisito_id' => 'required|integer',
+    ]);
+
+    $doc = PostulacionDocumento::where('postulacion_id', $request->postulacion_id)
+        ->where('requisito_id', $request->requisito_id)
+        ->first();
+
+    if ($doc) {
+        // Elimina archivo físico si deseas
+        if (Storage::exists($doc->archivo)) {
+            Storage::delete($doc->archivo);
+        }
+        $doc->delete();
+        return response()->json(['message' => 'Documento eliminado'], 200);
+    }
+
+    return response()->json(['message' => 'Documento no encontrado'], 404);
+}
 
 
 /*

@@ -87,6 +87,7 @@ Route::get('postulacion-documentos', [PostulacionDocumentoController::class, 'al
 Route::get('postulaciones/{id}/documentos', [PostulacionDocumentoController::class, 'index']);
 
 Route::delete('postulacion-documentos/{id}', [PostulacionDocumentoController::class, 'destroy']);
+Route::delete('/postulacion-documentos/eliminar', [PostulacionDocumentoController::class, 'destroyByPostulacionAndRequisito']);
 
 
 });
