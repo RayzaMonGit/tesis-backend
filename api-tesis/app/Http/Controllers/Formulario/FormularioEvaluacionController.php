@@ -40,7 +40,8 @@ public function show($id)
         'secciones.*.criterios' => 'required|array|min:1',
         'secciones.*.criterios.*.nombre' => 'required|string|max:255',
         'secciones.*.criterios.*.puntaje_por_item' => 'nullable|numeric',
-        'secciones.*.criterios.*.max_items' => 'nullable|integer',
+        'secciones.*.criterios.*.puntaje_maximo' => 'nullable|numeric',
+        //'secciones.*.criterios.*.max_items' => 'nullable|integer',
         ]);
 
         DB::beginTransaction();
@@ -60,7 +61,7 @@ public function show($id)
                         'nombre' => $c['nombre'],
                         'puntaje_por_item'=> $c['puntaje_por_item'],
                         //'puntaje' => $c['puntaje'],
-                        'max_items' => $c['max_items'],
+                        'puntaje_maximo' => $c['puntaje_maximo'],
                         //'orden' => $c['orden'],
                     ]);
                 }
@@ -81,61 +82,80 @@ public function show($id)
     }
 
     public function update(Request $request, $id)
-    {
-        
-        $validated = $request->validate([
-            
-            //'resolucion' => 'nullable|string|max:255',
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
-            'puntaje_total' => 'required|numeric',
-            'secciones' => 'required|array|min:1',
-            'secciones.*.titulo' => 'required|string|max:255',
-            'secciones.*.puntaje_max' => 'required|numeric',
-            'secciones.*.criterios' => 'required|array|min:1',
-            'secciones.*.criterios.*.nombre' => 'required|string|max:255',
-            'secciones.*.criterios.*.puntaje_por_item' => 'nullable|numeric',
-            'secciones.*.criterios.*.max_items' => 'nullable|integer',
-        ]);
-        
-        DB::beginTransaction();
-        try {
-            $formulario = FormularioEvaluacion::findOrFail($id);
-            $formulario->update($validated);
+{
+    $validated = $request->validate([
+        'nombre' => 'string|max:255',
+        'descripcion' => 'string',
+        'puntaje_total' ,
+        'secciones' => 'array|min:1',
+        'secciones.*.id' => 'integer|exists:secciones_formulario,id', // Validar que existe
+        'secciones.*.titulo' => 'string|max:255',
+        'secciones.*.puntaje_max' ,
+        'secciones.*.criterios' => 'array|min:1',
+        'secciones.*.criterios.*.id' => 'integer|exists:criterios_formulario,id', // Validar que existe
+        'secciones.*.criterios.*.nombre' => 'string|max:255',
+        'secciones.*.criterios.*.puntaje_por_item' ,
+        'secciones.*.criterios.*.puntaje_maximo' ,
+    ]);
+    
+    DB::beginTransaction();
+    try {
+        $formulario = FormularioEvaluacion::findOrFail($id);
+        $formulario->update($validated);
 
-            // Eliminar secciones y criterios existentes
-            foreach ($formulario->secciones as $s) {
-                $s->criterios()->delete();
-                $s->delete();
-            }
-
-            // Crear nuevas secciones y criterios
-            foreach ($validated['secciones'] as $s) {
-                $seccion = $formulario->secciones()->create([
-                    'titulo' => $s['titulo'],
-                    'puntaje_max' => $s['puntaje_max'],
-                    //'orden' => $s['orden'],
+        $existingSectionIds = $formulario->secciones()->pluck('id')->toArray();
+        $receivedSectionIds = [];
+        
+        foreach ($validated['secciones'] as $sectionData) {
+            // Buscar o crear sección con validación adicional
+            $seccion = isset($sectionData['id']) 
+                ? $formulario->secciones()->findOrFail($sectionData['id'])
+                : $formulario->secciones()->create([
+                    'titulo' => $sectionData['titulo'],
+                    'puntaje_max' => $sectionData['puntaje_max'],
                 ]);
-
-                foreach ($s['criterios'] as $c) {
-                    $seccion->criterios()->create([
-                        'nombre' => $c['nombre'],
-                        'puntaje_por_item'=> $c['puntaje_por_item'],
-                        //'puntaje' => $c['puntaje'],
-                        'max_items' => $c['max_items'],
-                        //'orden' => $c['orden'],
-                    ]);
-                }
-            }
-
-            DB::commit();
-            return response()->json(['message' => 'Formulario actualizado correctamente.']);
             
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return response()->json(['error' => 'Error al actualizar formulario.', 'detail' => $e->getMessage()], 500);
+            $receivedSectionIds[] = $seccion->id;
+
+            $existingCriterionIds = $seccion->criterios()->pluck('id')->toArray();
+            $receivedCriterionIds = [];
+            
+            foreach ($sectionData['criterios'] as $criterionData) {
+                // Buscar o crear criterio con validación adicional
+                $criterio = isset($criterionData['id'])
+                    ? $seccion->criterios()->findOrFail($criterionData['id'])
+                    : $seccion->criterios()->create([
+                        'nombre' => $criterionData['nombre'],
+                        'puntaje_por_item' => $criterionData['puntaje_por_item'],
+                        'puntaje_maximo' => $criterionData['puntaje_maximo'],
+                    ]);
+                
+                $receivedCriterionIds[] = $criterio->id;
+            }
+            
+            // Eliminar criterios no incluidos
+            $seccion->criterios()
+                ->whereIn('id', array_diff($existingCriterionIds, $receivedCriterionIds))
+                ->delete();
         }
+        
+        // Eliminar secciones no incluidas
+        $formulario->secciones()
+            ->whereIn('id', array_diff($existingSectionIds, $receivedSectionIds))
+            ->delete();
+
+        DB::commit();
+        return response()->json(['message' => 'Formulario actualizado correctamente.']);
+        
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        return response()->json([
+            'error' => 'Error al actualizar formulario.',
+            'detail' => $e->getMessage(),
+            'trace' => env('APP_DEBUG') ? $e->getTrace() : null
+        ], 500);
     }
+}
 
     public function destroy($id)
     {

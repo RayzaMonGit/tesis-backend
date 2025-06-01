@@ -19,12 +19,38 @@ use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
 
 use App\Http\Controllers\AuthController;
-
+//para enviar email
+use App\Mail\VerificationCodeMail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 
 
 class RegisterController extends Controller
 {
+    public function register(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users',
+        'password' => 'required|string|min:8|confirmed',
+    ]);
+
+    $verificationCode = Str::random(6);
+
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'verification_code' => $verificationCode,
+        'is_verified' => false,
+    ]);
+
+    Mail::to($user->email)->send(new VerificationCodeMail($verificationCode));
+
+    return redirect()->route('verification.notice');
+}
+
     /**
      * Display a listing of the resource.
      */
@@ -39,7 +65,7 @@ class RegisterController extends Controller
     public function store(Request $request)
     {
         // Guardar el password plano para login
-$plainPassword = $request->password;
+            $plainPassword = $request->password;
 
             $validator = Validator::make($request->all(), [
             // Datos del usuario

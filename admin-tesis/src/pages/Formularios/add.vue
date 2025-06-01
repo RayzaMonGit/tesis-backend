@@ -109,14 +109,14 @@
               </v-col>
               <v-col cols="12" md="3">
                 <v-text-field 
-                v-model.number="criterio.max_items" 
-                label="Cantidad maxima de ítems" 
+                v-model.number="criterio.puntaje_maximo" 
+                label="Puntaje máximo del Criterio" 
                 placeholder="Ej: 2"
                 type="number"
                 outlined dense
-                @blur="() => criterio.max_items = criterio.max_items ?? 0"
+                @blur="() => criterio.puntaje_maximo = criterio.puntaje_maximo ?? 0"
 
-                :value="criterio.max_items ?? 0"
+                :value="criterio.puntaje_maximo ?? 0"
                 ></v-text-field>
               </v-col>
               <v-col cols="12" md="2" class="text-right">
@@ -183,7 +183,7 @@ const formulario = ref({
         {
           nombre: '',
           puntaje_por_item: null,
-          max_items: null,
+          puntaje_maximo: null,
           
         }
       ],
@@ -291,7 +291,7 @@ const formData = {
     criterios: (s.criterios || []).map((c) => ({
       nombre: c.nombre,
       puntaje_por_item: Number(c.puntaje_por_item),
-      max_items: Number(c.max_items ?? 0), // Si viene undefined, lo pone como 0
+      puntaje_maximo: Number(c.puntaje_maximo ?? puntaje_por_item), // Si viene undefined, lo pone como 0
     })),
   })),
 }

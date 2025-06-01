@@ -248,52 +248,52 @@ const limitPhoneDigits = (e) => {
               </p>
 
               <VRow>
-                <VCol
-                  cols="12"
-                  md="12"
-                >
-                  <VTextField
-                    v-model="form.email"
-                    label="Email"
-                    placeholder="juanmanuel@email.com"
-                    :rules="[
-                            v => !!v || 'El correo es requerido',
-                            v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) || 'Ingrese un correo válido'
-                            ]"
-                  />
-                </VCol>
+  <VCol cols="12" md="12">
+    <VTextField
+      v-model="form.email"
+      label="Email"
+      placeholder="juanmanuel@email.com"
+      :rules="[
+        v => !!v || 'El correo es requerido',
+        v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) || 'Ingrese un correo válido'
+      ]"
+    />
+  </VCol>
 
-                <VCol cols="12" md="6">
-  <VTextField
-    v-model="form.password"
-    label="Password"
-    placeholder="............"
-    :type="isPasswordVisible ? 'text' : 'password'"
-    :append-inner-icon="isPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
-    @click:append-inner="isPasswordVisible = !isPasswordVisible"
-    :rules="[
-      v => !!v || 'La contraseña es obligatoria',
-      v => v.length >= 6 || 'Debe tener al menos 6 caracteres'
-    ]"
-  />
-</VCol>
+  <VCol cols="12" md="6">
+    <VTextField
+      v-model="form.password"
+      label="Password"
+      placeholder="............"
+      :type="isPasswordVisible ? 'text' : 'password'"
+      :append-inner-icon="isPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
+      @click:append-inner="isPasswordVisible = !isPasswordVisible"
+      :rules="[
+        v => !!v || 'La contraseña es obligatoria',
+        v => v.length >= 6 || 'Debe tener al menos 6 caracteres',
+        v => /[0-9]/.test(v) || 'Debe contener al menos un número',
+        v => /[a-z]/.test(v) || 'Debe contener al menos una minúscula',
+        v => /[A-Z]/.test(v) || 'Debe contener al menos una mayúscula',
+        v => /[^A-Za-z0-9]/.test(v) || 'Debe contener al menos un carácter especial'
+      ]"
+    />
+  </VCol>
 
-<VCol cols="12" md="6">
-  <VTextField
-    v-model="form.confirmPassword"
-    label="Confirmar contraseña"
-    placeholder="Repetir contraseña"
-    :type="isConfirmPasswordVisible ? 'text' : 'password'"
-    :append-inner-icon="isConfirmPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
-    @click:append-inner="isConfirmPasswordVisible = !isConfirmPasswordVisible"
-    :rules="[
-      v => !!v || 'La confirmación es obligatoria',
-      v => v === form.password || 'Las contraseñas no coinciden'
-    ]"
-  />
-</VCol>
-
-              </VRow>
+  <VCol cols="12" md="6">
+    <VTextField
+      v-model="form.confirmPassword"
+      label="Confirmar contraseña"
+      placeholder="Repetir contraseña"
+      :type="isConfirmPasswordVisible ? 'text' : 'password'"
+      :append-inner-icon="isConfirmPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
+      @click:append-inner="isConfirmPasswordVisible = !isConfirmPasswordVisible"
+      :rules="[
+        v => !!v || 'La confirmación es obligatoria',
+        v => v === form.password || 'Las contraseñas no coinciden'
+      ]"
+    />
+  </VCol>
+</VRow>
             </VWindowItem>
 
             <VWindowItem>
@@ -395,7 +395,7 @@ const limitPhoneDigits = (e) => {
                   <VRow>
                             <VCol cols="12">
                                 <VFileInput 
-                                label="File input" 
+                                label="Seleccione una imagen de perfil" 
                                 @change="loadFile($event)" />
                             </VCol>
                             <VCol cols="12" v-if="IMAGEN_PREVIZUALIZA">
@@ -428,7 +428,7 @@ const limitPhoneDigits = (e) => {
                   <VSelect
                     :items="type_grades"
                     v-model="form.grado_academico"
-                    label="Grado académico:"
+                    label="Seleccione su mayor grado académico:"
                     placeholder="Seleccionar"
                     :rules="[v => !!v || 'El grado académico es requerido']" required
                     eager></VSelect>

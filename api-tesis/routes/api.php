@@ -13,6 +13,8 @@ use App\Http\Controllers\Formulario\FormularioEvaluacionController;
 use App\Http\Controllers\Postulacion\PostulacionController;
 use App\Http\Controllers\Postulacion\PostulacionDocumentoController;
 
+//use App\Http\Controllers\Formulario\FormularioController;
+use App\Http\Controllers\Formulario\EvaluacionController;
 //para que se registre un usuario sin estar autentificado
 Route::resource("register",RegisterController::class);
 //Route::post("register/{id}",[RegisterController::class,"update"]);
@@ -89,5 +91,18 @@ Route::get('postulaciones/{id}/documentos', [PostulacionDocumentoController::cla
 Route::delete('postulacion-documentos/{id}', [PostulacionDocumentoController::class, 'destroy']);
 Route::delete('/postulacion-documentos/eliminar', [PostulacionDocumentoController::class, 'destroyByPostulacionAndRequisito']);
 
+//evaluaciones del postulante segun formulario
 
+
+
+Route::post('/evaluaciones', [EvaluacionController::class, 'store']); // Guardar evaluación
+Route::get('/evaluaciones/{id}', [EvaluacionController::class, 'show']); // Ver resultados (API)
+
+
+
+Route::get('/formularios/{id}', [FormularioController::class, 'show']); // Mostrar formulario
+Route::post('/evaluaciones/resultado/{id}', [EvaluacionController::class, 'resultado']); // Resultados web
+
+// Cambiar estado de postulación
+Route::post('/postulaciones/{id}/cambiar-estado', [PostulacionController::class, 'cambiarEstado']);
 });

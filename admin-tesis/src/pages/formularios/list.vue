@@ -44,7 +44,7 @@
                     <span> {{ criterio.nombre }}</span>
                     <span class="text-gray-500 text-xs">
                       {{ criterio.puntaje_por_item }} puntos
-                      <span v-if="criterio.max_items > 0"> (max. {{ criterio.max_items }})</span>
+                      <span v-if="criterio.puntaje_maximo != criterio.puntaje_por_item && criterio.puntaje_maximo!=0 "> (max. {{ criterio.puntaje_maximo }})</span>
                     </span>
 
                   </div>

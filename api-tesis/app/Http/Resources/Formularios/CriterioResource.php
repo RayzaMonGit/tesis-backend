@@ -14,7 +14,7 @@ class CriterioResource extends JsonResource
             'seccion_id' => $this->seccion_id,
             'nombre' => $this->nombre,
             //'puntaje' => $this->puntaje,
-            'max_items' => $this->max_items,
+            //'max_items' => $this->max_items,
             //'orden' => $this->orden,
             'puntaje_por_item' => $this->puntaje_por_item,
             'puntaje_maximo' => $this->puntaje_maximo,

@@ -76,11 +76,11 @@
                                     placeholder="Ej: Asistencia a congresos" outlined dense />
                             </v-col>
                             <v-col cols="12" md="3">
-                                <v-text-field v-model.number="criterio.puntaje_por_item" label="Puntaje por ítem"
+                                <v-text-field v-model.number="criterio.puntaje_por_item" label="Puntaje por Item"
                                     placeholder="Ej: 0,5" type="number" outlined dense />
                             </v-col>
                             <v-col cols="12" md="3">
-                                <v-text-field v-model.number="criterio.max_items" label="Cantidad máxima de ítems"
+                                <v-text-field v-model.number="criterio.puntaje_maximo" label="Puntaje máximo del Criterio"
                                     placeholder="Ej: 2" type="number" outlined dense />
                             </v-col>
                             <v-col cols="12" md="2" class="text-right">
@@ -90,10 +90,10 @@
                             </v-col>
                         </v-row>
 
-                        <!-- Sólo muestro puntos y max_items si max_items > 0 -->
+                        <!-- Sólo muestro puntos y max_items si max_items > 0 
                         <div v-if="criterio.max_items > 0" class="text-right text-xs text-gray-500">
                             {{ criterio.puntaje_por_item }} puntos (max. {{ criterio.max_items }})
-                        </div>
+                        </div>-->
                     </div>
 
                     <v-btn prepend-icon="mdi-plus" variant="text" color="primary" class="mt-2"
@@ -177,7 +177,7 @@ function addCriterion(sectionIndex) {
   localForm.secciones[sectionIndex].criterios.push({
     nombre: '',
     puntaje_por_item: 0,
-    max_items: 0
+    puntaje_maximo: 0
   })
 }
 
@@ -196,6 +196,7 @@ async function save() {
     method: 'POST',
     body: localForm
   })
+  console.log('Formulario guardado:', localForm)
   emit('editFormulario', JSON.parse(JSON.stringify(localForm)))
   close()
 }

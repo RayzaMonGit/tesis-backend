@@ -24,6 +24,8 @@ class PostulacionDocumentoResource extends JsonResource
             'es_requisito_ley' => $this->es_requisito_ley,
             'es_requisito_personalizado' => $this->es_requisito_personalizado,
             'created_at' => $this->created_at->toDateTimeString(),
+            'seccion_id' => $this->seccion_id,
+            'criterio_id' => $this->criterio_id,
         ];
     }
 }

@@ -19,7 +19,7 @@ class FormularioEvaluacionResource extends JsonResource
         'nombre' => $this->nombre,
         'descripcion' => $this->descripcion,
         //'resolucion' => $this->resolucion,
-        'puntaje_total',
+        'puntaje_total'=> $this->puntaje_total,
         'secciones' => SeccionResource::collection($this->whenLoaded('secciones')),
     ];
 }

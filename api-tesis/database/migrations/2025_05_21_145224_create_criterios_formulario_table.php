@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->foreignId('seccion_id')->constrained('secciones_formulario')->onDelete('cascade');
             $table->string('nombre');
             $table->float('puntaje')->default(0);
-            $table->integer('max_items')->default(1); // máximo número de veces que se puede aplicar
+           // $table->integer('max_items')->default(1); // máximo número de veces que se puede aplicar
             $table->integer('orden')->default(0);
             $table->timestamps();
         });

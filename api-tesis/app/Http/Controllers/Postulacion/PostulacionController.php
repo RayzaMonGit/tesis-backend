@@ -131,4 +131,22 @@ class PostulacionController extends Controller
     return PostulacionResource::collection($postulaciones);
 }
 
+public function cambiarEstado(Request $request, $id)
+{
+
+    $postulacion = Postulacion::findOrFail($id);
+    
+    // Verificar que el usuario tiene permisos para cambiar el estado
+    // Aquí deberías agregar tu lógica de autorización
+    
+    $postulacion->estado = $request->estado;
+    $postulacion->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Estado actualizado correctamente',
+        'data' => $postulacion
+    ]);
+}
+
 }

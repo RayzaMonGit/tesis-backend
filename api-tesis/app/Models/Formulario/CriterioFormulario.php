@@ -11,7 +11,7 @@ class CriterioFormulario extends Model
         'seccion_id',
         'nombre',
         //'puntaje',
-        'max_items',
+        //'max_items',
         //'orden',
         'puntaje_por_item',
         'puntaje_maximo',

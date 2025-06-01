@@ -39,11 +39,13 @@ public function all()
 {
     $request->validate([
         'postulacion_id'             => 'required|exists:postulaciones,id',
-        'requisito_id'               => 'required|integer',
+        'seccion_id' => 'nullable|integer', // Para documentos de currículum
+        'criterio_id' => 'nullable|integer', // Para documentos de currículum
+        'requisito_id' => 'nullable|integer', // Para requisitos básicos
         'nombre'                     => 'required|string',
         'archivo'                    => 'required|file',
-        'es_requisito_ley'           => 'required|boolean',
-        'es_requisito_personalizado' => 'required|boolean',
+        'es_requisito_ley'           => 'boolean',
+        'es_requisito_personalizado' => 'boolean',
     ]);
 
     if ($request->es_requisito_ley) {
@@ -67,6 +69,8 @@ public function all()
     PostulacionDocumento::create([
         'postulacion_id'             => $request->postulacion_id,
         'requisito_id'               => $request->requisito_id,
+        'seccion_id'                 => $request->seccion_id,
+        'criterio_id'                => $request->criterio_id,
         'nombre'                     => $request->nombre,
         'archivo'                    => $ruta,
         'es_requisito_ley'           => $request->es_requisito_ley,

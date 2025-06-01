@@ -37,6 +37,9 @@ class User extends Authenticatable implements JWTSubject
         'gender',
         'tipo_doc',
         'n_doc',
+        //para verificacion
+        'verification_code',
+        'is_verified',
     ];
 
     /**
