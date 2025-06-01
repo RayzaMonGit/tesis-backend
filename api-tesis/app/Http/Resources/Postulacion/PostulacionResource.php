@@ -28,6 +28,7 @@ class PostulacionResource extends JsonResource
             'postulante' => new PostulanteResource($this->whenLoaded('postulante')),
             'convocatoria' => new ConvocatoriaResource($this->whenLoaded('convocatoria')),
             'created_at' => $this->created_at,
+            'nota_preliminar'=> $this->nota_preliminar,
         ];
     }
 }

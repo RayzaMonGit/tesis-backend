@@ -18,6 +18,9 @@ class PostulacionDocumento extends Model
         'archivo',
         'es_requisito_ley',
         'es_requisito_personalizado',
+         'seccion_id',  
+    'criterio_id', 
+        
     ];
 /*
     protected $casts = [

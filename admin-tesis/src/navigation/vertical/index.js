@@ -122,10 +122,17 @@ export default [
         icon: { icon: 'ri-calendar-event-line' },
         permission: 'convocatoria_para_postulantes',
 
-      }
+      },
+      
 
     ],
   },
+   {
+title: 'Mis Postulaciones',
+    to: { name: 'postulaciones-mispostul' },
+    icon: { icon: 'ri-article-line' },
+    permissions: ['convocatoria_para_postulantes', 'list_documentos_postulante'],
+   },
   {
     title: 'Formulario de evaluación',
     icon: { icon: 'ri-clipboard-line' },
@@ -174,7 +181,7 @@ export default [
     ],
   },
 
- 
+
 
 
 
@@ -204,16 +211,16 @@ export default [
      icon: { icon: 'ri-calendar-line' },
      permissions:[] 'calendar',
    },*/
-   {
+  {
     heading: 'Documentacion', permissions: [
       "register_documents"
       , "list_documents"
       , "edit_documents"
       , "delete_documents"
-      
+
     ]
   },
-  
+
   {
     title: 'Documentos',
     icon: { icon: 'ri-file-upload-line' },
@@ -234,7 +241,7 @@ export default [
       },
     ],
   },
-   {
+  {
     heading: 'Configuración', permissions: [
       "register_rol"
       , "list_rol"

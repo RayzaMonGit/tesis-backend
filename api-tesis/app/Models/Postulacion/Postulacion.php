@@ -16,6 +16,7 @@ class Postulacion extends Model
         'postulante_id',
         'convocatoria_id',
         'estado',
+        'nota_preliminar',
     ];
 
     public function postulante()

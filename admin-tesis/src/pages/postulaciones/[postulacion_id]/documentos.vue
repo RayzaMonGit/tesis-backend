@@ -51,10 +51,6 @@
           <VCardText>
             <VWindow v-model="currentTab">
               <VWindowItem :value="0">
-                <VBtn color="success" class="mt-4" :loading="guardando" @click="guardarRequisitos">
-                  Guardar requisitos
-                  <VIcon end icon="ri-upload-cloud-line" />
-                </VBtn>
 
                 <!-- Primera pestaña: Requisitos -->
                 <VTimeline>
@@ -609,7 +605,8 @@ const guardarDocumentosFormulario = async (publicar = false) => {
   } else {
     guardando.value = true;
   }
-
+  const notafinal=progresoTotal.value;
+  console.log('Nota preliminar:', notafinal);
   try {
     // 1. Guardar requisitos básicos
     await guardarRequisitos();
@@ -630,6 +627,7 @@ const guardarDocumentosFormulario = async (publicar = false) => {
             formData.append('nombre', archivo.name);
             formData.append('tipo', 'curriculum'); // Para diferenciarlos
             
+            
             await $api('/postulacion-documentos', {
               method: 'POST',
               body: formData,
@@ -639,6 +637,16 @@ const guardarDocumentosFormulario = async (publicar = false) => {
               }
             });
           }
+          await $api(`/postulaciones/${postulacionId}/cambiar-estado`, {
+      method: 'POST',
+      body: { 
+        nota_preliminar: notafinal,
+      },
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      }
+    });
         }
       }
     }
@@ -647,7 +655,9 @@ const guardarDocumentosFormulario = async (publicar = false) => {
       // Actualizar estado a "en evaluacion"
       await $api(`/postulaciones/${postulacionId}/cambiar-estado`, {
         method: 'POST',
-        body: { estado: 'en evaluacion' },
+        body: { estado: 'en evaluacion',
+          nota_preliminar: notafinal,
+        },
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`

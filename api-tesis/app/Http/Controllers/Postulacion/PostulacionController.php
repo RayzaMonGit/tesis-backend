@@ -72,16 +72,40 @@ class PostulacionController extends Controller
 }
 
 
+public function porPostulante($postulanteId)
+{
+    $postulaciones = Postulacion::with([
+        'postulante.user',
+        'convocatoria.formulario.secciones.criterios', 
+        'convocatoria.requisitosLey',
+        'convocatoria.evaluadores'
+    ])
+    ->where('postulante_id', $postulanteId)
+    ->get();
+
+    return PostulacionResource::collection($postulaciones);
+}
+
     public function show($id)
 {
+    // Busca la postulación de usuario postulante_id
     $postulacion = Postulacion::with([
         'postulante.user',
         'convocatoria.formulario.secciones.criterios', 
         'convocatoria.requisitosLey',
         'convocatoria.evaluadores'
     ])->findOrFail($id);
-
+    // Devuelve la postulación como un recurso
     return new PostulacionResource($postulacion);
+
+    /*$postulacion = Postulacion::with([
+        'postulante.user',
+        'convocatoria.formulario.secciones.criterios', 
+        'convocatoria.requisitosLey',
+        'convocatoria.evaluadores'
+    ])->findOrFail($id);
+
+    return new PostulacionResource($postulacion);*/
 }
 
 
@@ -138,8 +162,13 @@ public function cambiarEstado(Request $request, $id)
     
     // Verificar que el usuario tiene permisos para cambiar el estado
     // Aquí deberías agregar tu lógica de autorización
-    
-    $postulacion->estado = $request->estado;
+    if($request->has('estado')) {
+        $postulacion->estado = $request->estado;
+    }
+    // Si se envía una nota preliminar, también la actualizamos
+    if ($request->has('nota_preliminar')) {
+        $postulacion->nota_preliminar = $request->nota_preliminar;
+    }
     $postulacion->save();
 
     return response()->json([

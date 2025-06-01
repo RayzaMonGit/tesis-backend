@@ -26,6 +26,7 @@ class PostulacionDocumentoResource extends JsonResource
             'created_at' => $this->created_at->toDateTimeString(),
             'seccion_id' => $this->seccion_id,
             'criterio_id' => $this->criterio_id,
+            
         ];
     }
 }

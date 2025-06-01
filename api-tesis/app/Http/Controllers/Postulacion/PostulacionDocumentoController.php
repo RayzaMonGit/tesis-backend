@@ -46,6 +46,7 @@ public function all()
         'archivo'                    => 'required|file',
         'es_requisito_ley'           => 'boolean',
         'es_requisito_personalizado' => 'boolean',
+        
     ]);
 
     if ($request->es_requisito_ley) {
@@ -75,6 +76,7 @@ public function all()
         'archivo'                    => $ruta,
         'es_requisito_ley'           => $request->es_requisito_ley,
         'es_requisito_personalizado' => $request->es_requisito_personalizado,
+       
     ]);
 
     return response()->json(['message' => 'Documento guardado correctamente']);

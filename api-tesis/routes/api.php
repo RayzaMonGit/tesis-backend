@@ -79,7 +79,8 @@ Route::get('postulaciones/{id}', [PostulacionController::class, 'show']);
 Route::post('postulaciones', [PostulacionController::class, 'store']);
 Route::post('postulaciones/{id}', [PostulacionController::class, 'update']);
 Route::delete('postulaciones/{id}', [PostulacionController::class, 'destroy']);
-
+// Obtener postulaciones por postulante
+Route::get('postulaciones/postulante/{postulanteId}', [PostulacionController::class, 'porPostulante']);
 //nosecreoqaunnlovibien
 Route::get('convocatorias/{convocatoria}/postulaciones', [PostulacionController::class, 'porConvocatoria']);
 
