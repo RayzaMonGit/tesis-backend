@@ -174,7 +174,7 @@ title: 'Mis Postulaciones',
       },
       {
         title: 'Listado',
-        to: { name: 'evaluaciones-listado' },
+        to: { name: 'evaluaciones-list' },
         icon: { icon: 'ri-list-check' },
         permission: 'list_evaluation',
       },

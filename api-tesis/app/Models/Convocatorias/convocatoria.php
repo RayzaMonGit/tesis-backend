@@ -62,6 +62,11 @@ public function formulario()
     return $this->belongsTo(FormularioEvaluacion::class, 'formulario_id');
 }
 
+    public function postulaciones()
+    {
+        return $this->hasMany('App\Models\Postulacion\Postulacion', 'convocatoria_id');
+    }
+
 
     
 }

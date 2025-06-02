@@ -6,6 +6,7 @@ use App\Models\Convocatorias\Convocatoria;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\User;
 
 class ComisionController extends Controller
 {
@@ -39,6 +40,24 @@ public function obtenerComision($id)
         'evaluadores' => $convocatoria->evaluadores
     ]);
 }
+public function convocatoriasPorEvaluador()
+{
+    $user = auth()->user();
+
+    // Asegúrate de que es una comisión (si usas roles)
+    /*if (!$user->hasRole('Evaluador')) {
+        return response()->json(['error' => 'No autorizado.'], 403);
+    }*/
+
+    $convocatorias = $user->convocatoriasComoEvaluador()->get();
+ // puedes cargar relaciones si quieres
+
+    return response()->json([
+        'evaluador_id' => $user->id,
+        'convocatorias' => $convocatorias,
+    ]);
+}
+
 
     /**
      * Display a listing of the resource.

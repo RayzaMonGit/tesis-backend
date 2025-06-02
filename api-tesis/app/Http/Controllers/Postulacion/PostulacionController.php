@@ -14,10 +14,13 @@ use App\Models\Postulante\Postulante;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\Postulante\PostulanteResource;
 use App\Http\Resources\Postulante\PostulanteCollection;
-use App\Models\Convocatoria\Convocatoria;
+use App\Models\Convocatorias\Convocatoria;
 use App\Http\Resources\Convocatoria\ConvocatoriaResource;
 use App\Http\Resources\Convocatoria\ConvocatoriaCollection;
 
+use App\Http\Resources\User\UserResource;
+use App\Http\Resources\User\UserCollection;
+use App\Models\User;
 
 class PostulacionController extends Controller
 {
@@ -155,6 +158,7 @@ public function porPostulante($postulanteId)
     return PostulacionResource::collection($postulaciones);
 }
 
+
 public function cambiarEstado(Request $request, $id)
 {
 
@@ -175,6 +179,28 @@ public function cambiarEstado(Request $request, $id)
         'success' => true,
         'message' => 'Estado actualizado correctamente',
         'data' => $postulacion
+    ]);
+}
+
+
+public function postulantesPorConvocatoria($id)
+{
+    $convocatoria = Convocatoria::with(['postulaciones.postulante.user'])->findOrFail($id);
+
+    $postulantes = $convocatoria->postulaciones->map(function ($postulacion) {
+        $user = $postulacion->postulante->user ?? null;
+
+        return [
+            'id_postulacion' => $postulacion->id,
+            'estado' => $postulacion->estado,
+            'postulante_id' => $postulacion->postulante_id,
+            'user' => $user ? new UserResource($user) : null, // Aquí usas el UserResource
+        ];
+    });
+
+    return response()->json([
+        'convocatoria_id' => $id,
+        'postulantes' => $postulantes,
     ]);
 }
 

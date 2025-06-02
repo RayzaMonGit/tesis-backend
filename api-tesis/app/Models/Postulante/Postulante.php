@@ -93,5 +93,9 @@ public function postulaciones()
     return $this->hasMany(Postulacion::class);
 }
 
+public function postulante()
+{
+    return $this->belongsTo(\App\Models\Postulante::class, 'postulante_id');
+}
 
 }

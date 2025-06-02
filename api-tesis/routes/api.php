@@ -12,6 +12,10 @@ use App\Http\Controllers\Comision\ComisionController;
 use App\Http\Controllers\Formulario\FormularioEvaluacionController;
 use App\Http\Controllers\Postulacion\PostulacionController;
 use App\Http\Controllers\Postulacion\PostulacionDocumentoController;
+use App\Http\Controllers\Comision\VistoBuenoController;
+use App\Http\Controllers\Evaluacion\EvaluController;
+use App\Http\Controllers\Evaluacion\EvaluDocumentoController;
+
 
 //use App\Http\Controllers\Formulario\FormularioController;
 use App\Http\Controllers\Formulario\EvaluacionController;
@@ -63,6 +67,7 @@ Route::group([
     //comisiones
     Route::get('convocatorias/{id}/comision', [ComisionController::class, 'obtenerComision']);
     Route::post('convocatorias/{id}/comision', [ComisionController::class, 'asignarComision']);
+    Route::get('comision/convocatorias-por-evaluador', [ComisionController::class, 'convocatoriasPorEvaluador']);
 
     //Formulario
 
@@ -106,4 +111,17 @@ Route::post('/evaluaciones/resultado/{id}', [EvaluacionController::class, 'resul
 
 // Cambiar estado de postulación
 Route::post('/postulaciones/{id}/cambiar-estado', [PostulacionController::class, 'cambiarEstado']);
+//visto bueno de las comisiones a los documentos
+Route::post('visto-bueno',[VistoBuenoController::class]);
+//para ver postulandtes de una convocatoria
+Route::get('convocatorias/{id}/postulantes', [PostulacionController::class, 'postulantesPorConvocatoria']);
+// Rutas para Evaluaciones
+    Route::get('postulaciones/{postulacionId}/evaluaciones', [EvaluController::class, 'index']);
+    Route::get('evaluaciones/{id}', [EvaluController::class, 'show']);
+    Route::post('postulaciones/{postulacionId}/evaluaciones', [EvaluController::class, 'store']);
+    
+    // Rutas para Documentos Evaluados
+    Route::post('evaluaciones/{evaluacionId}/documentos', [EvaluDocumentoController::class, 'store']);
+    Route::post('evaluaciones-documentos/{id}', [EvaluDocumentoController::class, 'update']);
+    Route::delete('evaluaciones-documentos/{id}', [EvaluDocumentoController::class, 'destroy']);
 });

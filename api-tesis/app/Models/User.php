@@ -12,6 +12,8 @@ use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject; 
 use App\Models\Postulante\Postulante;
 
+
+
 class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -99,6 +101,11 @@ public function convocatorias()
 {
     return $this->belongsToMany(Convocatoria::class, 'convocatoria_comision', 'user_id', 'convocatoria_id');
 }
+public function convocatoriasComoEvaluador()
+{
+    return $this->belongsToMany(\App\Models\Convocatorias\Convocatoria::class, 'convocatoria_comision', 'user_id', 'convocatoria_id');
+}
+
 
 
 

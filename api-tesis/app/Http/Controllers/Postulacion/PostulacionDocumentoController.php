@@ -9,7 +9,7 @@ use App\Http\Resources\Postulacion\PostulacionDocumentoResource;
 use App\Http\Resources\Postulacion\PostulacionDocumentoCollection;
 use App\Models\Postulacion\Postulacion;
 use App\Models\Postulante\Postulante;
-use App\Models\Convocatoria\Convocatoria;
+use App\Models\Convocatorias\Convocatoria;
 use App\Http\Resources\Postulante\PostulanteResource;
 use App\Http\Resources\Postulante\PostulanteCollection;
 use App\Http\Resources\Convocatoria\ConvocatoriaResource;
