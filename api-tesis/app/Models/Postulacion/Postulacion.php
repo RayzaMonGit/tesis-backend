@@ -36,7 +36,13 @@ class Postulacion extends Model
 
     public function evaluaciones()
     {
-        return $this->hasMany(Evaluacion::class); // la crearemos luego
+       return $this->hasMany('App\Models\Evaluacion\Evaluacion');
     }
+    public function documentosFormulario()
+{
+    return $this->hasMany(PostulacionDocumento::class)
+                ->whereNotNull('seccion_id')
+                ->whereNotNull('criterio_id');
+}
     
 }

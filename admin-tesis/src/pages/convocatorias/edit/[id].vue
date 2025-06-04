@@ -205,6 +205,7 @@ function cargarConvocatoria(data) {
 
   // Requisitos personalizados
   requisitosPersonalizados.value = data.requisitos.map(r => ({
+    id: r.id,
     nombre: r.descripcion,
     tipo: r.tipo
   }));
@@ -261,6 +262,7 @@ const fetchTodosRequisitos = async () => {
 
   // Requisitos personalizados
   requisitosPersonalizados.value = convocatoria.requisitos_personalizados.map(req => ({
+    id: req.id,
     nombre: req.descripcion,
     tipo: req.tipo,
   }))

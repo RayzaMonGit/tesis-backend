@@ -98,21 +98,40 @@ public function updateRequisitos(Request $request, $id)
             $convocatoria->requisitosLey()->sync($request->requisitos_ley_ids);
         }
 
-        // Eliminar y reemplazar requisitos personalizados
-        Requisitos::where('id_convocatoria', $convocatoria->id)->delete();
+        // Obtener los IDs enviados desde el frontend
+$idsEnviados = [];
+if ($request->has('requisitos_personalizados')) {
+    $requisitosPersonalizados = json_decode($request->requisitos_personalizados, true);
 
-        if ($request->has('requisitos_personalizados')) {
-            $requisitosPersonalizados = json_decode($request->requisitos_personalizados, true);
-
-            foreach ($requisitosPersonalizados as $req) {
-                Requisitos::create([
-                    'id_convocatoria' => $convocatoria->id,
+    foreach ($requisitosPersonalizados as $req) {
+        if (isset($req['id'])) {
+            // Actualizar requisito existente
+            $requisito = Requisitos::find($req['id']);
+            if ($requisito) {
+                $requisito->update([
                     'descripcion' => $req['nombre'],
                     'tipo' => $req['tipo'],
                     'req_sec' => 'Institucion'
                 ]);
+                $idsEnviados[] = $req['id'];
             }
+        } else {
+            // Crear nuevo requisito
+            $nuevo = Requisitos::create([
+                'id_convocatoria' => $convocatoria->id,
+                'descripcion' => $req['nombre'],
+                'tipo' => $req['tipo'],
+                'req_sec' => 'Institucion'
+            ]);
+            $idsEnviados[] = $nuevo->id;
         }
+    }
+
+    // Eliminar los requisitos que ya no están en la lista enviada
+    Requisitos::where('id_convocatoria', $convocatoria->id)
+        ->whereNotIn('id', $idsEnviados)
+        ->delete();
+}
 
         DB::commit();
 
@@ -287,7 +306,9 @@ $convocatorias = Convocatoria::with(['requisitos', 'evaluadores', 'formulario'])
             // Si se están actualizando los requisitos, eliminar los anteriores
             if ($request->has('requisitos_obligatorios') || $request->has('requisitos_personalizados')) {
                 // Eliminar requisitos existentes
-                Requisitos::where('id_convocatoria', $convocatoria->id)->delete();
+                Requisitos::where('id_convocatoria', $convocatoria->id)
+    ->whereNotIn('id', $idsEnviados)
+    ->delete();
                 
                 // Procesar requisitos obligatorios seleccionados
                 if ($request->has('requisitos_obligatorios')) {
@@ -304,18 +325,40 @@ $convocatorias = Convocatoria::with(['requisitos', 'evaluadores', 'formulario'])
                     }
                 }
                 
-                // Procesar requisitos personalizados
-                if ($request->has('requisitos_personalizados')) {
-                    $requisitosPersonalizados = json_decode($request->requisitos_personalizados, true);
-                    
-                    foreach ($requisitosPersonalizados as $req) {
-                        Requisitos::create([
-                            'id_convocatoria' => $convocatoria->id,
-                            'descripcion' => $req['nombre'],
-                            'tipo' => $req['tipo']
-                        ]);
-                    }
-                }
+                // Obtener los IDs enviados desde el frontend
+$idsEnviados = [];
+if ($request->has('requisitos_personalizados')) {
+    $requisitosPersonalizados = json_decode($request->requisitos_personalizados, true);
+
+    foreach ($requisitosPersonalizados as $req) {
+        if (isset($req['id'])) {
+            // Actualizar requisito existente
+            $requisito = Requisitos::find($req['id']);
+            if ($requisito) {
+                $requisito->update([
+                    'descripcion' => $req['nombre'],
+                    'tipo' => $req['tipo'],
+                    'req_sec' => 'Institucion'
+                ]);
+                $idsEnviados[] = $req['id'];
+            }
+        } else {
+            // Crear nuevo requisito
+            $nuevo = Requisitos::create([
+                'id_convocatoria' => $convocatoria->id,
+                'descripcion' => $req['nombre'],
+                'tipo' => $req['tipo'],
+                'req_sec' => 'Institucion'
+            ]);
+            $idsEnviados[] = $nuevo->id;
+        }
+    }
+
+    // Eliminar los requisitos que ya no están en la lista enviada
+    Requisitos::where('id_convocatoria', $convocatoria->id)
+        ->whereNotIn('id', $idsEnviados)
+        ->delete();
+}
             }
             // Sincronizar requisitos de ley si se enviaron
 if ($request->has('requisitos_ley_ids')) {

@@ -16,6 +16,29 @@ const opcionesEvaluacion = [
   { title: 'Rechazado', value: 'rechazado' },
   { title: 'Pendiente', value: 'pendiente' },
 ]
+const evaluacionRequisitos = reactive({
+  ley: {},
+  personalizado: {}
+});
+
+const comentariosRequisitos = reactive({
+  ley: {},
+  personalizado: {}
+});
+
+const evaluacionArchivos = ref({});
+const comentariosArchivos = ref({});
+const comentarioVisibleArchivos = reactive({});
+
+const archivosRequisitos = reactive({
+  ley: {},
+  personalizado: {}
+});
+
+const archivosFormulario = ref({});
+
+
+
 
 // Estados
 const loading = ref(true)
@@ -28,18 +51,12 @@ const requisitosPersonalizados = ref([])
 const secciones = ref([])
 
 // Datos de documentos
-const archivosRequisitos = reactive({ ley: {}, personalizado: {} })
-const archivosFormulario = ref({})
+
 
 // Evaluaciones
 const evaluacionId = ref(null)
-const evaluacionRequisitos = reactive({ ley: {}, personalizado: {} })
-const evaluacionArchivos = ref({})
-const comentariosRequisitos = reactive({ ley: {}, personalizado: {} })
-const comentariosArchivos = ref({})
+
 const comentarioGeneral = ref('')
-const comentarioVisible = reactive({ ley: null, personalizado: null })
-const comentarioVisibleArchivos = ref({})
 
 // Computed
 const documentosCompletos = computed(() => {
@@ -48,8 +65,8 @@ const documentosCompletos = computed(() => {
     ...requisitosPersonalizados.value.filter(r => r.requerido)
   ]
   return requisitosObligatorios.every(requisito => {
-    return archivosRequisitos.ley[requisito.id]?.yaSubido || 
-           archivosRequisitos.personalizado[requisito.id]?.yaSubido
+    return archivosRequisitos.ley[requisito.id]?.yaSubido ||
+      archivosRequisitos.personalizado[requisito.id]?.yaSubido
   })
 })
 
@@ -123,29 +140,17 @@ const getPuntajeAsignadoCriterio = (seccionId, criterioId) => {
 
   return aprobados * (parseFloat(criterio.puntaje_por_item) || 0)
 }
-
-const mostrarComentario = (tipo, id) => {
-  comentarioVisible[tipo] = comentarioVisible[tipo] === id ? null : id
-}
-
-const mostrarComentarioArchivo = (seccionId, criterioId, index) => {
-  if (!comentarioVisibleArchivos.value[seccionId]) {
-    comentarioVisibleArchivos.value[seccionId] = {}
-  }
-  comentarioVisibleArchivos.value[seccionId][criterioId] = 
-    comentarioVisibleArchivos.value[seccionId][criterioId] === index ? null : index
-}
-
+/*
 const guardarEvaluacion = async (finalizar = false) => {
   saving.value = true
   try {
     // 1. Guardar/Actualizar evaluación general
-    const endpoint = evaluacionId.value 
-      ? `/evaluaciones/${evaluacionId.value}`
-      : '/evaluaciones'
-      
+    const endpoint = evaluacionId.value
+      ? `evaluaciones/${evaluacionId.value}`
+      : 'evaluaciones'
+
     const method = evaluacionId.value ? 'POST' : 'POST'
-    
+
     const evalData = {
       postulacion_id: postulacionId,
       puntaje_total: puntajeAsignadoTotal.value,
@@ -181,7 +186,7 @@ const guardarEvaluacion = async (finalizar = false) => {
       for (const criterioId in evaluacionArchivos.value[seccionId]) {
         for (let i = 0; i < evaluacionArchivos.value[seccionId][criterioId].length; i++) {
           const archivo = archivosFormulario.value[seccionId][criterioId][i]
-          
+
           await $api('/evaluaciones/documentos', {
             method: 'POST',
             body: {
@@ -209,111 +214,214 @@ const guardarEvaluacion = async (finalizar = false) => {
   } finally {
     saving.value = false
   }
+}*/
+const guardarEvaluacion = async (finalizar = false) => {
+  saving.value = true
+  try {
+    // Armar requisitos
+    const requisitos = []
+    
+    for (const tipo in evaluacionRequisitos) {
+  for (const requisitoId in evaluacionRequisitos[tipo]) {
+    // Buscar si hay documento subido para este requisito
+    let postulacion_documento_id = null;
+    if (archivosRequisitos[tipo][requisitoId]) {
+      postulacion_documento_id = archivosRequisitos[tipo][requisitoId].id;
+    }
+    requisitos.push({
+      requisito_id: requisitoId,
+      estado: evaluacionRequisitos[tipo][requisitoId],
+      comentarios: comentariosRequisitos[tipo][requisitoId],
+      es_requisito_ley: tipo === 'ley',
+      postulacion_documento_id // <-- aquí agregas el id del documento subido (o null si no hay)
+    })
+  }
+}
+
+    // Armar documentos
+    const documentos = []
+    for (const seccionId in evaluacionArchivos.value) {
+      for (const criterioId in evaluacionArchivos.value[seccionId]) {
+        for (let i = 0; i < evaluacionArchivos.value[seccionId][criterioId].length; i++) {
+          const archivo = archivosFormulario.value[seccionId][criterioId][i]
+          documentos.push({
+            postulacion_documento_id: archivo.id,
+            estado: evaluacionArchivos.value[seccionId][criterioId][i],
+            puntaje: getPuntajeAsignadoCriterio(seccionId, criterioId),
+            comentarios: comentariosArchivos.value[seccionId]?.[criterioId]?.[i] || ''
+          })
+        }
+      }
+    }
+
+    //mostrar todo en consola
+    console.log('ID de postulación:', postulacionId);
+    console.log('Requisitos a enviar:', requisitos);
+    console.log('Documentos a enviar:', documentos);
+    console.log('Puntaje total asignado:', puntajeAsignadoTotal.value);
+    console.log('Comentario general:', comentarioGeneral.value);
+    console.log('Estado de la evaluación:', finalizar ? 'finalizada' : 'borrador');
+    // Enviar todo en una sola llamada
+    const res = await $api('/evaluaciones/completa', {
+      method: 'POST',
+      body: {
+        postulacion_id: postulacionId,
+        puntaje_total: puntajeAsignadoTotal.value,
+        comentarios_generales: comentarioGeneral.value,
+        estado: finalizar ? 'finalizada' : 'borrador',
+        requisitos,
+        documentos
+      }
+    })
+
+    evaluacionId.value = res.data.evaluacion_id
+
+    if (finalizar) {
+      await $api(`/postulaciones/${postulacionId}/actualizar-estado`, {
+        method: 'POST',
+        body: { estado: 'evaluada', nota_final: puntajeAsignadoTotal.value }
+      })
+    }
+
+  } catch (error) {
+    console.error('Error guardando evaluación:', error)
+  } finally {
+    saving.value = false
+  }
 }
 
 const cargarPostulacion = async () => {
   try {
     loading.value = true;
-    
-    // 1. Cargar datos básicos de postulación
-    const postRes = await $api(`/postulaciones/${postulacionId}`);
-    postulacion.value = postRes.data;
-    postulante.value = postRes.data.postulante;
-    convocatoria.value = postRes.data.convocatoria;
-    requisitosLey.value = postRes.data.convocatoria?.requisitos_ley || [];
-    requisitosPersonalizados.value = postRes.data.convocatoria?.requisitos || [];
-    secciones.value = postRes.data.convocatoria?.formulario?.secciones || [];
-    
-    // 2. Cargar documentos (puede venir en postRes o necesitar otra llamada)
-    cargarDocumentos(postRes.data.documentos || []);
+    const response = await $api(`/postulaciones/${postulacionId}`);
+    console.log('Datos de la postulación:', response);
 
-    // 3. Intentar cargar evaluaciones (si falla, no es crítico)
-    try {
-      const evalRes = await $api(`/postulaciones/${postulacionId}/evaluaciones`);
-      if (evalRes.data && evalRes.data.length > 0) {
-        cargarEvaluacionExistente(evalRes.data[0]);
-      }
-    } catch (error) {
-      console.warn('No se pudieron cargar las evaluaciones:', error);
-    }
+    // Datos básicos
+    postulacion.value = response.postulacion;
+    postulante.value = response.postulante;
+    convocatoria.value = response.postulacion.convocatoria;
+    /*console.log('Convocatoria:', convocatoria.value);
+    console.log('Postulante:', postulante.value);
+    console.log('Postulación:', postulacion.value);*/
+
+    // Requisitos
+    requisitosLey.value = response.requisitos.ley || [];
+    requisitosPersonalizados.value = response.requisitos.personalizados || [];
+
+    // Justo después de cargar los requisitos:
+requisitosLey.value.forEach(requisito => {
+  evaluacionRequisitos.ley[requisito.id] = '';
+  comentariosRequisitos.ley[requisito.id] = '';
+});
+requisitosPersonalizados.value.forEach(requisito => {
+  evaluacionRequisitos.personalizado[requisito.id] = '';
+  comentariosRequisitos.personalizado[requisito.id] = '';
+});
+
+
+
+    //console.log('Requisitos de ley:', requisitosLey.value);
+    console.log('Requisitos personalizados:', requisitosPersonalizados.value);
+
+    // Formulario y secciones
+    secciones.value = response.formulario?.secciones || [];
+    //console.log('Secciones del formulario:', secciones.value);
+
+    // Documentos - separar requisitos de formulario
+    procesarDocumentos(response.documentos);
 
   } catch (error) {
     console.error('Error cargando postulación:', error);
-    // Mostrar notificación al usuario
   } finally {
     loading.value = false;
   }
-}
+};
+const procesarDocumentos = (docs) => {
+  // Limpiar estructuras manteniendo la reactividad
+  Object.keys(archivosRequisitos.ley).forEach(k => delete archivosRequisitos.ley[k]);
+  Object.keys(archivosRequisitos.personalizado).forEach(k => delete archivosRequisitos.personalizado[k]);
+  archivosFormulario.value = {};
 
-const cargarDocumentos = (documentos) => {
-  documentos.forEach(doc => {
-    if (doc.requisito_id) {
-      const tipo = doc.es_requisito_ley ? 'ley' : 'personalizado'
-      archivosRequisitos[tipo][doc.requisito_id] = {
-        name: doc.nombre,
-        url: doc.archivo,
-        yaSubido: true,
-        id: doc.id
-      }
-    } else if (doc.seccion_id && doc.criterio_id) {
-      if (!archivosFormulario.value[doc.seccion_id]) {
-        archivosFormulario.value[doc.seccion_id] = {}
-      }
-      if (!archivosFormulario.value[doc.seccion_id][doc.criterio_id]) {
-        archivosFormulario.value[doc.seccion_id][doc.criterio_id] = []
-      }
-      
-      archivosFormulario.value[doc.seccion_id][doc.criterio_id].push({
+  console.log('Procesando documentos:', docs);
+
+  // Procesar documentos de requisitos de ley
+  if (Array.isArray(docs.requisitos_ley)) {
+    docs.requisitos_ley.forEach(doc => {
+      archivosRequisitos.ley[doc.requisito_id] = {
         id: doc.id,
         name: doc.nombre,
         url: doc.archivo,
-        fecha: doc.created_at,
         yaSubido: true
-      })
+      };
+    });
+    //mostrar los ids de archivos de requisitos de ley en consola
+    console.log('IDs de archivos de requisitos de ley:', Object.keys(archivosRequisitos.ley));
+    console.log('Archivos de requisitos de ley procesados:', archivosRequisitos.ley);
+  }
+
+  // Procesar documentos de requisitos personalizados
+  if (Array.isArray(docs.requisitos_personalizados)) {
+    docs.requisitos_personalizados.forEach(doc => {
+      archivosRequisitos.personalizado[doc.requisito_id] = {
+        id: doc.id,
+        name: doc.nombre,
+        url: doc.archivo,
+        yaSubido: true
+      };
+    });
+  }
+
+  // Procesar documentos de formulario/curriculum
+  if (Array.isArray(docs.formulario_curriculum)) {
+  docs.formulario_curriculum.forEach(doc => {
+    const seccionId = doc.seccion_id;
+    const criterioId = doc.criterio_id;
+    // Inicializar archivosFormulario.value
+    if (!archivosFormulario.value[seccionId]) {
+      archivosFormulario.value[seccionId] = {};
     }
-  })
-}
-
-const cargarEvaluacionExistente = (evaluacion) => {
-  evaluacionId.value = evaluacion.id
-  comentarioGeneral.value = evaluacion.comentarios_generales
-
-  // Cargar requisitos evaluados
-  evaluacion.requisitos.forEach(req => {
-    const tipo = req.es_requisito_ley ? 'ley' : 'personalizado'
-    evaluacionRequisitos[tipo][req.requisito_id] = req.estado
-    comentariosRequisitos[tipo][req.requisito_id] = req.comentarios
-  })
-
-  // Cargar documentos evaluados
-  evaluacion.documentos.forEach(doc => {
-    const seccionId = doc.documento.seccion_id
-    const criterioId = doc.documento.criterio_id
-    
+    if (!archivosFormulario.value[seccionId][criterioId]) {
+      archivosFormulario.value[seccionId][criterioId] = [];
+    }
+    // Inicializar evaluacionArchivos.value (opcional, si lo usas)
     if (!evaluacionArchivos.value[seccionId]) {
-      evaluacionArchivos.value[seccionId] = {}
+      evaluacionArchivos.value[seccionId] = {};
     }
     if (!evaluacionArchivos.value[seccionId][criterioId]) {
-      evaluacionArchivos.value[seccionId][criterioId] = []
+      evaluacionArchivos.value[seccionId][criterioId] = [];
     }
+    archivosFormulario.value[seccionId][criterioId].push({
+      id: doc.id,
+      name: doc.nombre,
+      url: doc.archivo,
+      fecha: doc.created_at,
+      yaSubido: true
+    });
+  });
+}
+  //mostrar los archivos en consola
+  /*console.log('Archivos de requisitos de ley:', archivosRequisitos.ley);
+  console.log('Archivos de requisitos personalizados:', archivosRequisitos.personalizado);
+  */console.log('Archivos de formulario:', archivosFormulario.value);
+  //  console.log('Requisitos personalizados:', requisitosPersonalizados.value);
+  //console.log('Archivos personalizados:', docs.requisitos_personalizados);
+};
 
-    const docIndex = archivosFormulario.value[seccionId][criterioId].findIndex(
-      d => d.id === doc.postulacion_documento_id
-    )
+const comentarioVisible = reactive({
+  ley: null,
+  personalizado: null,
+})
 
-    if (docIndex !== -1) {
-      evaluacionArchivos.value[seccionId][criterioId][docIndex] = doc.estado
-      
-      if (!comentariosArchivos.value[seccionId]) {
-        comentariosArchivos.value[seccionId] = {}
-      }
-      if (!comentariosArchivos.value[seccionId][criterioId]) {
-        comentariosArchivos.value[seccionId][criterioId] = []
-      }
-      
-      comentariosArchivos.value[seccionId][criterioId][docIndex] = doc.comentarios
-    }
-  })
+function mostrarComentario(tipo, id) {
+  comentarioVisible[tipo] = comentarioVisible[tipo] === id ? null : id
+}
+
+function mostrarComentarioArchivo(seccionId, criterioId, index) {
+  if (!comentarioVisibleArchivos[seccionId]) {
+    comentarioVisibleArchivos[seccionId] = {}
+  }
+  comentarioVisibleArchivos[seccionId][criterioId] =
+    comentarioVisibleArchivos[seccionId][criterioId] === index ? null : index
 }
 
 onMounted(() => {
@@ -336,9 +444,9 @@ onMounted(() => {
         <VCardText>
           <VRow>
             <VCol cols="12" md="6">
-              <p><strong>Postulante:</strong> {{ postulante?.nombre_completo }}</p>
+              <p><strong>Postulante:</strong> {{ postulante?.user.name }} {{ postulante?.user.surname }}</p>
               <p><strong>Área:</strong> {{ convocatoria.area }}</p>
-              <p><strong>Estado:</strong> 
+              <p><strong>Estado:</strong>
                 <VChip :color="postulacion?.estado === 'en evaluacion' ? 'warning' : 'success'" size="small">
                   {{ postulacion?.estado }}
                 </VChip>
@@ -358,275 +466,209 @@ onMounted(() => {
       </VTabs>
 
       <!-- Contenido de pestañas -->
-      <VWindow v-model="currentTab">
-        <!-- Pestaña Requisitos -->
-        <VWindowItem :value="0">
-          <VTimeline>
-            <!-- Requisitos de ley -->
-            <VTimelineItem 
-              v-for="requisito in requisitosLey" 
-              :key="'ley-'+requisito.id"
-              :dot-color="archivosRequisitos.ley[requisito.id] ? 'success' : 'error'"
-              size="x-small"
-            >
-              <div class="d-flex justify-space-between align-center gap-2 flex-wrap mb-2">
-                <span class="app-timeline-title">{{ requisito.nombre }}</span>
-                <span class="app-timeline-meta">Requisito obligatorio</span>
-              </div>
+      <VCardText>
+        <VWindow v-model="currentTab">
 
-              <div v-if="archivosRequisitos.ley[requisito.id]" class="mt-3">
-                <VCard class="mb-3">
-                  <VCardText>
-                    <div class="d-flex justify-space-between align-center">
-                      <div>
-                        <VIcon icon="mdi-file-document-outline" class="me-1" />
-                        <a :href="archivosRequisitos.ley[requisito.id].url" target="_blank" class="text-primary text-decoration-underline">
-                          {{ archivosRequisitos.ley[requisito.id].name }}
-                        </a>
-                      </div>
-                      <div class="d-flex align-center gap-2">
-                        <VSelect
-                          v-model="evaluacionRequisitos.ley[requisito.id]"
-                          :items="opcionesEvaluacion"
-                          label="Estado"
-                          density="compact"
-                          style="width: 150px"
-                        />
-                        <VBtn
-                          icon="ri-chat-1-line"
-                          variant="text"
-                          color="info"
-                          @click="mostrarComentario('ley', requisito.id)"
-                        />
-                      </div>
-                    </div>
-                  </VCardText>
-                </VCard>
+          <!-- Pestaña Requisitos -->
+          <VWindowItem :value="0">
+            <VTimeline>
+              <!-- Requisitos de ley -->
+              <VTimelineItem v-for="requisito in requisitosLey" :key="requisito.id + 'ley'"
+                :dot-color="archivosRequisitos.ley?.[requisito.id] ? 'success' : 'error'" size="x-small">
 
-                <VTextarea
-                  v-if="comentarioVisible.ley === requisito.id"
-                  v-model="comentariosRequisitos.ley[requisito.id]"
-                  label="Comentarios"
-                  placeholder="Ingrese comentarios sobre este documento"
-                  rows="2"
-                  class="mt-2"
-                />
-              </div>
-              <div v-else class="text-error">
-                <VIcon icon="mdi-alert-circle-outline" /> Documento no enviado
-              </div>
-            </VTimelineItem>
-
-            <!-- Requisitos personalizados -->
-            <VTimelineItem 
-              v-for="requisito in requisitosPersonalizados" 
-              :key="'per-'+requisito.id"
-              :dot-color="archivosRequisitos.personalizado[requisito.id] ? 'success' : requisito.requerido ? 'error' : 'warning'"
-              size="x-small"
-            >
-              <div class="d-flex justify-space-between align-center gap-2 flex-wrap mb-2">
-                <span class="app-timeline-title">{{ requisito.nombre }}</span>
-                <span class="app-timeline-meta">{{ requisito.requerido ? 'Obligatorio' : 'Opcional' }}</span>
-              </div>
-
-              <div v-if="archivosRequisitos.personalizado[requisito.id]" class="mt-3">
-                <VCard class="mb-3">
-                  <VCardText>
-                    <div class="d-flex justify-space-between align-center">
-                      <div>
-                        <VIcon icon="mdi-file-document-outline" class="me-1" />
-                        <a :href="archivosRequisitos.personalizado[requisito.id].url" target="_blank" class="text-primary text-decoration-underline">
-                          {{ archivosRequisitos.personalizado[requisito.id].name }}
-                        </a>
-                      </div>
-                      <div class="d-flex align-center gap-2">
-                        <VSelect
-                          v-model="evaluacionRequisitos.personalizado[requisito.id]"
-                          :items="opcionesEvaluacion"
-                          label="Estado"
-                          density="compact"
-                          style="width: 150px"
-                        />
-                        <VBtn
-                          icon="ri-chat-1-line"
-                          variant="text"
-                          color="info"
-                          @click="mostrarComentario('personalizado', requisito.id)"
-                        />
-                      </div>
-                    </div>
-                  </VCardText>
-                </VCard>
-
-                <VTextarea
-                  v-if="comentarioVisible.personalizado === requisito.id"
-                  v-model="comentariosRequisitos.personalizado[requisito.id]"
-                  label="Comentarios"
-                  placeholder="Ingrese comentarios sobre este documento"
-                  rows="2"
-                  class="mt-2"
-                />
-              </div>
-              <div v-else class="text-warning" v-if="!requisito.requerido">
-                <VIcon icon="mdi-information-outline" /> Documento opcional no enviado
-              </div>
-              <div v-else class="text-error">
-                <VIcon icon="mdi-alert-circle-outline" /> Documento obligatorio no enviado
-              </div>
-            </VTimelineItem>
-          </VTimeline>
-        </VWindowItem>
-
-        <!-- Pestaña CV/Formulario -->
-        <VWindowItem :value="1">
-          <!-- Resumen -->
-          <VCard class="mb-4">
-            <VCardText>
-              <div class="d-flex justify-space-between align-center flex-wrap">
-                <div>
-                  <h4 class="text-h4 mb-1">Evaluación de documentos</h4>
-                  <p class="mb-0">Puntaje asignado: {{ puntajeAsignadoTotal }}/{{ puntajeMaximoPosible }} pts</p>
+                <div class="d-flex justify-space-between align-center gap-2 flex-wrap mb-2">
+                  <span class="app-timeline-title">{{ requisito.descripcion }}</span>
+                  <span class="app-timeline-meta">{{ requisito.req }}</span>
                 </div>
-                <VChip color="primary" size="large" class="d-flex align-center">
-                  <VIcon icon="ri-star-fill" start />
-                  Progreso: {{ progresoTotal }}%
-                </VChip>
-              </div>
-              <VProgressLinear 
-                :model-value="progresoTotal" 
-                color="primary" 
-                height="10" 
-                class="mt-3" 
-                striped
-              />
-            </VCardText>
-          </VCard>
 
-          <!-- Secciones -->
-          <VExpansionPanels v-model="panelesAbiertos" variant="accordion">
-            <VExpansionPanel v-for="seccion in secciones" :key="seccion.id" class="mb-2">
-              <VExpansionPanelTitle>
-                <div class="d-flex justify-space-between align-center w-100">
-                  <div class="d-flex align-center">
-                    <VIcon icon="mdi-folder" color="primary" class="me-2" />
-                    <span class="h-6 mb-1 font-weight-bold">{{ seccion.titulo }}</span>
-                  </div>
-                  <div class="d-flex align-center gap-2">
-                    <span class="text-caption">
-                      Pts: {{ getPuntajeAsignadoSeccion(seccion.id) }}/{{ seccion.puntaje_max }}
-                    </span>
-                  </div>
-                </div>
-              </VExpansionPanelTitle>
-
-              <VExpansionPanelText class="pt-0 pb-4 px-2 bg-grey-lighten-4 rounded-b-xl">
-                <!-- Criterios -->
-                <div 
-                  v-for="criterio in seccion.criterios" 
-                  :key="criterio.id"
-                  class="pa-4 mb-4 rounded-lg elevation-1 bg-white"
-                >
-                  <div class="d-flex justify-space-between align-start mb-2">
-                    <div>
-                      <div class="text-title-1 font-weight-medium">{{ criterio.nombre }}</div>
-                      <div class="text-primary">
-                        {{ criterio.puntaje_por_item }} pts por item (Máx: {{ criterio.puntaje_maximo }} pts)
+                <div v-if="archivosRequisitos.ley[requisito.id]" class="mt-3">
+                  <VCard class="mb-3">
+                    <VCardText>
+                      <div class="d-flex justify-space-between align-center">
+                        <div>
+                          <VIcon icon="mdi-file-document-outline" class="me-1" />
+                          <a :href="archivosRequisitos.ley[requisito.id].url" target="_blank"
+                            class="text-primary text-decoration-underline">
+                            {{ archivosRequisitos.ley[requisito.id].name }}
+                          </a>
+                        </div>
+                        <div class="d-flex align-center gap-2">
+                          <VSelect v-model="evaluacionRequisitos.ley[requisito.id]" :items="opcionesEvaluacion"
+                            label="Estado" density="compact" style="width: 150px" />
+                          <VBtn icon="ri-chat-1-line" variant="text" color="info"
+                            @click="mostrarComentario('ley', requisito.id)" />
+                        </div>
                       </div>
+                    </VCardText>
+                  </VCard>
+
+                  <VTextarea v-if="comentarioVisible.ley === requisito.id"
+                    v-model="comentariosRequisitos.ley[requisito.id]" label="Comentarios"
+                    placeholder="Ingrese comentarios sobre este documento" rows="2" class="mt-2" />
+                </div>
+                <div v-else class="text-error" v-if="requisito.req === 'Obligatorio'">
+                  <VIcon icon="mdi-alert-circle-outline" /> Documento obligatorio no enviado
+                </div>
+                <div v-else class="text-warning">
+                  <VIcon icon="mdi-information-outline" /> Documento opcional no enviado
+                </div>
+              </VTimelineItem>
+
+              <!-- Requisitos personalizados -->
+              <VTimelineItem v-for="requisito in requisitosPersonalizados" :key="'per-' + requisito.id"
+                :dot-color="archivosRequisitos.personalizado?.[requisito.id] ? 'success' : (requisito.tipo === 'Obligatorio' ? 'error' : 'warning')"
+                size="x-small">
+                <div class="d-flex justify-space-between align-center gap-2 flex-wrap mb-2">
+                  <span class="app-timeline-title">{{ requisito.descripcion }}</span>
+                  <span class="app-timeline-meta">{{ requisito.tipo }}</span>
+                </div>
+
+                <div v-if="archivosRequisitos.personalizado[requisito.id]" class="mt-3">
+                  <VCard class="mb-3">
+                    <VCardText>
+                      <div class="d-flex justify-space-between align-center">
+                        <div>
+                          <VIcon icon="mdi-file-document-outline" class="me-1" />
+                          <a :href="archivosRequisitos.personalizado[requisito.id].url" target="_blank"
+                            class="text-primary text-decoration-underline">
+                            {{ archivosRequisitos.personalizado[requisito.id].name }}
+                          </a>
+                        </div>
+                        <div class="d-flex align-center gap-2">
+                          <VSelect v-model="evaluacionRequisitos.personalizado[requisito.id]"
+                            :items="opcionesEvaluacion" label="Estado" density="compact" style="width: 150px" />
+                          <VBtn icon="ri-chat-1-line" variant="text" color="info"
+                            @click="mostrarComentario('personalizado', requisito.id)" />
+                        </div>
+                      </div>
+                    </VCardText>
+                  </VCard>
+
+                  <VTextarea v-if="comentarioVisible.personalizado === requisito.id"
+                    v-model="comentariosRequisitos.personalizado[requisito.id]" label="Comentarios"
+                    placeholder="Ingrese comentarios sobre este documento" rows="2" class="mt-2" />
+                </div>
+                <div v-else class="text-error" v-if="requisito.tipo === 'Obligatorio'">
+                  <VIcon icon="mdi-alert-circle-outline" /> Documento obligatorio no enviado
+                </div>
+                <div v-else class="text-warning">
+                  <VIcon icon="mdi-information-outline" /> Documento opcional no enviado
+                </div>
+              </VTimelineItem>
+            </VTimeline>
+          </VWindowItem>
+
+          <!-- Pestaña CV/Formulario -->
+          <VWindowItem :value="1">
+            <VCard class="mb-4">
+              <VCardText>
+                <div class="d-flex justify-space-between align-center flex-wrap">
+                  <div>
+                    <h4 class="text-h4 mb-1">Evaluación de documentos</h4>
+                    <p class="mb-0">Puntaje asignado: {{ puntajeAsignadoTotal }}/{{ puntajeMaximoPosible }} pts</p>
+                  </div>
+                  <VChip color="primary" size="large" class="d-flex align-center">
+                    <VIcon icon="ri-star-fill" start />
+                    Progreso: {{ progresoTotal }}%
+                  </VChip>
+                </div>
+                <VProgressLinear :model-value="progresoTotal" color="primary" height="10" class="mt-3" striped />
+              </VCardText>
+            </VCard>
+
+            <VExpansionPanels v-model="panelesAbiertos" variant="accordion">
+              <VExpansionPanel v-for="seccion in secciones" :key="seccion.id" class="mb-2">
+                <VExpansionPanelTitle>
+                  <div class="d-flex justify-space-between align-center w-100">
+                    <div class="d-flex align-center">
+                      <VIcon icon="mdi-folder" color="primary" class="me-2" />
+                      <span class="h-6 mb-1 font-weight-bold">{{ seccion.titulo }}</span>
                     </div>
-                    <div class="text-right">
-                      <div class="font-weight-bold text-primary">
+                    <div class="d-flex align-center gap-2">
+                      <span class="text-caption">
+                        Pts: {{ getPuntajeAsignadoSeccion(seccion.id) }}/{{ seccion.puntaje_max }}
+                      </span>
+                    </div>
+                  </div>
+                </VExpansionPanelTitle>
+
+                <VExpansionPanelText class="pt-0 pb-4 px-2 bg-grey-lighten-4 rounded-b-xl">
+                  <div v-for="criterio in seccion.criterios" :key="criterio.id"
+                    class="pa-4 mb-4 rounded-lg elevation-1 bg-white">
+                    <div class="d-flex justify-space-between align-start mb-2">
+                      <div>
+                        <div class="text-title-1 font-weight-medium">{{ criterio.nombre }}</div>
+                        <div class="text-primary">
+                          {{ criterio.puntaje_por_item }} pts por item (Máx: {{ criterio.puntaje_maximo }} pts)
+                        </div>
+                      </div>
+                      <div class="text-right font-weight-bold text-primary">
                         Pts: {{ getPuntajeAsignadoCriterio(seccion.id, criterio.id) }}/{{ criterio.puntaje_maximo }}
                       </div>
                     </div>
-                  </div>
 
-                  <!-- Documentos -->
-                  <div v-if="archivosFormulario[seccion.id]?.[criterio.id]?.length" class="mt-3">
-                    <VList lines="two" density="compact">
-                      <VListItem 
-                        v-for="(archivo, index) in archivosFormulario[seccion.id][criterio.id]" 
-                        :key="'doc-'+index"
-                      >
-                        <template #prepend>
-                          <VIcon :icon="getFileIcon(archivo.name)" color="success" />
-                        </template>
-                        <VListItemTitle>
-                          <a :href="archivo.url" target="_blank" class="text-primary text-decoration-none">
-                            {{ archivo.name }}
-                          </a>
-                        </VListItemTitle>
-                        <VListItemSubtitle class="text-caption">
-                          Subido el {{ formatDate(archivo.fecha) }}
-                        </VListItemSubtitle>
-                        <template #append>
-                          <div class="d-flex align-center gap-2">
-                            <VSelect
-                              v-model="evaluacionArchivos[seccion.id][criterio.id][index]"
-                              :items="opcionesEvaluacion"
-                              label="Estado"
-                              density="compact"
-                              style="width: 150px"
-                            />
-                            <VBtn
-                              icon="ri-chat-1-line"
-                              variant="text"
-                              color="info"
-                              @click="mostrarComentarioArchivo(seccion.id, criterio.id, index)"
-                            />
-                          </div>
-                        </template>
-                      </VListItem>
-                    </VList>
+                    <!-- Documentos -->
+                    <div v-if="archivosFormulario[Number(seccion.id)]?.[Number(criterio.id)]?.length" class="mt-3">
+                      <VList lines="two" density="compact">
+                        <VListItem
+                          v-for="(archivo, index) in archivosFormulario[Number(seccion.id)][Number(criterio.id)]"
+                          :key="'doc-' + index">
+                          <template #prepend>
+                            <VIcon :icon="getFileIcon(archivo.name)" color="success" />
+                          </template>
+                          <VListItemTitle>
+                            <a :href="archivo.url" target="_blank" class="text-primary text-decoration-none">
+                              {{ archivo.name }}
+                            </a>
+                          </VListItemTitle>
+                          <VListItemSubtitle class="text-caption">
+                            Subido el {{ formatDate(archivo.fecha) }}
+                          </VListItemSubtitle>
+                          <template #append>
+                            <div class="d-flex align-center gap-2">
+                              <VSelect v-model="evaluacionArchivos[seccion.id][criterio.id][index]"
+                                :items="opcionesEvaluacion" label="Estado" density="compact" style="width: 150px" />
+                              <VBtn icon="ri-chat-1-line" variant="text" color="info"
+                                @click="mostrarComentarioArchivo(seccion.id, criterio.id, index)" />
+                            </div>
+                          </template>
+                        </VListItem>
+                      </VList>
 
-                    <!-- Comentarios -->
-                    <VTextarea
-                      v-if="comentarioVisibleArchivos[seccion.id]?.[criterio.id] === index"
-                      v-model="comentariosArchivos[seccion.id][criterio.id][index]"
-                      label="Comentarios"
-                      placeholder="Ingrese comentarios sobre este documento"
-                      rows="2"
-                      class="mt-2"
-                    />
-                  </div>
-                  <div v-else class="text-warning">
-                    <VIcon icon="mdi-information-outline" /> No se han subido documentos
-                  </div>
-                </div>
-              </VExpansionPanelText>
-            </VExpansionPanel>
-          </VExpansionPanels>
+                      <!-- Comentarios
+                      <VTextarea v-if="comentarioVisibleArchivos[seccion.id]?.[criterio.id] === index"
+                        v-model="comentariosArchivos[seccion.id][criterio.id][index]" label="Comentarios"
+                        placeholder="Ingrese comentarios sobre este documento" rows="2" class="mt-2" /> -->
+                    </div>
+                    <div v-else class="text-warning">
+                      <VIcon icon="mdi-information-outline" /> No se han subido documentos
+                    </div>
 
-          <!-- Comentarios generales -->
-          <VCard class="mt-4">
-            <VCardText>
-              <VTextarea
-                v-model="comentarioGeneral"
-                label="Comentarios generales"
-                placeholder="Ingrese observaciones generales sobre la postulación"
-                rows="3"
-              />
-            </VCardText>
-          </VCard>
-        </VWindowItem>
-      </VWindow>
+                  </div>
+                </VExpansionPanelText>
+              </VExpansionPanel>
+            </VExpansionPanels>
+
+            <VCard class="mt-4">
+              <VCardText>
+                <VTextarea v-model="comentarioGeneral" label="Comentarios generales"
+                  placeholder="Ingrese observaciones generales sobre la postulación" rows="3" />
+              </VCardText>
+            </VCard>
+          </VWindowItem>
+        </VWindow>
+      </VCardText>
+
 
       <!-- Botones de acción -->
       <VCard class="mt-4">
         <VCardText>
           <div class="d-flex justify-end gap-4">
-            <VBtn 
-              color="secondary" 
-              :loading="saving"
-              @click="guardarEvaluacion(false)"
-            >
+            <VBtn color="secondary" :loading="saving" @click="guardarEvaluacion(false)">
               <VIcon icon="ri-save-line" start />
               Guardar borrador
             </VBtn>
-            <VBtn 
-              color="success" 
-              :loading="saving"
-              @click="guardarEvaluacion(true)"
-            >
+            <VBtn color="success" :loading="saving" @click="guardarEvaluacion(true)">
               <VIcon icon="ri-check-line" start />
               Finalizar evaluación
             </VBtn>

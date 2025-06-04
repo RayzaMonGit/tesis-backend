@@ -91,25 +91,41 @@ public function porPostulante($postulanteId)
 
     public function show($id)
 {
-    // Busca la postulación de usuario postulante_id
     $postulacion = Postulacion::with([
         'postulante.user',
-        'convocatoria.formulario.secciones.criterios', 
+        'convocatoria',
         'convocatoria.requisitosLey',
-        'convocatoria.evaluadores'
+        'convocatoria.requisitos',
+        'convocatoria.formulario.secciones.criterios',
+        'documentos' => function($query) {
+            $query->orderBy('es_requisito_ley', 'desc')
+                  ->orderBy('es_requisito_personalizado', 'desc');
+        },
+        'documentosFormulario' => function($query) {
+            $query->with(['seccion', 'criterio']);
+        }
     ])->findOrFail($id);
-    // Devuelve la postulación como un recurso
-    return new PostulacionResource($postulacion);
 
-    /*$postulacion = Postulacion::with([
-        'postulante.user',
-        'convocatoria.formulario.secciones.criterios', 
-        'convocatoria.requisitosLey',
-        'convocatoria.evaluadores'
-    ])->findOrFail($id);
+    // Agrupar documentos según tipo
+    $documentosLey = $postulacion->documentos->where('es_requisito_ley', true)->values();
+    $documentosPersonalizados = $postulacion->documentos->where('es_requisito_personalizado', true)->values();
 
-    return new PostulacionResource($postulacion);*/
+    return response()->json([
+        'postulacion' => $postulacion,
+        'postulante' => $postulacion->postulante,
+        'requisitos' => [
+            'ley' => $postulacion->convocatoria->requisitosLey,
+            'personalizados' => $postulacion->convocatoria->requisitos
+        ],
+        'formulario' => $postulacion->convocatoria->formulario,
+        'documentos' => [
+            'requisitos_ley' => $documentosLey,
+            'requisitos_personalizados' => $documentosPersonalizados,
+            'formulario_curriculum' => $postulacion->documentosFormulario
+        ]
+    ]);
 }
+
 
 
     public function update(Request $request, $id)

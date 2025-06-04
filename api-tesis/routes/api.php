@@ -15,6 +15,7 @@ use App\Http\Controllers\Postulacion\PostulacionDocumentoController;
 use App\Http\Controllers\Comision\VistoBuenoController;
 use App\Http\Controllers\Evaluacion\EvaluController;
 use App\Http\Controllers\Evaluacion\EvaluDocumentoController;
+use App\Http\Controllers\Evaluacion\EvaluacionRequisitoController;
 
 
 //use App\Http\Controllers\Formulario\FormularioController;
@@ -117,11 +118,19 @@ Route::post('visto-bueno',[VistoBuenoController::class]);
 Route::get('convocatorias/{id}/postulantes', [PostulacionController::class, 'postulantesPorConvocatoria']);
 // Rutas para Evaluaciones
     Route::get('postulaciones/{postulacionId}/evaluaciones', [EvaluController::class, 'index']);
-    Route::get('evaluaciones/{id}', [EvaluController::class, 'show']);
     Route::post('postulaciones/{postulacionId}/evaluaciones', [EvaluController::class, 'store']);
+    Route::get('evaluaciones/{id}', [EvaluController::class, 'show']);
     
     // Rutas para Documentos Evaluados
     Route::post('evaluaciones/{evaluacionId}/documentos', [EvaluDocumentoController::class, 'store']);
     Route::post('evaluaciones-documentos/{id}', [EvaluDocumentoController::class, 'update']);
     Route::delete('evaluaciones-documentos/{id}', [EvaluDocumentoController::class, 'destroy']);
+    //evaluacio completa
+    Route::post('evaluaciones/completa', [EvaluController::class, 'guardarCompleta']);
+    //evaluacion de requisitos
+    Route::post('evaluaciones/{evaluacionId}/requisitos', [EvaluacionRequisitoController::class, 'store']);
+    Route::get('evaluaciones/{evaluacionId}/requisitos', [EvaluacionRequisitoController::class, 'index']);
+    Route::post('evaluacion-requisitos/{id}', [EvaluacionRequisitoController::class, 'update']);
+Route::delete('evaluacion-requisitos/{id}', [EvaluacionRequisitoController::class, 'destroy']);
+
 });

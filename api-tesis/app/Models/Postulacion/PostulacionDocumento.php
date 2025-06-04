@@ -33,4 +33,22 @@ class PostulacionDocumento extends Model
     {
         return $this->belongsTo(\App\Models\Postulacion\Postulacion::class);
     }
+
+    // Relación con Seccion
+    public function seccion()
+    {
+        return $this->belongsTo(\App\Models\Formulario\SeccionFormulario::class, 'seccion_id');
+    }
+
+    // Relación con Criterio (si la usas)
+    public function criterio()
+    {
+        return $this->belongsTo(\App\Models\Formulario\CriterioFormulario::class, 'criterio_id');
+    }
+
+    // Relación con Requisito (si la usas)
+    public function requisito()
+    {
+        return $this->belongsTo(\App\Models\Convocatorias\Requisitos::class, 'requisito_id');
+    }
 }

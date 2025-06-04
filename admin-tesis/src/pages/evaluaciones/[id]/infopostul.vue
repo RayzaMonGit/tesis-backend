@@ -61,17 +61,39 @@ onMounted(fetchPostulantes)
   <td>{{ p.user?.full_name }}</td>
   <td>{{ p.user?.email }}</td>
   <td>
-    
-      {{ p.estado }}
-   
-  </td>
-  <td>
-    <VBtn color="primary" size="small"
-        @click="$router.push(`/evaluaciones/revisardocumentos/${p.id_postulacion}`)"
+  <VChip
+    :color="p.estado.toLowerCase() === 'en evaluacion' ? 'info' : (p.estado.toLowerCase() === 'aprobado' ? 'success' : (p.estado.toLowerCase() === 'rechazado' ? 'error' : 'grey'))"
+    variant="tonal"
+    size="small"
+    class="text-capitalize"
   >
-  <VIcon icon="ri-eye-line" class="me-2" />Revisar
-</VBtn>
-  </td>
+    {{ p.estado }}
+  </VChip>
+</td>
+<td>
+  <VTooltip v-if="p.estado.toLowerCase() !== 'en evaluacion'" location="top">
+    <template #activator="{ props }">
+      <span v-bind="props">
+        <VBtn
+          color="primary"
+          size="small"
+          :disabled="true"
+        >
+          <VIcon icon="ri-eye-line" class="me-2" />Revisar
+        </VBtn>
+      </span>
+    </template>
+    El postulante aún no mandó sus datos para ser evaluados
+  </VTooltip>
+  <VBtn
+    v-else
+    color="primary"
+    size="small"
+    @click="$router.push(`/evaluaciones/revisardocumentos/${p.id_postulacion}`)"
+  >
+    <VIcon icon="ri-eye-line" class="me-2" />Revisar
+  </VBtn>
+</td>
 </tr>
       </tbody>
     </VTable>

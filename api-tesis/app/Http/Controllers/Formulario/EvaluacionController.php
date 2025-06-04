@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Formulario;
+namespace App\Http\Controllers\Formulario\EvaluacionController;
+use App\Http\Controllers\Controller;
 use App\Models\Evaluacion;
 use App\Http\Requests\StoreEvaluacionRequest;
 use App\Services\ScoringService;
-use App\Http\Resources\EvaluacionResource;
+use App\Http\Resources\Evaluacion\EvaluacionResource;
 
 class EvaluacionController extends Controller {
     // Guarda las respuestas y calcula el puntaje (API)

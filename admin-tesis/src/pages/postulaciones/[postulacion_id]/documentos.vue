@@ -825,24 +825,31 @@ const requisitos = async () => {
   try {
     console.log('Cargando convocatoria para postulación:', postulacionId)
     const response = await $api(`/postulaciones/${postulacionId}`)
-    console.log('Respuesta de la API:', response.data)
-
+    console.log('Respuesta de la API:', response)
+    
     // Postulación completa
-    postulacion.value = response.data
+    postulacion.value = response.postulacion
+    //console.log('Datos de la postulación:', postulacion.value)
 
     // Subdatos
-    postulante.value = response.data.postulante
-    usuario.value = response.data.postulante?.user ?? null
-    convocatoria.value = response.data.convocatoria
+    postulante.value= postulacion.value.postulante
+    //console.log('Datos del postulante:', postulante.value)
+
+    usuario.value = postulacion.value.postulante?.user ?? null
+    //console.log('Datos del usuario:', usuario.value)
+
+    convocatoria.value = postulacion.value.convocatoria
+    //console.log('Datos de la convocatoria:', convocatoria.value)
+
 
     // Subdatos de la convocatoria
-    requisitosLey.value = response.data.convocatoria?.requisitos_ley ?? []
-    requisitosPersonalizados.value = response.data.convocatoria?.requisitos ?? []
-    evaluadores.value = response.data.convocatoria?.evaluadores ?? []
+    requisitosLey.value = postulacion.value.convocatoria?.requisitos_ley ?? []
+    requisitosPersonalizados.value = postulacion.value.convocatoria?.requisitos ?? []
+    evaluadores.value = postulacion.value.convocatoria?.evaluadores ?? []
 
     // Formulario y secciones
-    formulario.value = response.data.convocatoria?.formulario ?? null
-    secciones.value = response.data.convocatoria?.formulario?.secciones ?? []
+    formulario.value = postulacion.value.convocatoria?.formulario ?? null
+    secciones.value = postulacion.value.convocatoria?.formulario?.secciones ?? []
     /*
         console.log('Postulación cargada:', postulacion.value)
         console.log('Postulante:', postulante.value)
@@ -883,9 +890,9 @@ const cargarDocumentosGuardados = async () => {
     const postulacionRes = await $api(`/postulaciones/${postulacionId}`);
     
     console.log('Documentos previos cargados:', res.data);
-    console.log('Estado de la postulación:', postulacionRes.data);
+    console.log('Estado de la postulación:', postulacionRes.postulacion.estado);
     
-    estadoPostulacion.value = postulacionRes.data.estado || 'pendiente';
+    estadoPostulacion.value = postulacionRes.postulacion.estado || 'pendiente';
 
     res.data.forEach(doc => {
       // Documentos de CV (tienen seccion_id y criterio_id)

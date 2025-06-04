@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 class EvaluacionDocumento extends Model
 {
     protected $fillable = [
+        'id',
         'evaluacion_id',
         'postulacion_documento_id',
         'estado',
