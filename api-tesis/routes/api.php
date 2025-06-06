@@ -131,6 +131,7 @@ Route::get('convocatorias/{id}/postulantes', [PostulacionController::class, 'pos
     Route::post('evaluaciones/{evaluacionId}/requisitos', [EvaluacionRequisitoController::class, 'store']);
     Route::get('evaluaciones/{evaluacionId}/requisitos', [EvaluacionRequisitoController::class, 'index']);
     Route::post('evaluacion-requisitos/{id}', [EvaluacionRequisitoController::class, 'update']);
-Route::delete('evaluacion-requisitos/{id}', [EvaluacionRequisitoController::class, 'destroy']);
+    Route::delete('evaluacion-requisitos/{id}', [EvaluacionRequisitoController::class, 'destroy']);
+    Route::get('postulaciones/{postulacionId}/evaluaciones/mi-evaluacion', [EvaluController::class, 'miEvaluacion']);
 
 });

@@ -140,158 +140,266 @@ const getPuntajeAsignadoCriterio = (seccionId, criterioId) => {
 
   return aprobados * (parseFloat(criterio.puntaje_por_item) || 0)
 }
-/*
+
+// Función actualizada para guardar evaluación
 const guardarEvaluacion = async (finalizar = false) => {
   saving.value = true
+  
   try {
-    // 1. Guardar/Actualizar evaluación general
-    const endpoint = evaluacionId.value
-      ? `evaluaciones/${evaluacionId.value}`
-      : 'evaluaciones'
+    // Validar datos antes de enviar
+    if (!validarDatos()) return
 
-    const method = evaluacionId.value ? 'POST' : 'POST'
+    // Preparar requisitos
+    const requisitos = prepararRequisitos()
+    
+    // Preparar documentos
+    const documentos = prepararDocumentos()
 
-    const evalData = {
-      postulacion_id: postulacionId,
-      puntaje_total: puntajeAsignadoTotal.value,
-      comentarios_generales: comentarioGeneral.value,
-      estado: finalizar ? 'finalizada' : 'borrador'
+    // Preparar payload
+    const payload = {
+      requisitos,
+      documentos,
+      comentarios_generales: comentarioGeneral.value || '',
+      finalizar
     }
 
-    const res = await $api(endpoint, {
-      method,
-      body: evalData
+    console.log('Enviando evaluación:', payload)
+    console.log('el id de la postulacion', postulacionId)
+    // Enviar al backend
+    const response = await $api(`/postulaciones/${postulacionId}/evaluaciones`, {
+      method: 'POST',
+      body: payload
     })
 
-    evaluacionId.value = res.data.id
-
-    // 2. Guardar requisitos
-    for (const tipo in evaluacionRequisitos) {
-      for (const requisitoId in evaluacionRequisitos[tipo]) {
-        await $api('/evaluaciones/requisitos', {
-          method: 'POST',
-          body: {
-            evaluacion_id: evaluacionId.value,
-            requisito_id: requisitoId,
-            estado: evaluacionRequisitos[tipo][requisitoId],
-            comentarios: comentariosRequisitos[tipo][requisitoId],
-            es_requisito_ley: tipo === 'ley'
-          }
-        })
+    if (response.success) {
+      evaluacionId.value = response.data.evaluacion_id
+      
+      // Mostrar mensaje de éxito
+      showSuccessMessage(finalizar ? 'Evaluación finalizada exitosamente' : 'Borrador guardado')
+      
+      // Si se finalizó, redirigir o actualizar estado
+      if (finalizar) {
+        // Aquí puedes redirigir o actualizar la interfaz
+        postulacion.value.estado = 'evaluada'
       }
-    }
-
-    // 3. Guardar documentos
-    for (const seccionId in evaluacionArchivos.value) {
-      for (const criterioId in evaluacionArchivos.value[seccionId]) {
-        for (let i = 0; i < evaluacionArchivos.value[seccionId][criterioId].length; i++) {
-          const archivo = archivosFormulario.value[seccionId][criterioId][i]
-
-          await $api('/evaluaciones/documentos', {
-            method: 'POST',
-            body: {
-              evaluacion_id: evaluacionId.value,
-              postulacion_documento_id: archivo.id,
-              estado: evaluacionArchivos.value[seccionId][criterioId][i],
-              puntaje: getPuntajeAsignadoCriterio(seccionId, criterioId),
-              comentarios: comentariosArchivos.value[seccionId]?.[criterioId]?.[i] || ''
-            }
-          })
-        }
-      }
-    }
-
-    if (finalizar) {
-      // Actualizar estado postulación
-      await $api(`/postulaciones/${postulacionId}/actualizar-estado`, {
-        method: 'POST',
-        body: { estado: 'evaluada', nota_final: puntajeAsignadoTotal.value }
-      })
     }
 
   } catch (error) {
     console.error('Error guardando evaluación:', error)
+    showErrorMessage('Error al guardar la evaluación: ' + (error.message || 'Error desconocido'))
   } finally {
     saving.value = false
   }
-}*/
-const guardarEvaluacion = async (finalizar = false) => {
-  saving.value = true
-  try {
-    // Armar requisitos
-    const requisitos = []
-    
-    for (const tipo in evaluacionRequisitos) {
-  for (const requisitoId in evaluacionRequisitos[tipo]) {
-    // Buscar si hay documento subido para este requisito
-    let postulacion_documento_id = null;
-    if (archivosRequisitos[tipo][requisitoId]) {
-      postulacion_documento_id = archivosRequisitos[tipo][requisitoId].id;
-    }
-    requisitos.push({
-      requisito_id: requisitoId,
-      estado: evaluacionRequisitos[tipo][requisitoId],
-      comentarios: comentariosRequisitos[tipo][requisitoId],
-      es_requisito_ley: tipo === 'ley',
-      postulacion_documento_id // <-- aquí agregas el id del documento subido (o null si no hay)
-    })
-  }
 }
 
-    // Armar documentos
-    const documentos = []
-    for (const seccionId in evaluacionArchivos.value) {
-      for (const criterioId in evaluacionArchivos.value[seccionId]) {
-        for (let i = 0; i < evaluacionArchivos.value[seccionId][criterioId].length; i++) {
-          const archivo = archivosFormulario.value[seccionId][criterioId][i]
+// Función para validar datos antes de enviar
+const validarDatos = () => {
+  // Validar que al menos un requisito esté evaluado
+  const tieneRequisitosEvaluados = Object.values(evaluacionRequisitos.ley).some(val => val) ||
+                                   Object.values(evaluacionRequisitos.personalizado).some(val => val)
+  
+  if (!tieneRequisitosEvaluados) {
+    showErrorMessage('Debe evaluar al menos un requisito')
+    return false
+  }
+
+  return true
+}
+
+// Función para preparar requisitos
+const prepararRequisitos = () => {
+  const requisitos = []
+
+  // Requisitos de ley
+  for (const requisitoId in evaluacionRequisitos.ley) {
+    if (evaluacionRequisitos.ley[requisitoId]) {
+      let postulacion_documento_id = null
+      const archivoAsociado = archivosRequisitos.ley?.[requisitoId]
+      
+      if (archivoAsociado?.id) {
+        postulacion_documento_id = archivoAsociado.id
+      }
+
+      requisitos.push({
+        requisito_id: parseInt(requisitoId),
+        es_requisito_ley: true,
+        estado: evaluacionRequisitos.ley[requisitoId],
+        comentarios: comentariosRequisitos.ley[requisitoId] || '',
+        postulacion_documento_id
+      })
+    }
+  }
+
+  // Requisitos personalizados
+  for (const requisitoId in evaluacionRequisitos.personalizado) {
+    if (evaluacionRequisitos.personalizado[requisitoId]) {
+      let postulacion_documento_id = null
+      const archivoAsociado = archivosRequisitos.personalizado?.[requisitoId]
+      
+      if (archivoAsociado?.id) {
+        postulacion_documento_id = archivoAsociado.id
+      }
+
+      requisitos.push({
+        requisito_id: parseInt(requisitoId),
+        es_requisito_ley: false,
+        estado: evaluacionRequisitos.personalizado[requisitoId],
+        comentarios: comentariosRequisitos.personalizado[requisitoId] || '',
+        postulacion_documento_id
+      })
+    }
+  }
+
+  return requisitos
+}
+
+// Función para preparar documentos del formulario
+const prepararDocumentos = () => {
+  const documentos = []
+
+  for (const seccionId in evaluacionArchivos.value) {
+    for (const criterioId in evaluacionArchivos.value[seccionId]) {
+      const archivos = archivosFormulario.value[seccionId]?.[criterioId] || []
+      const evaluaciones = evaluacionArchivos.value[seccionId][criterioId]
+
+      archivos.forEach((archivo, index) => {
+        if (evaluaciones[index]) {
           documentos.push({
             postulacion_documento_id: archivo.id,
-            estado: evaluacionArchivos.value[seccionId][criterioId][i],
-            puntaje: getPuntajeAsignadoCriterio(seccionId, criterioId),
-            comentarios: comentariosArchivos.value[seccionId]?.[criterioId]?.[i] || ''
+            estado: evaluaciones[index],
+            puntaje: calcularPuntajeDocumento(seccionId, criterioId, index),
+            comentarios: comentariosArchivos.value[seccionId]?.[criterioId]?.[index] || ''
           })
         }
-      }
-    }
-
-    //mostrar todo en consola
-    console.log('ID de postulación:', postulacionId);
-    console.log('Requisitos a enviar:', requisitos);
-    console.log('Documentos a enviar:', documentos);
-    console.log('Puntaje total asignado:', puntajeAsignadoTotal.value);
-    console.log('Comentario general:', comentarioGeneral.value);
-    console.log('Estado de la evaluación:', finalizar ? 'finalizada' : 'borrador');
-    // Enviar todo en una sola llamada
-    const res = await $api('/evaluaciones/completa', {
-      method: 'POST',
-      body: {
-        postulacion_id: postulacionId,
-        puntaje_total: puntajeAsignadoTotal.value,
-        comentarios_generales: comentarioGeneral.value,
-        estado: finalizar ? 'finalizada' : 'borrador',
-        requisitos,
-        documentos
-      }
-    })
-
-    evaluacionId.value = res.data.evaluacion_id
-
-    if (finalizar) {
-      await $api(`/postulaciones/${postulacionId}/actualizar-estado`, {
-        method: 'POST',
-        body: { estado: 'evaluada', nota_final: puntajeAsignadoTotal.value }
       })
     }
+  }
 
+  return documentos
+}
+
+// Función para calcular puntaje de un documento específico
+const calcularPuntajeDocumento = (seccionId, criterioId, index) => {
+  const estado = evaluacionArchivos.value[seccionId]?.[criterioId]?.[index]
+  
+  if (estado !== 'aprobado') return 0
+
+  const criterio = secciones.value
+    .find(s => s.id == seccionId)
+    ?.criterios.find(c => c.id == criterioId)
+
+  return parseFloat(criterio?.puntaje_por_item || 0)
+}
+
+// Funciones auxiliares para mostrar mensajes
+const showSuccessMessage = (message) => {
+  // Implementar según tu sistema de notificaciones
+  console.log('SUCCESS:', message)
+}
+
+const showErrorMessage = (message) => {
+  // Implementar según tu sistema de notificaciones
+  console.error('ERROR:', message)
+}
+
+// Inicializar evaluaciones correctamente
+const inicializarEvaluaciones = () => {
+  // Inicializar evaluaciones de requisitos
+  requisitosLey.value.forEach(requisito => {
+    if (!evaluacionRequisitos.ley[requisito.id]) {
+      evaluacionRequisitos.ley[requisito.id] = ''
+    }
+    if (!comentariosRequisitos.ley[requisito.id]) {
+      comentariosRequisitos.ley[requisito.id] = ''
+    }
+  })
+
+  requisitosPersonalizados.value.forEach(requisito => {
+    if (!evaluacionRequisitos.personalizado[requisito.id]) {
+      evaluacionRequisitos.personalizado[requisito.id] = ''
+    }
+    if (!comentariosRequisitos.personalizado[requisito.id]) {
+      comentariosRequisitos.personalizado[requisito.id] = ''
+    }
+  })
+
+  // Inicializar evaluaciones de documentos del formulario
+  secciones.value.forEach(seccion => {
+    if (!evaluacionArchivos.value[seccion.id]) {
+      evaluacionArchivos.value[seccion.id] = {}
+    }
+    if (!comentariosArchivos.value[seccion.id]) {
+      comentariosArchivos.value[seccion.id] = {}
+    }
+
+    seccion.criterios.forEach(criterio => {
+      const archivos = archivosFormulario.value[seccion.id]?.[criterio.id] || []
+      
+      if (!evaluacionArchivos.value[seccion.id][criterio.id]) {
+        evaluacionArchivos.value[seccion.id][criterio.id] = new Array(archivos.length).fill('')
+      }
+      if (!comentariosArchivos.value[seccion.id][criterio.id]) {
+        comentariosArchivos.value[seccion.id][criterio.id] = new Array(archivos.length).fill('')
+      }
+    })
+  })
+}
+
+// Cargar evaluación existente si la hay
+const cargarEvaluacionExistente = async () => {
+  try {
+    const response = await $api(`/postulaciones/${postulacionId}/evaluaciones/mi-evaluacion`)
+    console.log('datos disque', response)
+    
+    if (response.success && response.data) {
+      const evaluacion = response.data
+      evaluacionId.value = evaluacion.id
+      comentarioGeneral.value = evaluacion.comentarios_generales || ''
+
+      // Cargar evaluaciones de requisitos
+      evaluacion.requisitos?.forEach(req => {
+  const tipo = req.es_requisito_ley ? 'ley' : 'personalizado'
+  const id = req.es_requisito_ley ? req.requisito_ley_id : req.requisito_id
+  evaluacionRequisitos[tipo][id] = req.estado
+  comentariosRequisitos[tipo][id] = req.comentarios || ''
+})
+
+      // Cargar evaluaciones de documentos
+      evaluacion.documentos?.forEach(doc => {
+        // Buscar en qué sección/criterio está este documento
+        const docInfo = encontrarDocumentoEnFormulario(doc.postulacion_documento_id)
+        if (docInfo) {
+          const index = docInfo.index
+          evaluacionArchivos.value[docInfo.seccionId][docInfo.criterioId][index] = doc.estado
+          comentariosArchivos.value[docInfo.seccionId][docInfo.criterioId][index] = doc.comentarios || ''
+        }
+      })
+    }
   } catch (error) {
-    console.error('Error guardando evaluación:', error)
-  } finally {
-    saving.value = false
+    console.log('No hay evaluación previa o error al cargar:', error.message)
   }
 }
 
-const cargarPostulacion = async () => {
+// Función auxiliar para encontrar documento en el formulario
+const encontrarDocumentoEnFormulario = (documentoId) => {
+  for (const seccionId in archivosFormulario.value) {
+    for (const criterioId in archivosFormulario.value[seccionId]) {
+      const archivos = archivosFormulario.value[seccionId][criterioId]
+      const index = archivos.findIndex(archivo => archivo.id === documentoId)
+      if (index !== -1) {
+        return { seccionId, criterioId, index }
+      }
+    }
+  }
+  return null
+}
+
+
+const USER = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
+
+const cargarPostulacionantiguio = async () => {
   try {
+  //console.log('Usuario actual:', USER);
     loading.value = true;
     const response = await $api(`/postulaciones/${postulacionId}`);
     console.log('Datos de la postulación:', response);
@@ -301,7 +409,7 @@ const cargarPostulacion = async () => {
     postulante.value = response.postulante;
     convocatoria.value = response.postulacion.convocatoria;
     /*console.log('Convocatoria:', convocatoria.value);
-    console.log('Postulante:', postulante.value);
+    console.log('Postulante:', postulante.value.user.id);
     console.log('Postulación:', postulacion.value);*/
 
     // Requisitos
@@ -336,6 +444,38 @@ requisitosPersonalizados.value.forEach(requisito => {
     loading.value = false;
   }
 };
+// Actualizar la función de carga principal
+const cargarPostulacion = async () => {
+  try {
+    loading.value = true
+    
+    // Cargar datos de la postulación
+    const response = await $api(`/postulaciones/${postulacionId}`)
+    
+    // Asignar datos básicos
+    postulacion.value = response.postulacion
+    postulante.value = response.postulante
+    convocatoria.value = response.postulacion.convocatoria
+    requisitosLey.value = response.requisitos.ley || []
+    requisitosPersonalizados.value = response.requisitos.personalizados || []
+    secciones.value = response.formulario?.secciones || []
+
+    // Procesar documentos
+    procesarDocumentos(response.documentos)
+
+    // Inicializar estructuras de evaluación
+    inicializarEvaluaciones()
+
+    // Cargar evaluación existente si la hay
+    await cargarEvaluacionExistente()
+
+  } catch (error) {
+    console.error('Error cargando postulación:', error)
+    showErrorMessage('Error al cargar la postulación')
+  } finally {
+    loading.value = false
+  }
+}
 const procesarDocumentos = (docs) => {
   // Limpiar estructuras manteniendo la reactividad
   Object.keys(archivosRequisitos.ley).forEach(k => delete archivosRequisitos.ley[k]);
@@ -418,12 +558,15 @@ function mostrarComentario(tipo, id) {
 
 function mostrarComentarioArchivo(seccionId, criterioId, index) {
   if (!comentarioVisibleArchivos[seccionId]) {
-    comentarioVisibleArchivos[seccionId] = {}
+    comentarioVisibleArchivos[seccionId] = {};
   }
-  comentarioVisibleArchivos[seccionId][criterioId] =
-    comentarioVisibleArchivos[seccionId][criterioId] === index ? null : index
+  if (!comentarioVisibleArchivos[seccionId][criterioId]) {
+    comentarioVisibleArchivos[seccionId][criterioId] = {};
+  }
+  // Toggle el comentario para ese archivo
+  comentarioVisibleArchivos[seccionId][criterioId][index] =
+    !comentarioVisibleArchivos[seccionId][criterioId][index];
 }
-
 onMounted(() => {
   cargarPostulacion()
 })
@@ -612,7 +755,7 @@ onMounted(() => {
                       <VList lines="two" density="compact">
                         <VListItem
                           v-for="(archivo, index) in archivosFormulario[Number(seccion.id)][Number(criterio.id)]"
-                          :key="'doc-' + index">
+  :key="'doc-' + index">
                           <template #prepend>
                             <VIcon :icon="getFileIcon(archivo.name)" color="success" />
                           </template>
@@ -625,20 +768,26 @@ onMounted(() => {
                             Subido el {{ formatDate(archivo.fecha) }}
                           </VListItemSubtitle>
                           <template #append>
-                            <div class="d-flex align-center gap-2">
-                              <VSelect v-model="evaluacionArchivos[seccion.id][criterio.id][index]"
-                                :items="opcionesEvaluacion" label="Estado" density="compact" style="width: 150px" />
-                              <VBtn icon="ri-chat-1-line" variant="text" color="info"
-                                @click="mostrarComentarioArchivo(seccion.id, criterio.id, index)" />
-                            </div>
-                          </template>
+    <div class="d-flex align-center gap-2">
+      <VSelect v-model="evaluacionArchivos[seccion.id][criterio.id][index]"
+        :items="opcionesEvaluacion" label="Estado" density="compact" style="width: 150px" />
+      <VBtn icon="ri-chat-1-line" variant="text" color="info"
+        @click="mostrarComentarioArchivo(seccion.id, criterio.id, index)" />
+    </div>
+  </template>
+  <!-- Comentario SOLO aquí, dentro del v-for de archivos -->
+  <VTextarea
+    v-if="comentarioVisibleArchivos[seccion.id]?.[criterio.id]?.[index]"
+    v-model="comentariosArchivos[seccion.id][criterio.id][index]"
+    label="Comentarios"
+    placeholder="Ingrese comentarios sobre este documento"
+    rows="2"
+    class="mt-2"
+  />
                         </VListItem>
                       </VList>
 
-                      <!-- Comentarios
-                      <VTextarea v-if="comentarioVisibleArchivos[seccion.id]?.[criterio.id] === index"
-                        v-model="comentariosArchivos[seccion.id][criterio.id][index]" label="Comentarios"
-                        placeholder="Ingrese comentarios sobre este documento" rows="2" class="mt-2" /> -->
+                  
                     </div>
                     <div v-else class="text-warning">
                       <VIcon icon="mdi-information-outline" /> No se han subido documentos
@@ -649,14 +798,14 @@ onMounted(() => {
               </VExpansionPanel>
             </VExpansionPanels>
 
-            <VCard class="mt-4">
-              <VCardText>
-                <VTextarea v-model="comentarioGeneral" label="Comentarios generales"
-                  placeholder="Ingrese observaciones generales sobre la postulación" rows="3" />
-              </VCardText>
-            </VCard>
           </VWindowItem>
         </VWindow>
+        <VCard class="mt-4">
+          <VCardText>
+            <VTextarea v-model="comentarioGeneral" label="Comentarios generales"
+              placeholder="Ingrese observaciones generales sobre la postulación" rows="3" />
+          </VCardText>
+        </VCard>
       </VCardText>
 
 
