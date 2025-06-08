@@ -18,6 +18,8 @@ use App\Models\Convocatorias\Convocatoria;
 use App\Http\Resources\Convocatoria\ConvocatoriaResource;
 use App\Http\Resources\Convocatoria\ConvocatoriaCollection;
 
+use App\Http\Resources\Postulacion\PostulacionDocumentoResource;
+
 use App\Http\Resources\User\UserResource;
 use App\Http\Resources\User\UserCollection;
 use App\Models\User;
@@ -89,7 +91,8 @@ public function porPostulante($postulanteId)
     return PostulacionResource::collection($postulaciones);
 }
 
-    public function show($id)
+    
+public function show($id)
 {
     $postulacion = Postulacion::with([
         'postulante.user',
@@ -106,9 +109,16 @@ public function porPostulante($postulanteId)
         }
     ])->findOrFail($id);
 
-    // Agrupar documentos según tipo
-    $documentosLey = $postulacion->documentos->where('es_requisito_ley', true)->values();
-    $documentosPersonalizados = $postulacion->documentos->where('es_requisito_personalizado', true)->values();
+    // Agrupar documentos según tipo y envolver en resource
+    $documentosLey = PostulacionDocumentoResource::collection(
+        $postulacion->documentos->where('es_requisito_ley', true)->values()
+    );
+    $documentosPersonalizados = PostulacionDocumentoResource::collection(
+        $postulacion->documentos->where('es_requisito_personalizado', true)->values()
+    );
+    $documentosFormulario = PostulacionDocumentoResource::collection(
+        $postulacion->documentosFormulario
+    );
 
     return response()->json([
         'postulacion' => $postulacion,
@@ -121,7 +131,7 @@ public function porPostulante($postulanteId)
         'documentos' => [
             'requisitos_ley' => $documentosLey,
             'requisitos_personalizados' => $documentosPersonalizados,
-            'formulario_curriculum' => $postulacion->documentosFormulario
+            'formulario_curriculum' => $documentosFormulario
         ]
     ]);
 }

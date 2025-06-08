@@ -16,6 +16,7 @@ use App\Http\Controllers\Comision\VistoBuenoController;
 use App\Http\Controllers\Evaluacion\EvaluController;
 use App\Http\Controllers\Evaluacion\EvaluDocumentoController;
 use App\Http\Controllers\Evaluacion\EvaluacionRequisitoController;
+use App\Http\Controllers\Convocatorias\ConvocatoriaAuditController;
 
 
 //use App\Http\Controllers\Formulario\FormularioController;
@@ -53,6 +54,10 @@ Route::group([
     Route::resource("postulantes", PostulanteController::class);
     Route::post("postulantes/{id}", [PostulanteController::class,"update"]);
 
+    //auditoria convocatoria
+    
+Route::get('convocatorias/{convocatoria}/auditoria', [ConvocatoriaAuditController::class, 'index']);
+Route::get('convocatorias/auditoria/todas', [ConvocatoriaAuditController::class, 'all']);
     //para devolver el perfil del postulante
     Route::get('postulantes-perfil', [PostulanteController::class, 'miPerfil']);
 

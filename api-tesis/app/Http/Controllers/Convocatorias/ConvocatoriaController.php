@@ -71,7 +71,10 @@ public function updateRequisitos(Request $request, $id)
     try {
         $convocatoria = Convocatoria::findOrFail($id);
 
-        // Actualizar datos generales
+        $original = $convocatoria->getOriginal();
+        $requisitosOriginales = $convocatoria->requisitos()->pluck('descripcion')->toArray();
+        $idsRequisitosLeyOriginales = $convocatoria->requisitosLey()->pluck('requisitos_ley.id')->toArray();
+
         $convocatoria->update([
             'titulo' => $request->titulo,
             'descripcion' => $request->descripcion,
@@ -84,71 +87,116 @@ public function updateRequisitos(Request $request, $id)
             'formulario_id' => $request->formulario_id,
         ]);
 
-        // Documento (opcional)
         if ($request->hasFile('documento')) {
             if ($convocatoria->documento) {
                 Storage::delete($convocatoria->documento);
             }
-            $documentoPath = $request->file("documento")->store("convocatorias", "public");
-            $convocatoria->update(['documento' => $documentoPath]);
+            $path = $request->file("documento")->store("convocatorias", "public");
+            $convocatoria->update(['documento' => $path]);
         }
 
-        // Requisitos de ley
         if ($request->has('requisitos_ley_ids')) {
             $convocatoria->requisitosLey()->sync($request->requisitos_ley_ids);
         }
 
-        // Obtener los IDs enviados desde el frontend
-$idsEnviados = [];
-if ($request->has('requisitos_personalizados')) {
-    $requisitosPersonalizados = json_decode($request->requisitos_personalizados, true);
+        $idsEnviados = [];
+        if ($request->has('requisitos_personalizados')) {
+            $requisitos = json_decode($request->requisitos_personalizados, true);
 
-    foreach ($requisitosPersonalizados as $req) {
-        if (isset($req['id'])) {
-            // Actualizar requisito existente
-            $requisito = Requisitos::find($req['id']);
-            if ($requisito) {
-                $requisito->update([
-                    'descripcion' => $req['nombre'],
-                    'tipo' => $req['tipo'],
-                    'req_sec' => 'Institucion'
-                ]);
-                $idsEnviados[] = $req['id'];
+            foreach ($requisitos as $req) {
+                if (isset($req['id'])) {
+                    $r = Requisitos::find($req['id']);
+                    if ($r) {
+                        $r->update([
+                            'descripcion' => $req['nombre'],
+                            'tipo' => $req['tipo'],
+                            'req_sec' => 'Institucion'
+                        ]);
+                        $idsEnviados[] = $r->id;
+                    }
+                } else {
+                    $nuevo = Requisitos::create([
+                        'id_convocatoria' => $convocatoria->id,
+                        'descripcion' => $req['nombre'],
+                        'tipo' => $req['tipo'],
+                        'req_sec' => 'Institucion'
+                    ]);
+                    $idsEnviados[] = $nuevo->id;
+                }
             }
+
+            Requisitos::where('id_convocatoria', $convocatoria->id)
+                ->whereNotIn('id', $idsEnviados)
+                ->delete();
+        }
+
+        $requisitosNuevos = $convocatoria->requisitos()->pluck('descripcion')->toArray();
+        $idsRequisitosLeyNuevos = $convocatoria->requisitosLey()->pluck('requisitos_ley.id')->toArray();
+
+        $cambios = [];
+        foreach ($original as $key => $oldValue) {
+    if ($request->has($key)) {
+        $newValue = $request->$key;
+
+        // Normalizar fechas
+        if (in_array($key, ['fecha_inicio', 'fecha_fin'])) {
+            $oldValueNorm = substr($oldValue, 0, 10); // Solo Y-m-d
+            $newValueNorm = substr($newValue, 0, 10);
         } else {
-            // Crear nuevo requisito
-            $nuevo = Requisitos::create([
-                'id_convocatoria' => $convocatoria->id,
-                'descripcion' => $req['nombre'],
-                'tipo' => $req['tipo'],
-                'req_sec' => 'Institucion'
-            ]);
-            $idsEnviados[] = $nuevo->id;
+            $oldValueNorm = $oldValue;
+            $newValueNorm = $newValue;
+        }
+
+        // Normalizar documento (solo nombre de archivo)
+        if ($key === 'documento') {
+            $oldValueNorm = $oldValue ? basename($oldValue) : null;
+            $newValueNorm = $newValue ? basename($newValue) : null;
+        }
+
+        if ($oldValueNorm != $newValueNorm) {
+            $cambios[$key] = [
+                'antes' => $oldValue,
+                'despues' => $newValue
+            ];
         }
     }
-
-    // Eliminar los requisitos que ya no están en la lista enviada
-    Requisitos::where('id_convocatoria', $convocatoria->id)
-        ->whereNotIn('id', $idsEnviados)
-        ->delete();
 }
+
+        if ($requisitosOriginales !== $requisitosNuevos) {
+            $cambios['requisitos_personalizados'] = [
+                'antes' => $requisitosOriginales,
+                'despues' => $requisitosNuevos
+            ];
+        }
+
+        if (array_diff($idsRequisitosLeyOriginales, $idsRequisitosLeyNuevos) || array_diff($idsRequisitosLeyNuevos, $idsRequisitosLeyOriginales)) {
+            $cambios['requisitos_ley_ids'] = [
+                'antes' => $idsRequisitosLeyOriginales,
+                'despues' => $idsRequisitosLeyNuevos
+            ];
+        }
+
+        if (!empty($cambios)) {
+            \App\Models\Convocatorias\ConvocatoriaAudit::create([
+                'convocatoria_id' => $convocatoria->id,
+                'user_id' => auth()->id(),
+                'accion' => 'update',
+                'cambios' => $cambios,
+            ]);
+        }
 
         DB::commit();
 
-        return response()->json([
-            'message' => 200,
-            'msg_text' => 'Requisitos actualizados correctamente'
-        ]);
+        return response()->json(["message" => 200]);
+
     } catch (\Exception $e) {
         DB::rollBack();
         return response()->json([
-            'message' => 500,
-            'error' => $e->getMessage()
+            "message" => 500,
+            "error" => $e->getMessage()
         ], 500);
     }
 }
-
-
 
     /**
      * Display a listing of the resource.
@@ -159,7 +207,7 @@ if ($request->has('requisitos_personalizados')) {
     $estado = $request->get("estado");
     $area = $request->get("area");
 
-$convocatorias = Convocatoria::with(['requisitos', 'evaluadores', 'formulario'])
+    $convocatorias = Convocatoria::with(['requisitos', 'evaluadores', 'formulario'])
 
         ->when($area, function ($q) use ($area) {
             $q->where("area", $area);
@@ -236,6 +284,22 @@ $convocatorias = Convocatoria::with(['requisitos', 'evaluadores', 'formulario'])
                     ]);
                 }
             }
+
+            // Auditoría de creación
+\App\Models\Convocatorias\ConvocatoriaAudit::create([
+    'convocatoria_id' => $convocatoria->id,
+    'user_id' => auth()->id(),
+    'accion' => 'create',
+    'cambios' => [
+        'campos' => $convocatoria->toArray(),
+        'requisitos_personalizados' => $request->has('requisitos_personalizados')
+            ? json_decode($request->requisitos_personalizados, true)
+            : [],
+        'requisitos_ley_ids' => $request->has('requisitos_ley_ids')
+            ? $request->requisitos_ley_ids
+            : [],
+    ],
+]);
             
             DB::commit();
             
@@ -272,114 +336,162 @@ $convocatorias = Convocatoria::with(['requisitos', 'evaluadores', 'formulario'])
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        DB::beginTransaction();
-        
-        try {
-            $convocatoria = Convocatoria::findOrFail($id);
-            
-            // Procesar documento
-            if($request->hasFile("documento")){
-                if($convocatoria->documento){
-                    Storage::delete($convocatoria->documento);
-                }
-                $path = $request->file("documento")->store("convocatorias", "public");
 
-                $request->request->add(["documento" => $path]);
+public function update(Request $request, string $id)
+{
+    DB::beginTransaction();
+
+    try {
+        $convocatoria = Convocatoria::findOrFail($id);
+
+        // Guardar datos originales para auditoría
+        $original = $convocatoria->getOriginal();
+        $requisitosOriginales = $convocatoria->requisitos()->pluck('descripcion')->toArray();
+        $idsRequisitosLeyOriginales = $convocatoria->requisitosLey()->pluck('requisitos_ley.id')->toArray();
+
+        // Procesar documento
+        if ($request->hasFile("documento")) {
+            if ($convocatoria->documento) {
+                Storage::delete($convocatoria->documento);
             }
-            
-            // Actualizar convocatoria
-            $convocatoria->update([
-                'titulo' => $request->titulo ?? $convocatoria->titulo,
-                'descripcion' => $request->descripcion ?? $convocatoria->descripcion,
-                'area' => $request->area ?? $convocatoria->area,
-                'fecha_inicio' => $request->fecha_inicio ?? $convocatoria->fecha_inicio,
-                'fecha_fin' => $request->fecha_fin ?? $convocatoria->fecha_fin,
-                'estado' => $request->estado ?? $convocatoria->estado,
-                'plazas_disponibles' => $request->plazas_disponibles ?? $convocatoria->plazas_disponibles,
-                'sueldo_referencial' => $request->sueldo_referencial ?? $convocatoria->sueldo_referencial,
-                'documento' => $request->documento ?? $convocatoria->documento,
-                'formulario_id' => $request->formulario_id ?? $convocatoria->formulario_id ,
-            ]);
-            
-            // Si se están actualizando los requisitos, eliminar los anteriores
-            if ($request->has('requisitos_obligatorios') || $request->has('requisitos_personalizados')) {
-                // Eliminar requisitos existentes
-                Requisitos::where('id_convocatoria', $convocatoria->id)
-    ->whereNotIn('id', $idsEnviados)
-    ->delete();
-                
-                // Procesar requisitos obligatorios seleccionados
-                if ($request->has('requisitos_obligatorios')) {
-                    $requisitosObligatorios = json_decode($request->requisitos_obligatorios, true);
-                    
-                    foreach ($requisitosObligatorios as $req) {
-                        if ($req['seleccionado']) {
-                            Requisitos::create([
-                                'id_convocatoria' => $convocatoria->id,
-                                'descripcion' => $req['texto'],
-                                'tipo' => 'Obligatorio'
-                            ]);
-                        }
+            $path = $request->file("documento")->store("convocatorias", "public");
+            $request->merge(["documento" => $path]);
+        }
+
+        // Actualizar campos
+        $convocatoria->update([
+            'titulo' => $request->titulo ?? $convocatoria->titulo,
+            'descripcion' => $request->descripcion ?? $convocatoria->descripcion,
+            'area' => $request->area ?? $convocatoria->area,
+            'fecha_inicio' => $request->fecha_inicio ?? $convocatoria->fecha_inicio,
+            'fecha_fin' => $request->fecha_fin ?? $convocatoria->fecha_fin,
+            'estado' => $request->estado ?? $convocatoria->estado,
+            'plazas_disponibles' => $request->plazas_disponibles ?? $convocatoria->plazas_disponibles,
+            'sueldo_referencial' => $request->sueldo_referencial ?? $convocatoria->sueldo_referencial,
+            'documento' => $request->documento ?? $convocatoria->documento,
+            'formulario_id' => $request->formulario_id ?? $convocatoria->formulario_id,
+        ]);
+
+        // === Procesar requisitos personalizados y de ley ===
+        $idsEnviados = [];
+
+        if ($request->has('requisitos_obligatorios')) {
+            $requisitosObligatorios = json_decode($request->requisitos_obligatorios, true);
+            foreach ($requisitosObligatorios as $req) {
+                if ($req['seleccionado']) {
+                    $nuevo = Requisitos::create([
+                        'id_convocatoria' => $convocatoria->id,
+                        'descripcion' => $req['texto'],
+                        'tipo' => 'Obligatorio'
+                    ]);
+                    $idsEnviados[] = $nuevo->id;
+                }
+            }
+        }
+
+        if ($request->has('requisitos_personalizados')) {
+            $requisitosPersonalizados = json_decode($request->requisitos_personalizados, true);
+            foreach ($requisitosPersonalizados as $req) {
+                if (isset($req['id'])) {
+                    $requisito = Requisitos::find($req['id']);
+                    if ($requisito) {
+                        $requisito->update([
+                            'descripcion' => $req['nombre'],
+                            'tipo' => $req['tipo'],
+                            'req_sec' => 'Institucion'
+                        ]);
+                        $idsEnviados[] = $requisito->id;
                     }
+                } else {
+                    $nuevo = Requisitos::create([
+                        'id_convocatoria' => $convocatoria->id,
+                        'descripcion' => $req['nombre'],
+                        'tipo' => $req['tipo'],
+                        'req_sec' => 'Institucion'
+                    ]);
+                    $idsEnviados[] = $nuevo->id;
                 }
-                
-                // Obtener los IDs enviados desde el frontend
-$idsEnviados = [];
-if ($request->has('requisitos_personalizados')) {
-    $requisitosPersonalizados = json_decode($request->requisitos_personalizados, true);
-
-    foreach ($requisitosPersonalizados as $req) {
-        if (isset($req['id'])) {
-            // Actualizar requisito existente
-            $requisito = Requisitos::find($req['id']);
-            if ($requisito) {
-                $requisito->update([
-                    'descripcion' => $req['nombre'],
-                    'tipo' => $req['tipo'],
-                    'req_sec' => 'Institucion'
-                ]);
-                $idsEnviados[] = $req['id'];
             }
+
+            Requisitos::where('id_convocatoria', $convocatoria->id)
+                ->whereNotIn('id', $idsEnviados)
+                ->delete();
+        }
+
+        if ($request->has('requisitos_ley_ids')) {
+            $convocatoria->requisitosLey()->sync($request->requisitos_ley_ids);
+        }
+
+        // Obtener nuevos datos para auditoría
+        $requisitosNuevos = $convocatoria->requisitos()->pluck('descripcion')->toArray();
+        $idsRequisitosLeyNuevos = $convocatoria->requisitosLey()->pluck('requisitos_ley.id')->toArray();
+
+        // Comparar y armar cambios
+        $cambios = [];
+        foreach ($original as $key => $oldValue) {
+    if ($request->has($key)) {
+        $newValue = $request->$key;
+
+        // Normalizar fechas
+        if (in_array($key, ['fecha_inicio', 'fecha_fin'])) {
+            $oldValueNorm = substr($oldValue, 0, 10); // Solo Y-m-d
+            $newValueNorm = substr($newValue, 0, 10);
         } else {
-            // Crear nuevo requisito
-            $nuevo = Requisitos::create([
-                'id_convocatoria' => $convocatoria->id,
-                'descripcion' => $req['nombre'],
-                'tipo' => $req['tipo'],
-                'req_sec' => 'Institucion'
-            ]);
-            $idsEnviados[] = $nuevo->id;
+            $oldValueNorm = $oldValue;
+            $newValueNorm = $newValue;
+        }
+
+        // Normalizar documento (solo nombre de archivo)
+        if ($key === 'documento') {
+            $oldValueNorm = $oldValue ? basename($oldValue) : null;
+            $newValueNorm = $newValue ? basename($newValue) : null;
+        }
+
+        if ($oldValueNorm != $newValueNorm) {
+            $cambios[$key] = [
+                'antes' => $oldValue,
+                'despues' => $newValue
+            ];
         }
     }
-
-    // Eliminar los requisitos que ya no están en la lista enviada
-    Requisitos::where('id_convocatoria', $convocatoria->id)
-        ->whereNotIn('id', $idsEnviados)
-        ->delete();
-}
-            }
-            // Sincronizar requisitos de ley si se enviaron
-if ($request->has('requisitos_ley_ids')) {
-    $convocatoria->requisitosLey()->sync($request->requisitos_ley_ids);
 }
 
-            DB::commit();
-            
-            return response()->json([
-                "message" => 200
-            ]);
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            return response()->json([
-                "message" => 500,
-                "error" => $e->getMessage()
-            ], 500);
+        if ($requisitosOriginales !== $requisitosNuevos) {
+            $cambios['requisitos_personalizados'] = [
+                'antes' => $requisitosOriginales,
+                'despues' => $requisitosNuevos
+            ];
         }
+
+        if (array_diff($idsRequisitosLeyOriginales, $idsRequisitosLeyNuevos) || array_diff($idsRequisitosLeyNuevos, $idsRequisitosLeyOriginales)) {
+            $cambios['requisitos_ley_ids'] = [
+                'antes' => $idsRequisitosLeyOriginales,
+                'despues' => $idsRequisitosLeyNuevos
+            ];
+        }
+
+        if (!empty($cambios)) {
+            \App\Models\Convocatorias\ConvocatoriaAudit::create([
+                'convocatoria_id' => $convocatoria->id,
+                'user_id' => auth()->id(),
+                'accion' => 'update',
+                'cambios' => $cambios,
+            ]);
+        }
+
+        DB::commit();
+
+        return response()->json(["message" => 200]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            "message" => 500,
+            "error" => $e->getMessage()
+        ], 500);
     }
+}
+
 
     /**
      * Remove the specified resource from storage.
@@ -399,6 +511,18 @@ if ($request->has('requisitos_ley_ids')) {
         // Eliminar relaciones (requisitos personalizados y de ley)
         $convocatoria->requisitos()->delete();
         $convocatoria->requisitosLey()->detach();
+
+        // Auditoría de eliminación
+\App\Models\Convocatorias\ConvocatoriaAudit::create([
+    'convocatoria_id' => $convocatoria->id,
+    'user_id' => auth()->id(),
+    'accion' => 'delete',
+    'cambios' => [
+        'campos' => $convocatoria->toArray(),
+        'requisitos_personalizados' => $convocatoria->requisitos()->pluck('descripcion')->toArray(),
+        'requisitos_ley_ids' => $convocatoria->requisitosLey()->pluck('requisitos_ley.id')->toArray(),
+    ],
+]);
 
         $convocatoria->delete();
 

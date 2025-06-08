@@ -1,7 +1,9 @@
 <script setup>
 import { VExpansionPanelTitle } from 'vuetify/components';
 import { load } from 'webfontloader';
-
+import { watch } from 'vue'
+import { useRouter } from 'vue-router'
+const router = useRouter();
 const formularios = ref([]);
 
 const obtenerFormularios = async () => {
@@ -94,7 +96,59 @@ const loadDocument = ($event) => {
   }
 }
 
+const guardarComoBorradorYRedirigir = async () => {
+  // Marca como borrador
+  from.value.estado = 'Borrador';
+if (!from.value.titulo) {
+    warning.value = "Se debe llenar el TÍTULO del cargo";
+    return;
+  } if (!from.value.area) {
+    warning.value = "Se debe llenar el ÁREA del cargo";
+    return;
+  } if (!from.value.descripcion) {
+    warning.value = "Se debe llenar la DESCRIPCIÓN del cargo";
+    return;
+  }
+  // Prepara el formData mínimo necesario
+  let formData = new FormData();
+  formData.append('titulo', from.value.titulo || 'Sin título');
+  formData.append('descripcion', from.value.descripcion || '');
+  formData.append('area', from.value.area || '');
+  
 
+  try {
+    const resp = await $api('/convocatorias', {
+      method: 'POST',
+      body: formData,
+      onResponseError({ response }) {
+        console.log(response)
+        error_exsist.value = response._data.error
+      }
+    });
+    console.log(resp);
+    if (resp.message === 200) {
+      success.value = "Convocatoria registrada en borradores"
+      setTimeout(() => {
+        success.value = null;
+        warning.value = null;
+        error_exsist.value = null;
+        //redirigir a list.vue
+        router.push('/formularios/add');
+        // Limpiar formulario
+        //fileClean();
+        // Navegar a la lista de convocatorias o limpiar formulario
+        // router.push('/convocatorias');
+      }, 1000)
+    } else if (resp.message === 403) {
+      warning.value = resp.message_text
+    }
+
+  }catch (error) {
+    console.log(error);
+    error_exsist.value = error;
+    warning.value = "Error al guardar como borrador antes de añadir formulario";
+  }
+}
 
 const store = async () => {
   console.log("Guardando...")
@@ -190,7 +244,7 @@ const store = async () => {
     console.log(error);
     error_exsist.value = error;
   }
-}
+};
 //para los requisitos 
 const mostrarDocumento = ref(false);
 const todosSeleccionados = ref(false);
@@ -241,7 +295,7 @@ const fileClean = () => {
   mostrarDocumento.value = false;
 
 
-}
+};
 
 onMounted(() => {
   fetchRequisitosLey();
@@ -265,7 +319,7 @@ onMounted(() => {
       <!-- Información -->
       <VWindowItem value="info">
         <VCardText class="pa-5">
-          <!-- Aquí va tu formulario actual -->
+          
           <VRow dense>
             <!-- TÍTULO -->
             <VCol cols="12" md="6">
@@ -300,11 +354,27 @@ onMounted(() => {
                 required />
             </VCol>
             <!-- FORMULARIO -->
-            <VCol cols="12" md="4">
-              <v-select v-model="from.formulario_id" :items="formularios" item-title="nombre" item-value="id"
-                label="Formulario de evaluación" clearable />
-
-            </VCol>
+           <VCol cols="12" md="4">
+  <v-select
+    v-model="from.formulario_id"
+    :items="formularios"
+    item-title="nombre"
+    item-value="id"
+    label="Formulario de evaluación"
+    clearable
+  />
+  <VBtn
+   color="primary"
+  variant="text"
+  class="mt-2"
+  size="small"
+  density="compact"
+  style="min-width: 0; font-size: 0.9rem; padding: 2px 8px;"
+  @click="guardarComoBorradorYRedirigir"
+  >
+    ➕ Añadir nuevo formulario
+  </VBtn>
+</VCol>
 
 
 

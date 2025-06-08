@@ -8,7 +8,50 @@ const convocatoriaSeleccionada = ref(null)
 const busquedaEvaluador = ref('');
 const success = ref(null)
 const error_exists = ref(null)
+//para agregar nuevos perfiles desde aqui
+const abrirMiniDialog = ref(false)
+const nuevoEvaluador = ref({ name: '', surname: '', email: '' })
 
+const crearEvaluadorRapido = async () => {
+    if (!nuevoEvaluador.value.name || !nuevoEvaluador.value.surname || !nuevoEvaluador.value.email) {
+        error_exists.value = 'Completa todos los campos';
+        return;
+    }
+    // Busca el id del rol "Evaluador"
+    const evaluadorRole = roles.value.find(r => r.name === 'Evaluador')
+    if (!evaluadorRole) {
+        error_exists.value = 'No se encontró el rol Evaluador'
+        return
+    }
+    const roleId = evaluadorRole.id
+
+    try {
+        const resp = await $api('/staffs', {
+            method: 'POST',
+            body: {
+                name: nuevoEvaluador.value.name,
+                surname: nuevoEvaluador.value.surname,
+                email: nuevoEvaluador.value.email,
+                password: '123456',
+                role_id: roleId,
+                gender: 'O',
+                telefono: '00000000',
+                tipo_doc: 'CI',
+                n_doc: '00000000',
+            }
+        })
+        evaluadores1.value.push({
+            ...resp.user,
+            role_name: 'Evaluador',
+            avatar: null,
+        })
+        abrirMiniDialog.value = false
+        nuevoEvaluador.value = { name: '', surname: '', email: '' }
+        evaluadoresSeleccionados.value.push(resp.user.id)
+    } catch (e) {
+        error_exists.value = 'No se pudo crear el evaluador'
+    }
+}
 
 
 const fetchConvocatorias = async () => {
@@ -47,6 +90,14 @@ const getEstadoColor = (estado) => {
     if (estado === 'Borrador') return 'warning'
     return 'info'
 }
+function avatarText(fullName) {
+    if (!fullName) return ''
+    return fullName
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+}
 
 const asignarEvaluadores = async () => {
     try {
@@ -60,15 +111,15 @@ const asignarEvaluadores = async () => {
         // Notificación
         success.value = 'Evaluadores asignados correctamente'
         setTimeout(() => {
-            success.value  = null
+            success.value = null
             error_exists.value = null
             fetchConvocatorias()
-            
-                    modalVisible.value = false
-                    evaluadoresSeleccionados.value = []
-                    
-      
-    }, 1000)
+
+            modalVisible.value = false
+            evaluadoresSeleccionados.value = []
+
+
+        }, 1000)
 
     } catch (error) {
         console.error('Error al asignar evaluadores:', error)
@@ -86,8 +137,27 @@ const evaluadoresFiltrados = computed(() => {
     )
 })
 
+const roles = ref([])
+const searchQuery = ref(null);
+const fetchRoles = async () => {
+    try {
+        const resp = await $api('/staffs?search=' + (searchQuery.value ? searchQuery.value : ''), {
+            method: 'GET',
+            onResponseError({ response }) {
+                console.log(response);
+            }
+        })
+        console.log('respuesta api', resp);
 
+        //data.value = resp.users.data;
+        roles.value = resp.roles;
+        console.log(roles.value);
+    } catch (e) {
+        console.error('Error al cargar roles', e)
+    }
+}
 onMounted(() => {
+    fetchRoles()
     fetchConvocatorias()
 })
 </script>
@@ -105,29 +175,34 @@ onMounted(() => {
                             Date(conv.fecha_fin).toLocaleDateString() }}<br>
                         Estado: <VChip :color="getEstadoColor(conv.estado)">{{ conv.estado }}</VChip>
 
-                        
+
                     </VCardText>
                     <VCardActions>
                         <VBtn color="primary" @click="abrirModal(conv)">Añadir Evaluadores</VBtn>
                     </VCardActions>
                     <VCardText class="pt-0">
-  <div class="v-avatar-group d-flex align-center">
-    <VAvatar v-for="(evaluator, index) in conv.evaluadores.slice(0, 5)" :key="evaluator.id">
-  <VImg :src="evaluator.avatar || '/default-avatar.png'" />
-  <VTooltip activator="parent" location="top">
-    {{ evaluator.name }} {{ evaluator.surname }}
-  </VTooltip>
-</VAvatar>
+                        <div class="v-avatar-group d-flex align-center">
+                            <VAvatar v-for="(evaluator, index) in conv.evaluadores.slice(0, 5)" :key="evaluator.id"
+                                :color="evaluator.avatar ? '' : 'primary'"
+                                :class="evaluator.avatar ? '' : 'v-avatar-light-bg primary--text'"
+                                :variant="!evaluator.avatar ? 'tonal' : undefined">
+                                <VImg v-if="evaluator.avatar" :src="evaluator.avatar" />
+                                <span v-else class="text-sm">
+                                    {{ avatarText(`${evaluator.name} ${evaluator.surname}`) }}
+                                </span>
+                                <VTooltip activator="parent" location="top">
+                                    {{ evaluator.name }} {{ evaluator.surname }}
+                                </VTooltip>
+                            </VAvatar>
+                            
+                            <VAvatar v-if="conv.evaluadores.length > 5"
+                                :color="$vuetify.theme.current.dark ? '#383B55' : '#F0EFF0'">
+                                +{{ conv.evaluadores.length - 5 }}
+                            </VAvatar>
 
-<VAvatar
-  v-if="conv.evaluadores.length > 5"
-  :color="$vuetify.theme.current.dark ? '#383B55' : '#F0EFF0'"
->
-  +{{ conv.evaluadores.length - 5 }}
-</VAvatar>
 
-  </div>
-</VCardText>
+                        </div>
+                    </VCardText>
                 </VCard>
             </VCol>
         </VRow>
@@ -145,9 +220,20 @@ onMounted(() => {
                             class="py-3 px-2rounded border mb-2" style="transition: background 0.3s"
                             :class="{ 'bg-grey-lighten-4': evaluadoresSeleccionados.includes(user.id) }">
                             <template #prepend>
-                                <VAvatar size="40">
-                                    <VImg :src="user.avatar ? user.avatar : '/default-avatar.png'" />
-                                </VAvatar>
+                                <VAvatar
+                                    size="40"
+                                    :color="user.avatar ? '' : 'primary'"
+                                    :class="user.avatar ? '' : 'v-avatar-light-bg primary--text'"
+                                    :variant="!user.avatar ? 'tonal' : undefined"
+                                    >
+                                    <VImg v-if="user.avatar" :src="user.avatar" />
+                                    <span v-else class="text-sm">
+                                        {{ avatarText(`${user.name} ${user.surname}`) }}
+                                    </span>
+                                    <VTooltip activator="parent" location="top">
+                                        {{ user.name }} {{ user.surname }}
+                                    </VTooltip>
+                                    </VAvatar>
                             </template>
 
                             <VListItemTitle class="font-weight-medium">
@@ -162,6 +248,9 @@ onMounted(() => {
                                     density="compact" />
                             </template>
                         </VListItem>
+                        <VBtn color="secondary" class="mb-3" @click="abrirMiniDialog = true" variant="outlined" block>
+                            Agregar Evaluador rápido
+                        </VBtn>
                     </VList>
                 </VCardText>
 
@@ -171,7 +260,7 @@ onMounted(() => {
                     <VBtn color="success" @click="asignarEvaluadores">Asignar</VBtn>
                 </VCardActions>
 
-                
+
 
                 <VAlert v-if="success" type="success" class="mb-4" border="start" variant="tonal" color="success">
                     {{ success }}
@@ -181,6 +270,21 @@ onMounted(() => {
                     {{ error_exists }}
                 </VAlert>
 
+            </VCard>
+        </VDialog>
+        <VDialog v-model="abrirMiniDialog" max-width="400px">
+            <VCard>
+                <VCardTitle>Nuevo Evaluador</VCardTitle>
+                <VCardText>
+                    <VTextField v-model="nuevoEvaluador.name" label="Nombre" />
+                    <VTextField v-model="nuevoEvaluador.surname" label="Apellido" />
+                    <VTextField v-model="nuevoEvaluador.email" label="Email" />
+                </VCardText>
+                <VCardActions>
+                    <VSpacer />
+                    <VBtn text @click="abrirMiniDialog = false">Cancelar</VBtn>
+                    <VBtn color="success" @click="crearEvaluadorRapido">Crear</VBtn>
+                </VCardActions>
             </VCard>
         </VDialog>
 

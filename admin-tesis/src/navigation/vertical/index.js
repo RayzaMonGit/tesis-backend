@@ -221,26 +221,24 @@ title: 'Mis Postulaciones',
     ]
   },
 
-  {
-    title: 'Documentos',
-    icon: { icon: 'ri-file-upload-line' },
-    children: [
-      {
+  
+    
+      /*{
         title: 'Subir Documento',
         to: { name: 'documentos-subir' },
         icon: { icon: 'ri-upload-cloud-line' },
         permissions: ["register_documents",
           , "edit_documents"
           , "delete_documents"],
-      },
+      },*/
       {
-        title: 'Ver mis documentos',
-        to: { name: 'documentos-listado' },
+        title: 'Auditorias Convocatorias',
+       to: { name: 'convocatorias-historialauditoria' },
         icon: { icon: 'ri-folder-line' },
         permission: 'list_documents',
       },
-    ],
-  },
+    
+  
   {
     heading: 'Configuración', permissions: [
       "register_rol"

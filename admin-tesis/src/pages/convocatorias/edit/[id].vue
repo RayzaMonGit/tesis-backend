@@ -1,6 +1,10 @@
 <script setup>
 import { onMounted } from 'vue';
 
+const esAbierta = computed(() => estadoOriginal.value === 'Abierta');
+const estadoOriginal = ref(null);
+
+
 const warning = ref(null);
 const success = ref(null);
 const error_exists = ref(null);
@@ -75,6 +79,13 @@ const loadDocument = ($event) => {
 const edit = async () => {
     
         warning.value = null;
+        if (from.value.estado === 'Abierta') {
+
+            
+        if (!confirm("¿Estás seguro de guardar? No podrás modificar los datos después.")) {
+            return;
+        }
+    }
         // Validaciones existentes
         if (!from.value.titulo) {
             warning.value = "Se debe llenar el TÍTULO del cargo";
@@ -181,6 +192,8 @@ const show = async () => {
         from.value.sueldo_referencial = conv_selected.value.sueldo_referencial;
         from.value.estado = conv_selected.value.estado;
         from.value.formulario_id = conv_selected.value.formulario_id;
+
+        estadoOriginal.value = conv_selected.value.estado;
         
         // Documento
         FILE_DOCUMENTO.value = conv_selected.value.documento;
@@ -351,20 +364,20 @@ definePage({
                         <VCol cols="12" md="6">
                             <VTextField v-model="from.titulo" label="Título del cargo"
                                 placeholder="Ej: Cargo docente computación"
-                                :rules="[v => !!v || 'Este campo es obligatorio']" required />
+                                :rules="[v => !!v || 'Este campo es obligatorio']" required :disabled="esAbierta"/>
                         </VCol>
 
                         <!-- ÁREA -->
                         <VCol cols="12" md="6">
                             <VTextField v-model="from.area" label="Área/Carrera" placeholder="Ej: Sistemas informáticos"
-                                :rules="[v => !!v || 'Este campo es obligatorio']" required />
+                                :rules="[v => !!v || 'Este campo es obligatorio']" required :disabled="esAbierta" />
                         </VCol>
 
                         <!-- PERFIL / DESCRIPCIÓN -->
                         <VCol cols="12">
                             <VTextarea v-model="from.descripcion" label="Descripción o perfil profesional"
                                 placeholder="Ej: Perfil en provisión nacional..." auto-grow rows="3"
-                                :rules="[v => !!v || 'Este campo es obligatorio']" required />
+                                :rules="[v => !!v || 'Este campo es obligatorio']" required :disabled="esAbierta"/>
                         </VCol>
 
                         <!-- FECHA INICIO -->
@@ -373,7 +386,7 @@ definePage({
                                 :min="fechaInicioOriginal" :rules="[
                                     v => !!v || 'Obligatorio',
                                     v => v >= fechaInicioOriginal || 'La fecha de inicio no puede ser anterior a la original'
-                                ]" required />
+                                ]" required :disabled="esAbierta"/>
                         </VCol>
 
                         <!-- FECHA FIN -->
@@ -382,41 +395,50 @@ definePage({
                                 :min="from.fecha_inicio" :rules="[
                                     v => !!v || 'Obligatorio',
                                     v => v >= from.fecha_inicio || 'La fecha de finalización no puede ser anterior a la fecha de inicio'
-                                ]" required />
+                                ]" required :disabled="esAbierta"/>
                         </VCol>
 
                         <!-- FORMULARIO -->
             <VCol cols="12" md="4">
               <v-select v-model="from.formulario_id" :items="formularios" item-title="nombre" item-value="id"
-                label="Formulario de evaluación" clearable />
+                label="Formulario de evaluación" clearable :disabled="esAbierta"/>
 
             </VCol>
 
                         <!-- PLAZAS DISPONIBLES -->
                         <VCol cols="12" md="4">
                             <VTextField v-model="from.plazas_disponibles" label="Plazas disponibles" placeholder="Ej: 1"
-                                type="number" :rules="[v => v > 0 || 'Debe ser un número mayor a 0']" required />
+                                type="number" :rules="[v => v > 0 || 'Debe ser un número mayor a 0']" required :disabled="esAbierta"/>
                         </VCol>
 
                         <!-- SUELDO REFERENCIAL -->
                         <VCol cols="12" md="4">
                             <VTextField v-model="from.sueldo_referencial" label="Sueldo referencial"
                                 placeholder="Ej: 3500 Bs." type="number"
-                                :rules="[v => v >= 0 || 'Debe ser un número válido']" />
+                                :rules="[v => v >= 0 || 'Debe ser un número válido']" :disabled="esAbierta"/>
                         </VCol>
                         <!-- ESTADO -->
                         <VCol cols="12" md="4">
                             <VSelect v-model="from.estado" :items="estados" label="Estado"
                                 placeholder="Selecciona un estado" :rules="[v => !!v || 'Selecciona un estado']"
-                                required />
+                                required :disabled="esAbierta"/>
+                                
                         </VCol>
+<VAlert type="warning" v-if="from.estado==='Abierta'" class="mt-3">
+                                <strong>
+                                    Esta convocatoria está en estado <b>Abierta</b> despues de guardar no podra modificar la convocatria.
+                                </strong>
+                                </VAlert>
 
+                                <VAlert type="warning" v-else-if="warning" class="mt-3">
+                                <strong>{{ warning }}</strong>
+                                </VAlert>
                         <!-- DOCUMENTO -->
                         <VCol cols="12" md="12">
                             <VRow>
                                 <VCol cols="12">
                                     <VFileInput label="Documento de convocatoria" accept=".pdf,.doc,.docx"
-                                        @change="loadDocument($event)" />
+                                        @change="loadDocument($event)" :disabled="esAbierta"/>
                                 </VCol>
 
                                 <!-- PREVISUALIZAR SOLO PDF -->
@@ -464,10 +486,10 @@ definePage({
                                     </VExpansionPanelTitle>
                                     <VExpansionPanelText>
                                         <VCheckbox v-model="todosSeleccionados" label="Seleccionar / Quitar todos"
-                                            @change="toggleTodosObligatorios" />
+                                            @change="toggleTodosObligatorios" :disabled="esAbierta"/>
                                         <VList dense>
                                             <VListItem v-for="(req, index) in requisitosLey" :key="'ley-' + index">
-  <VCheckbox v-model="req.seleccionado" :label="req.texto" hide-details />
+  <VCheckbox v-model="req.seleccionado" :label="req.texto" hide-details :disabled="esAbierta"/>
 </VListItem>
 
 
@@ -482,14 +504,14 @@ definePage({
                                         <VRow>
                                             <VCol cols="6">
                                                 <VTextField label="Nombre del requisito"
-                                                    v-model="nuevoRequisito.nombre" />
+                                                    v-model="nuevoRequisito.nombre" :disabled="esAbierta"/>
                                             </VCol>
                                             <VCol cols="4">
                                                 <VSelect :items="['Obligatorio', 'Opcional']"
-                                                    v-model="nuevoRequisito.tipo" label="Tipo" />
+                                                    v-model="nuevoRequisito.tipo" label="Tipo" :disabled="esAbierta"/>
                                             </VCol>
                                             <VCol cols="2">
-                                                <VBtn @click="agregarRequisito" color="primary">Agregar</VBtn>
+                                                <VBtn @click="agregarRequisito" color="primary" :disabled="esAbierta">Agregar</VBtn>
                                             </VCol>
                                         </VRow>
                                         <VList dense>
@@ -497,7 +519,7 @@ definePage({
                                                 :key="'perso-' + index">
                                                 <VListItemTitle>{{ req.nombre }} ({{ req.tipo }})</VListItemTitle>
                                                 <VBtn icon="mdi-delete"
-                                                    @click="requisitosPersonalizados.splice(index, 1)" />
+                                                    @click="requisitosPersonalizados.splice(index, 1)" :disabled="esAbierta" />
                                             </VListItem>
                                         </VList>
                                     </VExpansionPanelText>
@@ -537,7 +559,7 @@ definePage({
   </VBtn>
 
   <!-- Botón Guardar a la derecha -->
-  <VBtn @click="edit()" color="success">
+  <VBtn @click="edit()" color="success" :disabled="esAbierta">
     Guardar convocatoria
     <VIcon end icon="ri-checkbox-circle-line" />
   </VBtn>

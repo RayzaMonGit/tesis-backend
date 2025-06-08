@@ -11,7 +11,9 @@ class EvaluacionDocumentoResource extends JsonResource
             'id' => $this->id,
             'documento_id' => $this->postulacion_documento_id,
             'nombre_documento' => $this->documento->nombre,
-            'url' => $this->documento->url,
+            'url' => $this->documento && $this->documento->url
+    ? rtrim(env("APP_URL"), '/') . '/storage/' . ltrim($this->documento->url, '/')
+    : null,
             'estado' => $this->estado,
             'puntaje' => (float) $this->puntaje,
             'comentarios' => $this->comentarios
