@@ -605,8 +605,9 @@ const guardarDocumentosFormulario = async (publicar = false) => {
   } else {
     guardando.value = true;
   }
-  const notafinal=progresoTotal.value;
-  console.log('Nota preliminar:', notafinal);
+  //const notafinal=progresoTotal.value;
+  const notafinal = puntajeTotal.value;
+  console.log('Nota preliminar (nota real):', notafinal);
   try {
     // 1. Guardar requisitos básicos
     await guardarRequisitos();

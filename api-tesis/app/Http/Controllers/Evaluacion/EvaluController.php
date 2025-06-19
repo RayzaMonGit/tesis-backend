@@ -13,6 +13,8 @@ use App\Models\Convocatorias\Requisitos;
 use App\Models\Convocatorias\RequisitosLey;
 use App\Models\Postulacion\PostulacionDocumento;
 
+use App\Http\Resources\Postulante\PostulanteResource;
+
 
 
 //use App\Models\Postulacion\PostulacionDocumento;
@@ -346,5 +348,38 @@ class EvaluController extends Controller
     ]);
 }
 
-    
+public function postulantesPorConvocatoria($convocatoriaId)
+{
+    $postulantes = Postulacion::with('postulante.user')
+        ->where('convocatoria_id', $convocatoriaId)
+        ->get()
+        ->map(function($postulacion) {
+            // Calcula el promedio de las notas finales de las evaluaciones finalizadas
+            $notaFinal = \App\Models\Evaluacion\Evaluacion::where('postulacion_id', $postulacion->id)
+                ->where('estado', 'finalizada')
+                ->avg('puntaje_total');
+
+            return [
+                'id' => $postulacion->id,
+                'usuario' => $postulacion->postulante && $postulacion->postulante->user
+                    ? [
+                        'name' => $postulacion->postulante->user->name,
+                        'surname' => $postulacion->postulante->user->surname,
+                        'email' => $postulacion->postulante->user->email,
+                    ]
+                    : null,
+                'nota_preliminar' => $postulacion->nota_preliminar,
+                'nota_final' => $notaFinal ,
+                'estado' => $postulacion->estado,
+            ];
+        })
+        ->sortByDesc('nota_final')
+        ->values();
+
+    return response()->json([
+        'success' => true,
+        'data' => $postulantes
+    ]);
+}
+
 }

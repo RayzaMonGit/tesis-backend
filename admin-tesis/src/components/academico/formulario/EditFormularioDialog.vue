@@ -189,9 +189,18 @@ function removeCriterion(sectionIndex, critIndex) {
 function close() {
   emit('update:isDialogVisible', false)
 }
-
+function limpiarCriterios(form) {
+  form.secciones.forEach(seccion => {
+    seccion.criterios = seccion.criterios.map(criterio => ({
+      ...criterio,
+      puntaje_por_item: Number(criterio.puntaje_por_item) || 0,
+      puntaje_maximo: Number(criterio.puntaje_maximo) || 0,
+    }))
+  })
+}
 // Guardar cambios
 async function save() {
+  limpiarCriterios(localForm)
   await $api(`/formularios-evaluacion/${localForm.id}`, {
     method: 'POST',
     body: localForm

@@ -4,7 +4,7 @@ namespace App\Models\Convocatorias;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
+//use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Convocatorias\Requisitos;
 use App\Models\Convocatorias\Convocatoria;
 use App\Models\Convocatorias\RequisitosLey;
@@ -12,7 +12,7 @@ use App\Models\Convocatorias\RequisitosLey;
 class RequisitosLey extends Model
 {
     
-    use SoftDeletes;
+    //use SoftDeletes;
     use HasFactory;
 
     protected $table = 'requisitos_ley';

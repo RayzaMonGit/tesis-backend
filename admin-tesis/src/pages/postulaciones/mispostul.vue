@@ -41,6 +41,15 @@ postulacions.value = resp.data || []
     cargando.value = false
   }
 }
+function getPorcentajeNota(post) {
+  const nota = Number(post.nota_preliminar) || 0
+  // Ahora tomamos el puntaje máximo desde el formulario
+  const max = Number(post.convocatoria?.formulario?.puntaje_total) || 100
+  console.log('conv: ',post.convocatoria)
+  console.log('nota: ',nota)
+  console.log('puntajetotal: ',post.convocatoria?.formulario?.puntaje_total)
+  return max > 0 ? Math.round((nota / max) * 100) : 0
+}
 
 onMounted(() => {
   fetchpostulacionsAbiertas()
@@ -94,7 +103,7 @@ onMounted(() => {
 
               <!-- Barra de estado -->
               <div class="mt-4">
-                <EstadoBarra :estado="post.estado" :nota_preliminar="Number(post.nota_preliminar)" />
+                <EstadoBarra :estado="post.estado" :nota_preliminar="getPorcentajeNota(post)" />
               </div>
 
               <VCardActions class="mt-5">

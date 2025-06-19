@@ -125,6 +125,8 @@ Route::get('convocatorias/{id}/postulantes', [PostulacionController::class, 'pos
     Route::get('postulaciones/{postulacionId}/evaluaciones', [EvaluController::class, 'index']);
     Route::post('postulaciones/{postulacionId}/evaluaciones', [EvaluController::class, 'store']);
     Route::get('evaluaciones/{id}', [EvaluController::class, 'show']);
+
+Route::get('/postulantes/{id}/convocatorias', [EvaluController::class, 'postulantesPorConvocatoria']);
     
     // Rutas para Documentos Evaluados
     Route::post('evaluaciones/{evaluacionId}/documentos', [EvaluDocumentoController::class, 'store']);

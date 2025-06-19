@@ -81,58 +81,75 @@ public function show($id)
         }
     }
 
-    public function update(Request $request, $id)
+
+public function update(Request $request, $id)
 {
     $validated = $request->validate([
         'nombre' => 'string|max:255',
         'descripcion' => 'string',
-        'puntaje_total' ,
+        'puntaje_total' => 'required|numeric',
         'secciones' => 'array|min:1',
-        'secciones.*.id' => 'integer|exists:secciones_formulario,id', // Validar que existe
+        'secciones.*.id' => 'integer|exists:secciones_formulario,id',
         'secciones.*.titulo' => 'string|max:255',
-        'secciones.*.puntaje_max' ,
+        'secciones.*.puntaje_max' => 'required|numeric',
         'secciones.*.criterios' => 'array|min:1',
-        'secciones.*.criterios.*.id' => 'integer|exists:criterios_formulario,id', // Validar que existe
+        'secciones.*.criterios.*.id' => 'integer|exists:criterios_formulario,id',
         'secciones.*.criterios.*.nombre' => 'string|max:255',
-        'secciones.*.criterios.*.puntaje_por_item' ,
-        'secciones.*.criterios.*.puntaje_maximo' ,
+        'secciones.*.criterios.*.puntaje_por_item' => 'required|numeric',
+        'secciones.*.criterios.*.puntaje_maximo' => 'required|numeric',
     ]);
     
     DB::beginTransaction();
     try {
         $formulario = FormularioEvaluacion::findOrFail($id);
-        $formulario->update($validated);
+        $formulario->update([
+            'nombre' => $validated['nombre'],
+            'descripcion' => $validated['descripcion'],
+            'puntaje_total' => $validated['puntaje_total'],
+        ]);
 
         $existingSectionIds = $formulario->secciones()->pluck('id')->toArray();
         $receivedSectionIds = [];
         
         foreach ($validated['secciones'] as $sectionData) {
-            // Buscar o crear sección con validación adicional
-            $seccion = isset($sectionData['id']) 
-                ? $formulario->secciones()->findOrFail($sectionData['id'])
-                : $formulario->secciones()->create([
+            // Buscar o crear sección
+            if (isset($sectionData['id'])) {
+                $seccion = $formulario->secciones()->findOrFail($sectionData['id']);
+                // Actualizar campos de la sección
+                $seccion->update([
                     'titulo' => $sectionData['titulo'],
                     'puntaje_max' => $sectionData['puntaje_max'],
                 ]);
-            
+            } else {
+                $seccion = $formulario->secciones()->create([
+                    'titulo' => $sectionData['titulo'],
+                    'puntaje_max' => $sectionData['puntaje_max'],
+                ]);
+            }
             $receivedSectionIds[] = $seccion->id;
 
             $existingCriterionIds = $seccion->criterios()->pluck('id')->toArray();
             $receivedCriterionIds = [];
-            
+
             foreach ($sectionData['criterios'] as $criterionData) {
-                // Buscar o crear criterio con validación adicional
-                $criterio = isset($criterionData['id'])
-                    ? $seccion->criterios()->findOrFail($criterionData['id'])
-                    : $seccion->criterios()->create([
+                if (isset($criterionData['id'])) {
+                    $criterio = $seccion->criterios()->findOrFail($criterionData['id']);
+                    // Actualizar campos del criterio
+                    $criterio->update([
                         'nombre' => $criterionData['nombre'],
                         'puntaje_por_item' => $criterionData['puntaje_por_item'],
                         'puntaje_maximo' => $criterionData['puntaje_maximo'],
                     ]);
-                
+                } else {
+                    $criterio = $seccion->criterios()->create([
+                        'nombre' => $criterionData['nombre'],
+                        'puntaje_por_item' => $criterionData['puntaje_por_item'],
+                        'puntaje_maximo' => $criterionData['puntaje_maximo'],
+                    ]);
+                }
                 $receivedCriterionIds[] = $criterio->id;
             }
-            
+
             // Eliminar criterios no incluidos
             $seccion->criterios()
                 ->whereIn('id', array_diff($existingCriterionIds, $receivedCriterionIds))

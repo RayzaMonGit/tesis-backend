@@ -327,7 +327,7 @@ onMounted(()=>{
                                 @click:append-inner="isPasswordVisible = !isPasswordVisible"
                                 :rules="[
                                 v => !!v || 'La contraseña es obligatoria',
-                                v => v.length >= 6 || 'Debe tener al menos 6 caracteres'
+                                v => v.length >= 6 || 'Debe tener al menos 8 caracteres'
                                 ]"
                             />
                             </VCol>
