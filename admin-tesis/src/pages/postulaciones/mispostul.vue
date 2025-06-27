@@ -31,7 +31,7 @@ const fetchpostulacionsAbiertas = async () => {
 const resp = await $api(`/postulaciones/postulante/${postulanteId}`, {
   method: 'GET',
 })
-postulacions.value = resp.data || []
+postulacions.value = (resp.data || []).filter(post => post.convocatoria)
    
    console.log('Postulacions abiertas:', postulacions.value);
     //postulacions.value = resp.postulacions || []
@@ -87,7 +87,7 @@ onMounted(() => {
                 <div class="text-body-2 text-grey-darken-1">
                   {{ post.convocatoria?.area || 'Sin área' }}
                   <VChip :color="post.convocatoria.estado === 'Abierta' ? 'success' : 'error'" size="small">
-                {{ post.convocatoria.estado }}
+                {{ post.convocatoria.estado || 'Sin estado'}}
               </VChip>
                 </div>
               </div>

@@ -212,7 +212,8 @@
                             :disabled="isFileLimitReached(seccion.id, criterio) || !puedeModificar"
                             @change="(e) => addPendiente(seccion.id, criterio, e)"
                             :multiple="getConfigCriterio(criterio).multiple"
-                            :counter="getConfigCriterio(criterio).maxArchivos" density="comfortable" chips
+                            counter
+                            :counter-value="getConfigCriterio(criterio).maxArchivos" density="comfortable" chips
                             class="flex-grow-1" />
                           <VBtn color="primary" variant="flat" :disabled="!hasPendientes(seccion.id, criterio.id)"
                             @click="confirmarSubida(seccion.id, criterio.id)">
@@ -454,8 +455,16 @@ const getMaxFiles = (criterio) => {
   // Si no, calcula cuántos archivos necesita para alcanzar el máximo
   return Math.ceil(parseFloat(criterio.puntaje_maximo) / parseFloat(criterio.puntaje_por_item));
 };
-
+/*
 const isFileLimitReached = (seccionId, criterio) => {
+  const archivosSubidos = archivosFormulario.value[seccionId]?.[criterio.id]?.length || 0
+  const archivosPend = archivosPendientes.value[seccionId]?.[criterio.id]?.length || 0
+  return (archivosSubidos + archivosPend) >= getMaxFiles(criterio)
+}*/
+const isFileLimitReached = (seccionId, criterio) => {
+  // Si el puntaje máximo del criterio es 0, nunca bloquear el input
+  if (!criterio.puntaje_maximo || criterio.puntaje_maximo == 0) return false;
+
   const archivosSubidos = archivosFormulario.value[seccionId]?.[criterio.id]?.length || 0
   const archivosPend = archivosPendientes.value[seccionId]?.[criterio.id]?.length || 0
   return (archivosSubidos + archivosPend) >= getMaxFiles(criterio)
@@ -558,7 +567,6 @@ const getProgresoSeccion = (seccionId) => {
   return Math.round((completados / total) * 100)
 }
 
-
 const getPuntajeCriterio = (seccionId, criterioId) => {
   const archivos = archivosFormulario.value[seccionId]?.[criterioId] || [];
   if (archivos.length === 0) return 0;
@@ -575,6 +583,27 @@ const getPuntajeCriterio = (seccionId, criterioId) => {
     config.puntajeMaximo
   );
 };
+/*
+
+const getPuntajeCriterio = (seccionId, criterioId) => {
+  const archivos = archivosFormulario.value[seccionId]?.[criterioId] || [];
+  if (archivos.length === 0) return 0;
+
+  const criterio = secciones.value
+    .find(s => s.id === seccionId)
+    ?.criterios.find(c => c.id === criterioId);
+
+  const config = getConfigCriterio(criterio);
+
+  // Si el puntaje máximo del criterio es 0, no suma puntaje
+  if (!criterio.puntaje_maximo || criterio.puntaje_maximo == 0) return 0;
+
+  // Puntaje sin exceder el máximo
+  return Math.min(
+    archivos.length * config.puntajeItem,
+    config.puntajeMaximo
+  );
+};*/
 
 
 const getPuntajeSeccion = (seccionId) => {
